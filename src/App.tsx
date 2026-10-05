@@ -7,7 +7,6 @@ import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
 import TopicsListPage from "./pages/TopicsListPage";
 import NewTopicPage from "./pages/NewTopicPage";
-import TopicOverviewPage from "./pages/TopicOverviewPage";
 import SummaryPage from "./pages/SummaryPage";
 import QuestionsPage from "./pages/QuestionsPage";
 import ExamPage from "./pages/ExamPage";
@@ -31,7 +30,7 @@ export default function App() {
         <Route path="/study/new" element={<NewTopicPage />} />
 
         <Route path="/study/:id" element={<TopicLayout />}>
-          <Route index element={<TopicOverviewPage />} />
+          <Route index element={<Navigate to="summary" replace />} />
           <Route path="summary" element={<SummaryPage />} />
           <Route path="questions" element={<QuestionsPage />} />
           <Route path="exam" element={<ExamPage />} />

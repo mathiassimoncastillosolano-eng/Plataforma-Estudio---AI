@@ -1,9 +1,10 @@
 import { useState, type FormEvent } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
-import { GraduationCap } from "lucide-react";
+import { AlertCircle, ArrowRight } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { Input } from "../components/Input";
 import Button from "../components/Button";
+import { AuthMobileHero, AuthThemeToggle, AuthVisual } from "../components/Auth";
 
 interface FormState {
   firstName: string;
@@ -63,33 +64,36 @@ export default function RegisterPage() {
 
   return (
     <div className="auth-shell">
-      <div className="auth-visual">
-        <div />
-        <div>
-          <p className="auth-visual-quote">
-            Sube tus apuntes, deja que la IA los organice y <span>estudia con un plan claro.</span>
-          </p>
-          <p className="auth-visual-attribution">Cursa — estudio asistido por IA</p>
-        </div>
-      </div>
+      <AuthVisual
+        message={
+          <>
+            Sube tus apuntes y <span>estudia con un plan claro.</span>
+          </>
+        }
+        description="La IA organiza tu material en resúmenes, preguntas y un examen, y tú avanzas a tu ritmo."
+      />
 
-      <div className="auth-form-side">
-        <div className="auth-form-card">
-          <div className="auth-brand">
-            <div className="auth-brand-mark">
-              <GraduationCap size={18} color="#fff" />
-            </div>
-            <span className="auth-brand-name">Cursa</span>
+      <main className="auth-form-side">
+        <AuthThemeToggle />
+        <AuthMobileHero message="Sube tus apuntes y estudia con un plan claro." />
+
+        <div className="auth-form-card stagger">
+          <div>
+            <h1 className="auth-heading">Crea tu cuenta</h1>
+            <p className="auth-subheading">Empieza a estudiar de forma más inteligente en minutos.</p>
           </div>
 
-          <h1 className="auth-heading">Crea tu cuenta</h1>
-          <p className="auth-subheading">Empieza a estudiar de forma más inteligente en minutos.</p>
-
           <form className="auth-form" onSubmit={handleSubmit}>
-            {formError && <div className="auth-error">{formError}</div>}
+            {formError && (
+              <div className="auth-error" role="alert">
+                <AlertCircle size={16} aria-hidden="true" />
+                <span>{formError}</span>
+              </div>
+            )}
             <div className="auth-form-row">
               <Input
                 label="Nombres"
+                autoComplete="given-name"
                 placeholder="Juan"
                 value={form.firstName}
                 error={errors.firstName}
@@ -97,6 +101,7 @@ export default function RegisterPage() {
               />
               <Input
                 label="Apellidos"
+                autoComplete="family-name"
                 placeholder="Pérez"
                 value={form.lastName}
                 error={errors.lastName}
@@ -106,6 +111,7 @@ export default function RegisterPage() {
             <Input
               label="Correo"
               type="email"
+              autoComplete="email"
               placeholder="tucorreo@ejemplo.com"
               value={form.email}
               error={errors.email}
@@ -114,6 +120,7 @@ export default function RegisterPage() {
             <Input
               label="Contraseña"
               type="password"
+              autoComplete="new-password"
               placeholder="Mínimo 6 caracteres"
               value={form.password}
               error={errors.password}
@@ -122,13 +129,15 @@ export default function RegisterPage() {
             <Input
               label="Confirmar contraseña"
               type="password"
+              autoComplete="new-password"
               placeholder="Repite tu contraseña"
               value={form.confirmPassword}
               error={errors.confirmPassword}
               onChange={(e) => update("confirmPassword", e.target.value)}
             />
-            <Button type="submit" fullWidth loading={loading}>
+            <Button type="submit" size="lg" fullWidth loading={loading} className="auth-submit">
               Crear cuenta
+              {!loading && <ArrowRight size={18} className="icon-nudge" aria-hidden="true" />}
             </Button>
           </form>
 
@@ -136,7 +145,7 @@ export default function RegisterPage() {
             ¿Ya tienes una cuenta? <Link to="/login">Iniciar sesión</Link>
           </p>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

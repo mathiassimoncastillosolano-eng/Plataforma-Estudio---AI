@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Mail, ShieldCheck, Moon } from "lucide-react";
+import { Mail, ShieldCheck, Palette } from "lucide-react";
+import ThemeSelector from "../components/ThemeSelector";
+import ColorSchemeSelector from "../components/ColorSchemeSelector";
 import Card from "../components/Card";
 import Button from "../components/Button";
 import { useToast } from "../hooks/useToast";
-import { useTheme } from "../hooks/useTheme";
 
 interface SettingToggle {
   key: string;
@@ -35,7 +36,6 @@ export default function SettingsPage() {
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const { showToast } = useToast();
-  const { theme, toggleTheme } = useTheme();
 
   function toggle(key: string) {
     setToggles((prev) => prev.map((t) => (t.key === key ? { ...t, enabled: !t.enabled } : t)));
@@ -60,27 +60,22 @@ export default function SettingsPage() {
 
       <Card>
         <div className="stack" style={{ gap: 0 }}>
-          <div className="row-between" style={{ gap: 20, padding: "18px 4px", borderBottom: "1px solid var(--color-border)" }}>
+          <div className="appearance-block">
             <div className="row gap-sm" style={{ alignItems: "flex-start" }}>
               <div className="stat-card-icon" style={{ marginTop: 2 }}>
-                <Moon size={16} />
+                <Palette size={16} />
               </div>
               <div>
-                <p style={{ fontWeight: 700, color: "var(--color-text)", fontSize: 14 }}>Modo oscuro</p>
-                <p className="text-muted" style={{ fontSize: 12.5, marginTop: 3, maxWidth: "38ch" }}>
-                  Cambia la apariencia de toda la plataforma a un tema oscuro.
+                <p style={{ fontWeight: 700, color: "var(--color-text)", fontSize: 14 }}>Apariencia</p>
+                <p className="text-muted" style={{ fontSize: 12.5, marginTop: 3 }}>
+                  Elige el modo y el color de acento. Se aplica al instante en toda la plataforma.
                 </p>
               </div>
             </div>
-            <button
-              className={`switch ${theme === "dark" ? "on" : ""}`}
-              onClick={toggleTheme}
-              role="switch"
-              aria-checked={theme === "dark"}
-              aria-label="Modo oscuro"
-            >
-              <span className="switch-knob" />
-            </button>
+            <p className="panel-label">Modo</p>
+            <ThemeSelector />
+            <p className="panel-label">Color de acento</p>
+            <ColorSchemeSelector />
           </div>
 
           {toggles.map((t, i) => {

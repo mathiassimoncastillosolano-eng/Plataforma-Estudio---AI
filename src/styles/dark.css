@@ -1,117 +1,93 @@
 /* ==========================================================================
-   Dark mode
-   Activado colocando data-theme="dark" en <html> (ver hooks/useTheme.tsx).
-   Redefine únicamente los tokens semánticos — los colores de marca fijos
-   (--navy, --blue, --white) permanecen intactos para que superficies
-   intencionalmente oscuras (Sidebar, tarjeta CTA, Avatar, Toast) se vean
-   igual de bien en ambos temas.
+   CURSA — Modo oscuro (diseñado, no invertido)
+   Se activa con data-theme="dark" en <html> (ver hooks/useTheme.tsx).
+
+   Jerarquía de superficies — de más hundida a más elevada:
+     bg → surface → surface-elevated → surface-interactive → surface-active
+   Índigo profundo en vez de negro: cómodo para sesiones largas de estudio.
+   Todos los componentes consumen tokens, así que aquí solo se redefinen
+   los valores semánticos.
    ========================================================================== */
 :root[data-theme="dark"] {
-  --color-bg: #0a1120;
-  --color-surface: #131c2f;
-  --color-surface-sunken: #1a2439;
-  --color-border: #263252;
-  --color-border-strong: #37456b;
-  --color-text: #edf1fa;
-  --color-text-secondary: #b7c1de;
-  --color-text-muted: #8794b8;
+  color-scheme: dark;
 
-  --color-primary: #529bff;
-  --color-primary-hover: #78b0ff;
-  --color-primary-tint: rgba(82, 155, 255, 0.16);
-  --color-primary-mid: rgba(82, 155, 255, 0.32);
+  /* Superficies */
+  --color-bg: #0f0e20;
+  --color-surface: #17162c;
+  --color-surface-elevated: #1f1e3b;
+  --color-surface-sunken: #0d0c1c;
+  --color-surface-interactive: #26254b;
+  --color-surface-active: #322f6b;
+  --bg-glow-1: rgba(99, 102, 241, 0.2);
+  --bg-glow-2: rgba(139, 92, 246, 0.13);
+  --shimmer: rgba(255, 255, 255, 0.07);
+  --hero-grad: linear-gradient(135deg, #2a2584 0%, #3b2f9e 52%, #52399f 100%);
 
-  --color-success: #3ddc9a;
-  --color-success-tint: rgba(61, 220, 154, 0.14);
-  --color-warning: #f6c453;
-  --color-warning-tint: rgba(246, 196, 83, 0.14);
+  /* Bordes */
+  --color-border: #2b2a52;
+  --color-border-strong: #403f72;
+
+  /* Texto */
+  --color-text: #efeeff;
+  --color-text-secondary: #c5c4e6;
+  --color-text-muted: #9d9cc2;
+  --color-text-on-primary: #ffffff;
+
+  /* Primario */
+  --color-primary: #a0a6ff;
+  --color-primary-solid: #5558e8;
+  --color-primary-hover: #6669f2;
+  --color-primary-tint: rgba(129, 140, 255, 0.16);
+  --color-primary-mid: rgba(129, 140, 255, 0.32);
+  --color-primary-ink: #bcc0ff;
+
+  /* Acento IA */
+  --color-accent: #b79cff;
+  --color-accent-tint: rgba(167, 139, 250, 0.16);
+  --color-accent-ink: #d0bfff;
+
+  /* Estados */
+  --color-success: #34d399;
+  --color-success-tint: rgba(52, 211, 153, 0.14);
+  --color-success-ink: #6ee7b7;
+  --color-warning: #fbbf24;
+  --color-warning-tint: rgba(251, 191, 36, 0.14);
+  --color-warning-ink: #fcd34d;
   --color-danger: #f87171;
   --color-danger-tint: rgba(248, 113, 113, 0.15);
+  --color-danger-ink: #fca5a5;
+  --color-neutral: #9d9cc2;
+  --color-disabled-bg: #211f3d;
+  --color-disabled-text: #6f6e99;
+  --color-focus: #b4b9ff;
 
-  --sidebar-bg: #060b16;
-  --color-header-bg: rgba(10, 17, 32, 0.86);
+  /* Navegación */
+  --sidebar-bg: #121128;
+  --color-header-bg: rgba(15, 14, 32, 0.8);
+  --color-scrim: rgba(4, 4, 14, 0.66);
+  --color-tooltip-bg: #35346b;
+  --color-tooltip-text: #ffffff;
 
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.36), 0 1px 2px rgba(0, 0, 0, 0.28);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 14px 34px rgba(0, 0, 0, 0.5);
+  /* Gráficos */
+  --chart-1: #8f96ff;
+  --chart-2: #2dd4bf;
+  --chart-grid: #2b2a52;
+  --chart-axis: #9d9cc2;
+
+  /* Sombras */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 8px 22px rgba(0, 0, 0, 0.42);
+  --shadow-lg: 0 20px 48px rgba(0, 0, 0, 0.55);
+  --shadow-primary: 0 6px 18px rgba(85, 88, 232, 0.4);
   --shadow-focus: 0 0 0 3px var(--color-primary-mid);
 }
 
 [data-theme="dark"] ::selection {
-  background: rgba(82, 155, 255, 0.35);
+  background: rgba(129, 140, 255, 0.38);
 }
 
-/* Badge / status-pill / trend text needs lighter tints for contrast on
-   dark tinted backgrounds — the light-mode hex values are hardcoded, so
-   we override them here rather than through variables. */
-[data-theme="dark"] .badge-blue,
-[data-theme="dark"] .status-pill.status-en-progreso {
-  color: #8fbcff;
-}
-[data-theme="dark"] .badge-green,
-[data-theme="dark"] .status-pill.status-completado {
-  color: #6ee7b7;
-}
-[data-theme="dark"] .badge-amber {
-  color: #fcd34d;
-}
-[data-theme="dark"] .badge-red {
-  color: #fca5a5;
-}
-[data-theme="dark"] .stat-card-trend.up {
-  color: #6ee7b7;
-}
-[data-theme="dark"] .stat-card-trend.down {
-  color: #fca5a5;
-}
-[data-theme="dark"] .feedback-panel.correct h4 {
-  color: #6ee7b7;
-}
-[data-theme="dark"] .feedback-panel.incorrect h4 {
-  color: #fca5a5;
-}
-[data-theme="dark"] .dropdown-item.danger {
-  color: #fca5a5;
-}
-[data-theme="dark"] .dropdown-item.danger svg {
-  color: #f19b9a;
-}
-[data-theme="dark"] .dropdown-item.danger:hover {
-  background: rgba(248, 113, 113, 0.12);
-  color: #fecaca;
-}
-[data-theme="dark"] .btn-danger {
-  color: #fca5a5;
-  border-color: rgba(248, 113, 113, 0.4);
-}
-[data-theme="dark"] .btn-danger:hover:not(:disabled) {
-  background: rgba(248, 113, 113, 0.12);
-  border-color: rgba(248, 113, 113, 0.6);
-}
-[data-theme="dark"] .btn-secondary:hover:not(:disabled) {
-  color: var(--color-primary);
-}
 [data-theme="dark"] .input::placeholder,
 [data-theme="dark"] .textarea::placeholder {
-  color: #5f6d94;
+  color: #8685b0;
 }
-[data-theme="dark"] .header-icon-btn .dot {
-  border-color: var(--color-header-bg);
-}
-[data-theme="dark"] .notif-item.unread {
-  background: rgba(82, 155, 255, 0.1);
-}
-[data-theme="dark"] .notif-item.unread:hover {
-  background: rgba(82, 155, 255, 0.16);
-}
-[data-theme="dark"] .recommend-card-icon {
-  background: rgba(246, 196, 83, 0.14);
-  color: #f6c453;
-}
-[data-theme="dark"] .exam-timer {
-  background: var(--color-surface-sunken);
-}
-
-/* Sidebar help card & brand mark keep their translucent-on-navy look in
-   both themes, so no overrides are needed there. */

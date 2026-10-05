@@ -32,7 +32,7 @@ export default function Button({
     .join(" ");
 
   return (
-    <button className={classes} disabled={disabled || loading} {...rest}>
+    <button className={classes} disabled={disabled || loading} data-loading={loading || undefined} aria-busy={loading || undefined} {...rest}>
       {loading ? <Loader2 size={16} className="spin" /> : icon}
       {children}
     </button>

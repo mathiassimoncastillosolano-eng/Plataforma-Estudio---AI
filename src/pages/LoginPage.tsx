@@ -1,9 +1,10 @@
 import { useState, type FormEvent } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
-import { GraduationCap } from "lucide-react";
+import { AlertCircle, ArrowRight } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { Input } from "../components/Input";
 import Button from "../components/Button";
+import { AuthMobileHero, AuthThemeToggle, AuthVisual } from "../components/Auth";
 import { DEMO_CREDENTIALS } from "../data/users";
 
 export default function LoginPage() {
@@ -40,30 +41,32 @@ export default function LoginPage() {
 
   return (
     <div className="auth-shell">
-      <div className="auth-visual">
-        <div />
-        <div>
-          <p className="auth-visual-quote">
-            Convierte cualquier material en un plan de estudio <span>que se adapta a tu progreso.</span>
-          </p>
-          <p className="auth-visual-attribution">Cursa — estudio asistido por IA</p>
-        </div>
-      </div>
+      <AuthVisual
+        message={
+          <>
+            Tu forma de aprender <span>está a punto de cambiar.</span>
+          </>
+        }
+        description="Convierte cualquier material en resúmenes, preguntas y exámenes que se adaptan a tu progreso."
+      />
 
-      <div className="auth-form-side">
-        <div className="auth-form-card">
-          <div className="auth-brand">
-            <div className="auth-brand-mark">
-              <GraduationCap size={18} color="#fff" />
-            </div>
-            <span className="auth-brand-name">Cursa</span>
+      <main className="auth-form-side">
+        <AuthThemeToggle />
+        <AuthMobileHero message="Tu forma de aprender está a punto de cambiar." />
+
+        <div className="auth-form-card stagger">
+          <div>
+            <h1 className="auth-heading">Bienvenido nuevamente</h1>
+            <p className="auth-subheading">Inicia sesión para continuar con tus temas de estudio.</p>
           </div>
 
-          <h1 className="auth-heading">Bienvenido nuevamente</h1>
-          <p className="auth-subheading">Inicia sesión para continuar con tus temas de estudio.</p>
-
           <form className="auth-form" onSubmit={handleSubmit}>
-            {error && <div className="auth-error">{error}</div>}
+            {error && (
+              <div className="auth-error" role="alert">
+                <AlertCircle size={16} aria-hidden="true" />
+                <span>{error}</span>
+              </div>
+            )}
             <Input
               label="Correo electrónico"
               type="email"
@@ -80,20 +83,23 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
             />
-            <Button type="submit" fullWidth loading={loading}>
+            <Button type="submit" size="lg" fullWidth loading={loading} className="auth-submit">
               Iniciar sesión
+              {!loading && <ArrowRight size={18} className="icon-nudge" aria-hidden="true" />}
             </Button>
           </form>
 
-          <div className="auth-demo-hint">
-            <strong>Cuenta demo:</strong> estudiante@demo.com · contraseña 123456
-          </div>
+          <div>
+            <div className="auth-demo-hint">
+              <strong>Cuenta demo:</strong> estudiante@demo.com · contraseña 123456
+            </div>
 
-          <p className="auth-switch">
-            ¿No tienes una cuenta? <Link to="/register">Crear cuenta</Link>
-          </p>
+            <p className="auth-switch">
+              ¿No tienes una cuenta? <Link to="/register">Crear cuenta</Link>
+            </p>
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

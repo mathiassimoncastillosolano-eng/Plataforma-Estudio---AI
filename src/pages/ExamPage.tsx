@@ -1,40 +1,42 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ClipboardCheck, ChevronLeft, ChevronRight } from "lucide-react";
 import { useTopicContext } from "../layouts/topicContext";
 import * as aiService from "../services/aiService";
 import * as examService from "../services/examService";
 import * as studyService from "../services/studyService";
-import { formatSeconds, difficultyLabel } from "../utils/format";
-import type { ExamConfig, QuestionAttempt, StudyQuestion } from "../types";
-import { LoadingState, ErrorState } from "../components/States";
-import Card from "../components/Card";
-import Button from "../components/Button";
-import ExamQuestion from "../components/ExamQuestion";
+import type { ExamConfig, StudyQuestion, TopicSummary } from "../types";
+import { QUESTION_COUNTS, buildExam } from "../utils/examBuilder";
+import { setStatuses, type StatusMap } from "../utils/questionStatus";
+import { LoadingState, ErrorState, EmptyState } from "../components/States";
+import ExamConfigurator from "../components/exam/ExamConfigurator";
+import ExamRunner from "../components/exam/ExamRunner";
 
-type Phase = "loading" | "intro" | "running" | "error";
+type Phase = "loading" | "config" | "running" | "error";
 
 export default function ExamPage() {
-  const { topic } = useTopicContext();
+  const { topic, setTopic } = useTopicContext();
   const navigate = useNavigate();
   const [phase, setPhase] = useState<Phase>("loading");
   const [config, setConfig] = useState<ExamConfig | null>(null);
-  const [questions, setQuestions] = useState<StudyQuestion[]>([]);
-  const [index, setIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, { optionId?: string; openText?: string }>>({});
-  const [seconds, setSeconds] = useState(0);
+  const [pool, setPool] = useState<StudyQuestion[]>([]);
+  const [summary, setSummary] = useState<TopicSummary | undefined>();
+  const [examQuestions, setExamQuestions] = useState<StudyQuestion[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
   async function load() {
     setPhase("loading");
     try {
-      const [examConfig, allQuestions] = await Promise.all([
-        examService.getExamConfig(topic.id),
-        aiService.generateQuestions(topic.id, topic.title),
-      ]);
-      setConfig(examConfig);
-      setQuestions(allQuestions.slice(0, examConfig.questionCount));
-      setPhase("intro");
+      const [saved, questions, concepts] = await Promise.all([examService.getExamConfig(topic.id), aiService.generateQuestions(topic.id, topic.title), aiService.getTopicConcepts(topic.id, topic.title)]);
+      // Si la configuración guardada pide más preguntas de las disponibles, se ajusta.
+      let questionCount = saved.questionCount;
+      if (questionCount > questions.length) {
+        const fits = [...QUESTION_COUNTS].filter((n) => n <= questions.length);
+        questionCount = fits.length > 0 ? fits[fits.length - 1] : questions.length;
+      }
+      setConfig({ ...saved, questionCount });
+      setPool(questions);
+      setSummary(concepts.summary);
+      setPhase("config");
     } catch {
       setPhase("error");
     }
@@ -45,131 +47,50 @@ export default function ExamPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [topic.id]);
 
-  useEffect(() => {
-    if (phase !== "running") return;
-    const timer = setInterval(() => setSeconds((s) => s + 1), 1000);
-    return () => clearInterval(timer);
-  }, [phase]);
-
   function startExam() {
-    setSeconds(0);
-    setIndex(0);
-    setAnswers({});
+    if (!config) return;
+    const built = buildExam(pool, config);
+    if (!built) return; // el botón ya está deshabilitado si no es factible
+    examService.saveExamConfig(config);
+    setExamQuestions(built.questions);
     setPhase("running");
   }
 
-  function selectOption(questionId: string, optionId: string) {
-    setAnswers((prev) => ({ ...prev, [questionId]: { optionId } }));
-  }
-
-  function setOpenAnswer(questionId: string, text: string) {
-    setAnswers((prev) => ({ ...prev, [questionId]: { openText: text } }));
-  }
-
-  async function finishExam() {
+  async function handleSubmit({ answers, seconds, timedOut }: { answers: examService.AnswerMap; seconds: number; timedOut: boolean }) {
+    if (!config) return;
     setSubmitting(true);
-    const attempts: QuestionAttempt[] = questions.map((q) => {
-      const answer = answers[q.id];
-      const isCorrect =
-        q.type === "abierta"
-          ? (answer?.openText?.trim().length ?? 0) > 8
-          : answer?.optionId === q.correctOptionId;
-      return {
-        questionId: q.id,
-        selectedOptionId: answer?.optionId,
-        openAnswerText: answer?.openText,
-        isCorrect,
-      };
-    });
+    try {
+      const attempts = examService.buildAttempts(examQuestions, answers);
+      const result = examService.gradeExam({ questions: examQuestions, attempts, config, durationSeconds: seconds, timedOut, summary });
 
-    const result = examService.gradeExam(questions, attempts, seconds);
-    await studyService.incrementExamsCompleted(topic.id);
-    const blended = Math.min(100, Math.round(topic.mastery * 0.35 + result.scorePercent * 0.65));
-    await studyService.updateTopicMastery(topic.id, blended);
+      // Cada pregunta queda marcada para el modo estudio: acertada o por repasar
+      const updates: StatusMap = {};
+      attempts.forEach((a) => (updates[a.questionId] = a.isCorrect ? "known" : "review"));
+      setStatuses(topic.id, updates);
 
-    navigate(`/study/${topic.id}/results`, {
-      state: { result, questions, attempts },
-    });
+      await studyService.incrementExamsCompleted(topic.id);
+      const blended = Math.min(100, Math.round(topic.mastery * 0.35 + result.scorePercent * 0.65));
+      const updated = await studyService.updateTopicMastery(topic.id, blended);
+      if (updated) setTopic(updated);
+
+      const stored = { result, questions: examQuestions, attempts };
+      examService.saveLastResult(stored);
+      navigate(`/study/${topic.id}/results`, { state: stored });
+    } catch {
+      setSubmitting(false);
+      setPhase("error");
+    }
   }
 
   if (phase === "loading") return <LoadingState message="Preparando tu prueba..." />;
   if (phase === "error" || !config) return <ErrorState onRetry={load} />;
-
-  if (phase === "intro") {
-    return (
-      <Card className="exam-intro-card">
-        <div className="exam-intro-icon">
-          <ClipboardCheck size={26} />
-        </div>
-        <h2>Prueba de conocimientos</h2>
-        <p className="text-muted" style={{ marginTop: 6 }}>
-          {topic.title}
-        </p>
-
-        <div className="exam-intro-meta">
-          <div className="exam-intro-meta-item">
-            <strong>{config.questionCount}</strong>
-            <span>preguntas</span>
-          </div>
-          <div className="exam-intro-meta-item">
-            <strong>{difficultyLabel(config.difficulty)}</strong>
-            <span>dificultad</span>
-          </div>
-          <div className="exam-intro-meta-item">
-            <strong>{config.estimatedMinutes} min</strong>
-            <span>estimado</span>
-          </div>
-        </div>
-
-        <Button size="lg" onClick={startExam}>
-          Comenzar prueba
-        </Button>
-      </Card>
-    );
+  if (pool.length === 0) {
+    return <EmptyState title="Este tema aún no tiene preguntas" description="Cuando la IA genere preguntas para el tema, podrás configurar una prueba." />;
   }
 
-  const current = questions[index];
-  const currentAnswer = answers[current.id];
-  const progressPercent = Math.round(((index + 1) / questions.length) * 100);
+  if (phase === "running") {
+    return <ExamRunner topicTitle={topic.title} questions={examQuestions} config={config} submitting={submitting} onSubmit={handleSubmit} onExit={() => setPhase("config")} />;
+  }
 
-  return (
-    <div className="questions-shell">
-      <div className="questions-top-row">
-        <span>Prueba de conocimientos</span>
-        <span className="exam-timer">{formatSeconds(seconds)}</span>
-      </div>
-      <div className="questions-progress-bar" style={{ marginBottom: 22 }}>
-        <div className="progress-track">
-          <div className="progress-fill" style={{ width: `${progressPercent}%` }} />
-        </div>
-      </div>
-
-      <ExamQuestion
-        question={current}
-        index={index}
-        total={questions.length}
-        selectedOptionId={currentAnswer?.optionId}
-        openAnswerText={currentAnswer?.openText}
-        onSelectOption={(optionId) => selectOption(current.id, optionId)}
-        onChangeOpenAnswer={(text) => setOpenAnswer(current.id, text)}
-      />
-
-      <div className="question-nav-row">
-        <Button variant="secondary" disabled={index === 0} onClick={() => setIndex((i) => i - 1)}>
-          <ChevronLeft size={15} />
-          Anterior
-        </Button>
-        {index + 1 < questions.length ? (
-          <Button onClick={() => setIndex((i) => i + 1)}>
-            Siguiente
-            <ChevronRight size={15} />
-          </Button>
-        ) : (
-          <Button onClick={finishExam} loading={submitting}>
-            Finalizar prueba
-          </Button>
-        )}
-      </div>
-    </div>
-  );
+  return <ExamConfigurator topicTitle={topic.title} pool={pool} config={config} onChange={setConfig} onStart={startExam} />;
 }

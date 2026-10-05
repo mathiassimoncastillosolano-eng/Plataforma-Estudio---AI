@@ -1,0 +1,188 @@
+/* ==========================================================================
+   CURSA — Temas: modo (claro/oscuro) × acento (azul/morado)
+   --------------------------------------------------------------------------
+   <html data-theme="light|dark" data-accent="blue|purple">
+
+   Cuatro combinaciones, todas definidas SOLO con tokens semánticos:
+     LIGHT + PURPLE  → tokens.css  (identidad original)
+     DARK  + PURPLE  → dark.css    (identidad original)
+     LIGHT + BLUE    → este archivo
+     DARK  + BLUE    → este archivo
+
+   Ningún componente conoce el color del acento: todos consumen --color-primary*,
+   --color-accent*, --color-surface*, etc. Cambiar de combinación no requiere
+   tocar ni un componente.
+
+   Se carga DESPUÉS de tokens.css y dark.css. Los selectores combinan
+   data-accent + data-theme (especificidad 0,3,0) para ganar siempre.
+   ========================================================================== */
+
+/* ---------- Tokens auxiliares: valores por defecto (acento morado) ---------- */
+:root {
+  --hero-btn-ink: #3a33b8;
+  --hero-btn-ink-hover: #2f28a3;
+  --hero-btn-bg-hover: #f3f2ff;
+  --chip-tint-a: #e6e8ff;
+  --chip-tint-b: #f1ebff;
+  --chip-ink-b: #5b32d6;
+  --chip-track: #e3e1f3;
+  --chip-muted: #4c4b70;
+  --meta-theme-color: #f5f4fb;
+}
+:root[data-theme="dark"] {
+  --meta-theme-color: #0f0e20;
+}
+
+/* ==========================================================================
+   AZUL · CLARO
+   Fondos claros fríos, superficies blancas, azul de acento y tinta azulada.
+   ========================================================================== */
+:root[data-accent="blue"][data-theme="light"] {
+  color-scheme: light;
+
+  --color-bg: #f3f6fc;
+  --color-surface: #ffffff;
+  --color-surface-elevated: #ffffff;
+  --color-surface-sunken: #e9eef8;
+  --color-surface-interactive: #eef3fb;
+  --color-surface-active: #dde9ff;
+  --bg-glow-1: rgba(37, 99, 235, 0.07);
+  --bg-glow-2: rgba(56, 189, 248, 0.05);
+  --shimmer: rgba(255, 255, 255, 0.75);
+  --hero-grad: linear-gradient(135deg, #1d4ed8 0%, #2563eb 60%, #3b7bf0 100%);
+
+  --color-border: #dde5f2;
+  --color-border-strong: #c0cde3;
+
+  --color-text: #0e1a33;
+  --color-text-secondary: #38486a;
+  --color-text-muted: #55657f;
+  --color-text-on-primary: #ffffff;
+
+  --color-primary: #2563eb;
+  --color-primary-solid: #2563eb;
+  --color-primary-hover: #1d4ed8;
+  --color-primary-tint: #e8f0ff;
+  --color-primary-mid: #c9dcff;
+  --color-primary-ink: #1e40af;
+
+  --color-accent: #0284c7;
+  --color-accent-tint: #e3f3fc;
+  --color-accent-ink: #075985;
+
+  --color-neutral: #5d6d88;
+  --color-disabled-bg: #e8edf6;
+  --color-disabled-text: #8895ad;
+  --color-focus: #2563eb;
+
+  --sidebar-bg: #ffffff;
+  --color-header-bg: rgba(243, 246, 252, 0.86);
+  --color-scrim: rgba(10, 22, 48, 0.5);
+  --color-tooltip-bg: #0e1a33;
+
+  --chart-1: #2563eb;
+  --chart-2: #14b8a6;
+  --chart-grid: #e1e8f4;
+  --chart-axis: #55657f;
+
+  --shadow-xs: 0 1px 2px rgba(15, 35, 90, 0.05);
+  --shadow-sm: 0 1px 3px rgba(15, 35, 90, 0.07), 0 1px 2px rgba(15, 35, 90, 0.04);
+  --shadow-md: 0 6px 18px rgba(15, 35, 90, 0.09);
+  --shadow-lg: 0 18px 44px rgba(15, 35, 90, 0.16);
+  --shadow-primary: 0 6px 16px rgba(37, 99, 235, 0.26);
+
+  --hero-btn-ink: #1e40af;
+  --hero-btn-ink-hover: #1a3794;
+  --hero-btn-bg-hover: #eef4ff;
+  --chip-tint-a: #e1ecff;
+  --chip-tint-b: #e0f2fe;
+  --chip-ink-b: #075985;
+  --chip-track: #dbe5f4;
+  --chip-muted: #455571;
+  --meta-theme-color: #f3f6fc;
+}
+
+/* ==========================================================================
+   AZUL · OSCURO
+   Marino muy oscuro, superficies azuladas, bordes discretos, azul de acento.
+   ========================================================================== */
+:root[data-accent="blue"][data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-bg: #070d1b;
+  --color-surface: #0d1628;
+  --color-surface-elevated: #132039;
+  --color-surface-sunken: #091122;
+  --color-surface-interactive: #182843;
+  --color-surface-active: #1d3358;
+  --bg-glow-1: rgba(59, 130, 246, 0.10);
+  --bg-glow-2: rgba(56, 189, 248, 0.05);
+  --shimmer: rgba(255, 255, 255, 0.06);
+  --hero-grad: linear-gradient(135deg, #14306a 0%, #1a418c 60%, #1f4fa6 100%);
+
+  --color-border: #1c2b47;
+  --color-border-strong: #2e4166;
+
+  --color-text: #e8eefb;
+  --color-text-secondary: #c0cce3;
+  --color-text-muted: #8c9dbd;
+  --color-text-on-primary: #ffffff;
+
+  --color-primary: #6aa8ff;
+  --color-primary-solid: #2f6fe0;
+  --color-primary-hover: #4382ee;
+  --color-primary-tint: rgba(79, 140, 255, 0.15);
+  --color-primary-mid: rgba(79, 140, 255, 0.34);
+  --color-primary-ink: #9cc4ff;
+
+  --color-accent: #4cc2f5;
+  --color-accent-tint: rgba(76, 194, 245, 0.13);
+  --color-accent-ink: #8bd8f9;
+
+  --color-neutral: #8c9dbd;
+  --color-disabled-bg: #15233b;
+  --color-disabled-text: #64769a;
+  --color-focus: #8dbaff;
+
+  --sidebar-bg: #0a1223;
+  --color-header-bg: rgba(7, 13, 27, 0.82);
+  --color-scrim: rgba(2, 6, 18, 0.7);
+  --color-tooltip-bg: #26406b;
+
+  --chart-1: #6aa8ff;
+  --chart-2: #2dd4bf;
+  --chart-grid: #1c2b47;
+  --chart-axis: #8c9dbd;
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.42), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 8px 22px rgba(0, 0, 0, 0.42);
+  --shadow-lg: 0 20px 48px rgba(0, 0, 0, 0.58);
+  --shadow-primary: 0 6px 18px rgba(47, 111, 224, 0.38);
+
+  --hero-btn-ink: #1e40af;
+  --hero-btn-ink-hover: #1a3794;
+  --hero-btn-bg-hover: #eef4ff;
+  --chip-tint-a: #e1ecff;
+  --chip-tint-b: #e0f2fe;
+  --chip-ink-b: #075985;
+  --chip-track: #dbe5f4;
+  --chip-muted: #455571;
+  --meta-theme-color: #070d1b;
+}
+
+:root[data-accent="blue"][data-theme="dark"] ::selection {
+  background: rgba(79, 140, 255, 0.4);
+}
+:root[data-accent="blue"][data-theme="dark"] .input::placeholder,
+:root[data-accent="blue"][data-theme="dark"] .textarea::placeholder {
+  color: #70829f;
+}
+
+/* Cambio de tema fluido: solo colores, y únicamente mientras se alterna */
+:root.theme-switching *,
+:root.theme-switching *::before,
+:root.theme-switching *::after {
+  transition: background-color 220ms var(--ease-out), border-color 220ms var(--ease-out), color 220ms var(--ease-out),
+    fill 220ms var(--ease-out), stroke 220ms var(--ease-out), box-shadow 220ms var(--ease-out) !important;
+}

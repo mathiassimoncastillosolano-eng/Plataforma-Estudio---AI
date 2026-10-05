@@ -1,8 +1,8 @@
-import type { MindMap, StudyQuestion, TopicSummary } from "../types";
+import type { KeyConcept, MindMap, StudyQuestion, TopicSummary } from "../types";
 import { summaries } from "../data/summaries";
 import { getQuestionsForTopic } from "../data/questions";
 import { mindmaps, buildFallbackMindMap } from "../data/mindmaps";
-import { mockDelay, randomId } from "../utils/mockDelay";
+import { mockDelay } from "../utils/mockDelay";
 
 // -----------------------------------------------------------------------
 // Servicio de Inteligencia Artificial (simulado).
@@ -56,36 +56,40 @@ export async function generateCompleteSummary(topicId: string, title = "este tem
 }
 
 function buildGenericQuestions(topicId: string, title: string): StudyQuestion[] {
-  return [
-    {
-      id: randomId("q"),
-      topicId,
-      prompt: `¿Cuál de las siguientes opciones describe mejor la idea central de "${title}"?`,
-      type: "opcion-multiple",
-      difficulty: "facil",
-      options: [
-        { id: "a", label: "La idea principal identificada por la IA" },
-        { id: "b", label: "Un concepto no relacionado" },
-        { id: "c", label: "Un dato secundario" },
-        { id: "d", label: "Ninguna de las anteriores" },
-      ],
-      correctOptionId: "a",
-      explanation: "Esta pregunta se genera automáticamente a partir del contenido que proporcionaste.",
-    },
-    {
-      id: randomId("q"),
-      topicId,
-      prompt: `El material sobre "${title}" incluye al menos un concepto fundamental.`,
-      type: "verdadero-falso",
-      difficulty: "facil",
-      options: [
-        { id: "v", label: "Verdadero" },
-        { id: "f", label: "Falso" },
-      ],
-      correctOptionId: "v",
-      explanation: "Todo contenido analizado produce al menos un concepto fundamental identificado por la IA.",
-    },
+  // Banco mock para temas creados por el usuario: 12 preguntas (4 fáciles,
+  // 5 medias, 3 difíciles) con ids estables para poder registrar su estado.
+  const specs: Array<[StudyQuestion["difficulty"], string, string, string]> = [
+    ["facil", `¿Cuál describe mejor la idea central de "${title}"?`, "La idea principal identificada en el material", "Un detalle sin relación con el tema"],
+    ["facil", `¿Qué se espera lograr al estudiar "${title}"?`, "Comprender sus conceptos fundamentales", "Memorizar sin entender"],
+    ["facil", `¿Dónde conviene empezar para estudiar "${title}"?`, "Por el resumen esencial", "Por los detalles más específicos"],
+    ["facil", `¿Qué tipo de contenido organiza "${title}"?`, "Conceptos, definiciones y relaciones", "Únicamente fechas"],
+    ["media", `¿Cómo se relacionan los conceptos principales de "${title}"?`, "Se apoyan entre sí para formar una visión general", "Son completamente independientes"],
+    ["media", `¿Qué aporta el mapa conceptual de "${title}"?`, "Una vista de cómo se conectan las ideas", "Una lista alfabética de términos"],
+    ["media", `¿Para qué sirven las preguntas de práctica de "${title}"?`, "Para detectar qué conceptos aún no dominas", "Para reemplazar la lectura del resumen"],
+    ["media", `¿Qué conviene hacer tras fallar una pregunta sobre "${title}"?`, "Leer la explicación y repasar el concepto", "Ignorarla y continuar"],
+    ["media", `¿Qué diferencia un concepto fundamental de uno secundario en "${title}"?`, "El fundamental sostiene la comprensión de los demás", "El secundario siempre es más importante"],
+    ["dificil", `¿Qué estrategia consolida mejor lo aprendido sobre "${title}"?`, "Combinar lectura, práctica y autoevaluación", "Releer el mismo párrafo muchas veces"],
+    ["dificil", `¿Qué indica un dominio alto en "${title}"?`, "Aciertos sostenidos, incluso en preguntas difíciles", "Haber respondido una sola pregunta"],
+    ["dificil", `Ante un error repetido en "${title}", ¿qué es lo más efectivo?`, "Identificar el concepto de fondo y reforzarlo", "Cambiar de tema inmediatamente"],
   ];
+  return specs.map(([difficulty, prompt, right, wrong], i) => {
+    const correctFirst = i % 2 === 0;
+    return {
+      id: `${topicId}-g${i + 1}`,
+      topicId,
+      prompt,
+      type: "opcion-multiple" as const,
+      difficulty,
+      options: [
+        { id: "a", label: correctFirst ? right : wrong },
+        { id: "b", label: correctFirst ? wrong : right },
+        { id: "c", label: "Ninguna de las anteriores" },
+        { id: "d", label: "Todas las anteriores" },
+      ],
+      correctOptionId: correctFirst ? "a" : "b",
+      explanation: "Pregunta de ejemplo generada automáticamente. Con tu material real, la IA generará preguntas específicas del contenido.",
+    };
+  });
 }
 
 export async function generateQuestions(topicId: string, title = "este tema"): Promise<StudyQuestion[]> {
@@ -108,6 +112,12 @@ export async function generateMindMap(topicId: string, title = "Tema"): Promise<
       ];
 
   return mockDelay(buildFallbackMindMap(topicId, title, concepts), 900);
+}
+
+/** Conceptos clave del tema (resumen) — alimenta "Conceptos relacionados". */
+export async function getTopicConcepts(topicId: string, title = "este tema"): Promise<{ concepts: KeyConcept[]; summary: TopicSummary }> {
+  const summary = summaries[topicId] ?? buildGenericSummary(topicId, title);
+  return mockDelay({ concepts: summary.essential.keyConcepts, summary }, 250);
 }
 
 export interface ProcessingStep {

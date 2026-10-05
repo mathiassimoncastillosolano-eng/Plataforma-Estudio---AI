@@ -82,11 +82,11 @@ export default function ProgressPage() {
           <p>Promedio de dominio a lo largo del tiempo, en todos tus temas.</p>
           <ResponsiveContainer width="100%" height={260}>
             <LineChart data={evolution}>
-              <CartesianGrid stroke="#eef2f7" vertical={false} />
-              <XAxis dataKey="date" tick={{ fontSize: 12, fill: "#64748b" }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 12, fill: "#64748b" }} axisLine={false} tickLine={false} domain={[0, 100]} />
-              <Tooltip contentStyle={{ borderRadius: 8, borderColor: "#e3e8ef", fontSize: 13 }} />
-              <Line type="monotone" dataKey="masteryAverage" stroke="#2563eb" strokeWidth={2.5} dot={false} name="Dominio %" />
+              <CartesianGrid stroke="var(--chart-grid)" vertical={false} />
+              <XAxis dataKey="date" tick={{ fontSize: 12, fill: "var(--chart-axis)" }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 12, fill: "var(--chart-axis)" }} axisLine={false} tickLine={false} domain={[0, 100]} />
+              <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid var(--color-border)", background: "var(--color-surface-elevated)", color: "var(--color-text)", boxShadow: "var(--shadow-md)", fontSize: 13 }} cursor={{ fill: "var(--color-primary-tint)" }} />
+              <Line type="monotone" dataKey="masteryAverage" stroke="var(--chart-1)" strokeWidth={3} dot={false} name="Dominio %" />
             </LineChart>
           </ResponsiveContainer>
         </Card>
@@ -116,11 +116,11 @@ export default function ProgressPage() {
           <p>Tu constancia practicando preguntas.</p>
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={weekly}>
-              <CartesianGrid stroke="#eef2f7" vertical={false} />
-              <XAxis dataKey="week" tick={{ fontSize: 12, fill: "#64748b" }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 12, fill: "#64748b" }} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={{ borderRadius: 8, borderColor: "#e3e8ef", fontSize: 13 }} />
-              <Bar dataKey="answered" fill="#2563eb" radius={[4, 4, 0, 0]} name="Preguntas" />
+              <CartesianGrid stroke="var(--chart-grid)" vertical={false} />
+              <XAxis dataKey="week" tick={{ fontSize: 12, fill: "var(--chart-axis)" }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 12, fill: "var(--chart-axis)" }} axisLine={false} tickLine={false} />
+              <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid var(--color-border)", background: "var(--color-surface-elevated)", color: "var(--color-text)", boxShadow: "var(--shadow-md)", fontSize: 13 }} cursor={{ fill: "var(--color-primary-tint)" }} />
+              <Bar dataKey="answered" fill="var(--chart-1)" radius={[6, 6, 0, 0]} name="Preguntas" />
             </BarChart>
           </ResponsiveContainer>
         </Card>

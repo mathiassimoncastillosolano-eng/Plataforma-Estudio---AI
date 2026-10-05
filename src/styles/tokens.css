@@ -1,50 +1,147 @@
+/* ==========================================================================
+   CURSA — Design System · Tokens
+   --------------------------------------------------------------------------
+   Capas:
+   1. Primitivos de marca   (paleta cruda: índigo, violeta, teal, ámbar…)
+   2. Tokens semánticos     (lo que consumen los componentes)
+   3. Tipografía · Espaciado · Radios · Sombras · Motion · Layout
+   4. Base global + utilidades de motion (reveal / stagger / shimmer)
+
+   Modo oscuro: dark.css redefine SOLO los tokens semánticos.
+   Regla: ningún componente usa un color hexadecimal propio; todo sale de aquí.
+   ========================================================================== */
 :root {
-  /* ---------- Brand palette (from brief) ---------- */
-  --navy: #172b4d;
-  --blue: #2563eb;
-  --blue-light: #eff6ff;
+  color-scheme: light;
+
+  /* ---------- 1 · Primitivos de marca ---------- */
+  --ink-900: #1a1938; /* tinta profunda (nunca negro puro) */
+  --indigo-50: #eef0ff;
+  --indigo-100: #e0e4ff;
+  --indigo-200: #c7cdff;
+  --indigo-500: #5b5ff0;
+  --indigo-600: #4f46e5;
+  --indigo-700: #4338ca;
+  --violet-500: #8b5cf6;
+  --teal-500: #14b8a6;
+  --amber-500: #f59e0b;
+
+  /* Alias heredados (se mantienen para no romper estilos inline existentes) */
+  --navy: var(--ink-900);
   --white: #ffffff;
-  --bg: #f8fafc;
-  --text-muted: #64748b;
-  --green: #22c55e;
-  --amber: #f59e0b;
-  --red: #ef4444;
+  --blue: var(--color-primary);
+  --blue-light: var(--color-primary-tint);
+  --bg: var(--color-bg);
+  --text-muted: var(--color-text-muted);
+  --green: var(--color-success);
+  --amber: var(--color-warning);
+  --red: var(--color-danger);
 
-  /* ---------- Semantic tokens ---------- */
-  --color-bg: var(--bg);
-  --color-surface: var(--white);
-  --color-surface-sunken: #f1f5f9;
-  --color-border: #e6eaf1;
-  --color-border-strong: #d7dee8;
-  --color-text: var(--navy);
-  --color-text-secondary: #475569;
-  --color-text-muted: var(--text-muted);
-  --color-primary: var(--blue);
-  --color-primary-hover: #1d4ed8;
-  --color-primary-tint: var(--blue-light);
-  --color-primary-mid: #dbeafe;
-  --color-success: var(--green);
-  --color-success-tint: #ecfdf3;
-  --color-warning: var(--amber);
-  --color-warning-tint: #fffbeb;
-  --color-danger: var(--red);
-  --color-danger-tint: #fef2f2;
+  /* ---------- 2 · Tokens semánticos ---------- */
+  /* Superficies — jerarquía de 5 niveles */
+  --color-bg: #f5f4fb; /* lienzo */
+  --color-surface: #ffffff; /* superficie base */
+  --color-surface-elevated: #ffffff; /* menús, modales */
+  --color-surface-sunken: #eeecf7; /* campos, pistas, fondos hundidos */
+  --color-surface-interactive: #f1f0fb; /* hover de filas / ítems */
+  --color-surface-active: #e6e8ff; /* ítem seleccionado */
+  --bg-glow-1: rgba(99, 102, 241, 0.13);
+  --bg-glow-2: rgba(139, 92, 246, 0.1);
+  --shimmer: rgba(255, 255, 255, 0.75);
+  --hero-grad: linear-gradient(135deg, #3a30cf 0%, #5237d9 52%, #6f45ec 100%);
+  --hero-on: #ffffff;
+  --hero-on-muted: rgba(255, 255, 255, 0.82);
+  --hero-glass: rgba(255, 255, 255, 0.16);
+  --hero-glass-border: rgba(255, 255, 255, 0.28);
 
-  /* ---------- Typography ---------- */
-  --font-display: "Plus Jakarta Sans", "Inter", -apple-system, sans-serif;
-  --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  /* Bordes */
+  --color-border: #e3e1f0;
+  --color-border-strong: #c9c6de;
+
+  /* Texto (todos ≥ 4.5:1 sobre surface y bg) */
+  --color-text: #1a1938;
+  --color-text-secondary: #46456a;
+  --color-text-muted: #5f5e82;
+  --color-text-on-primary: #ffffff;
+
+  /* Primario — identidad CURSA */
+  --color-primary: #4f46e5; /* texto, iconos, bordes activos */
+  --color-primary-solid: #4f46e5; /* relleno de botones (texto blanco encima) */
+  --color-primary-hover: #4338ca;
+  --color-primary-tint: #eef0ff;
+  --color-primary-mid: #d9ddff;
+  --color-primary-ink: #3a33b8; /* texto sobre tint */
+
+  /* Acento IA / logros (violeta sutil) */
+  --color-accent: #7c4dff;
+  --color-accent-tint: #f1ebff;
+  --color-accent-ink: #5b32d6;
+
+  /* Estados */
+  --color-success: #0f9f6e;
+  --color-success-tint: #e4f7ee;
+  --color-success-ink: #0b6b4a;
+  --color-warning: #d98306;
+  --color-warning-tint: #fff3dc;
+  --color-warning-ink: #8a5206;
+  --color-danger: #d93a3a;
+  --color-danger-tint: #fdecec;
+  --color-danger-ink: #a62323;
+  --color-info: var(--color-primary);
+  --color-info-tint: var(--color-primary-tint);
+  --color-info-ink: var(--color-primary-ink);
+  --color-neutral: #6a6988;
+  --color-active: var(--color-primary);
+  --color-disabled-bg: #ebeaf3;
+  --color-disabled-text: #8d8ca6;
+  --color-focus: #4f46e5;
+
+  /* Navegación */
+  --sidebar-bg: #ffffff;
+  --sidebar-border: var(--color-border);
+  --color-header-bg: rgba(245, 244, 251, 0.82);
+  --color-scrim: rgba(26, 25, 56, 0.5);
+  --color-tooltip-bg: #1a1938;
+  --color-tooltip-text: #ffffff;
+
+  /* Gráficos */
+  --chart-1: #4f46e5;
+  --chart-2: #14b8a6;
+  --chart-grid: #e6e4f2;
+  --chart-axis: #5f5e82;
+
+  /* ---------- 3 · Tipografía ---------- */
+  --font-display: "Bricolage Grotesque", "Figtree", -apple-system, "Segoe UI", sans-serif;
+  --font-body: "Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", monospace;
 
-  --text-xs: 12px;
-  --text-sm: 13px;
-  --text-base: 14.5px;
-  --text-md: 15.5px;
-  --text-lg: 18px;
-  --text-xl: 22px;
-  --text-2xl: 26px;
-  --text-3xl: 32px;
+  /* Escala: Display · Heading · Body · Caption · Label */
+  --fs-display: clamp(1.875rem, 1.45rem + 1.6vw, 2.75rem); /* hero / login */
+  --fs-score: 3.5rem; /* cifra de resultados */
+  --fs-heading-1: 1.75rem; /* título de página */
+  --fs-heading-2: 1.25rem; /* título de sección */
+  --fs-heading-3: 1.0625rem; /* título de tarjeta */
+  --fs-body: 0.9375rem; /* texto base 15px */
+  --fs-body-sm: 0.875rem; /* 14px */
+  --fs-caption: 0.8125rem; /* 13px */
+  --fs-label: 0.8125rem; /* 13px · 600 */
+  --fs-micro: 0.75rem; /* 12px — mínimo absoluto */
+  --fs-stat: 1.875rem; /* cifras destacadas */
 
-  /* ---------- Spacing scale ---------- */
+  --lh-tight: 1.2;
+  --lh-snug: 1.4;
+  --lh-body: 1.6;
+
+  /* Alias heredados de tamaño */
+  --text-xs: var(--fs-micro);
+  --text-sm: var(--fs-caption);
+  --text-base: var(--fs-body);
+  --text-md: 1rem;
+  --text-lg: var(--fs-heading-3);
+  --text-xl: var(--fs-heading-2);
+  --text-2xl: var(--fs-heading-1);
+  --text-3xl: 2rem;
+
+  /* ---------- Espaciado (base 4) ---------- */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -54,40 +151,50 @@
   --space-7: 32px;
   --space-8: 40px;
   --space-9: 56px;
+  --space-10: 72px;
 
-  /* ---------- Radius scale ---------- */
-  --radius-xs: 6px;
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
+  /* ---------- Radios ---------- */
+  --radius-xs: 8px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
   --radius-full: 999px;
 
-  /* ---------- Shadow system (soft, low-elevation — premium not heavy) ---------- */
-  --shadow-xs: 0 1px 2px rgba(23, 43, 77, 0.04);
-  --shadow-sm: 0 1px 3px rgba(23, 43, 77, 0.06), 0 1px 2px rgba(23, 43, 77, 0.04);
-  --shadow-md: 0 4px 14px rgba(23, 43, 77, 0.08);
-  --shadow-lg: 0 12px 32px rgba(23, 43, 77, 0.12);
+  /* ---------- Sombras (teñidas de índigo, bajas) ---------- */
+  --shadow-xs: 0 1px 2px rgba(40, 38, 100, 0.05);
+  --shadow-sm: 0 1px 3px rgba(40, 38, 100, 0.07), 0 1px 2px rgba(40, 38, 100, 0.04);
+  --shadow-md: 0 6px 18px rgba(40, 38, 100, 0.09);
+  --shadow-lg: 0 18px 44px rgba(40, 38, 100, 0.16);
+  --shadow-primary: 0 6px 16px rgba(79, 70, 229, 0.28);
   --shadow-focus: 0 0 0 3px var(--color-primary-mid);
+
+  /* ---------- Bordes ---------- */
+  --border-width: 1px;
+  --border-width-field: 1.5px;
 
   /* ---------- Motion ---------- */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
-  --duration-fast: 120ms;
-  --duration-base: 180ms;
-  --duration-slow: 280ms;
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --motion-micro: 140ms; /* hover, focus, iconos            100–180 */
+  --motion-standard: 240ms; /* tarjetas, botones, componentes 200–300 */
+  --motion-page: 420ms; /* transiciones de vista          300–500 */
+  --motion-emphasis: 700ms; /* momentos especiales            500–800 */
+  --stagger-step: 55ms;
+
+  /* Alias heredados */
+  --duration-fast: var(--motion-micro);
+  --duration-base: var(--motion-standard);
+  --duration-slow: var(--motion-page);
 
   /* ---------- Layout ---------- */
-  --sidebar-w: 252px;
-  --sidebar-w-collapsed: 76px;
-  --header-h: 68px;
-  --content-max: 1180px;
+  --sidebar-w: 264px;
+  --sidebar-w-collapsed: 84px;
+  --header-h: 72px;
+  --content-max: 1200px;
 
-  /* ---------- Theme-sensitive surfaces (overridden in dark.css) ---------- */
-  --sidebar-bg: var(--navy);
-  --color-header-bg: rgba(255, 255, 255, 0.92);
-
-  /* legacy aliases kept for backwards compatibility across the codebase */
+  /* Alias heredados */
   --border: var(--color-border);
   --border-strong: var(--color-border-strong);
   --text: var(--color-text);
@@ -100,6 +207,9 @@
   --shadow-pop: var(--shadow-lg);
 }
 
+/* ==========================================================================
+   4 · Base global
+   ========================================================================== */
 * {
   box-sizing: border-box;
 }
@@ -111,14 +221,17 @@ body {
 }
 
 body {
-  background: var(--color-bg);
+  background-color: var(--color-bg);
+  background-image: radial-gradient(900px 480px at 6% -8%, var(--bg-glow-1), transparent 65%),
+    radial-gradient(760px 420px at 100% -4%, var(--bg-glow-2), transparent 60%);
+  background-repeat: no-repeat;
   color: var(--color-text);
   font-family: var(--font-body);
-  font-size: var(--text-base);
-  line-height: 1.55;
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  transition: background-color var(--duration-slow) var(--ease-out), color var(--duration-slow) var(--ease-out);
+  transition: background-color var(--motion-page) var(--ease-out), color var(--motion-page) var(--ease-out);
 }
 
 h1,
@@ -129,8 +242,17 @@ h4 {
   color: var(--color-text);
   margin: 0;
   font-weight: 700;
-  letter-spacing: -0.015em;
-  line-height: 1.25;
+  letter-spacing: -0.02em;
+  line-height: var(--lh-tight);
+}
+h1 {
+  font-size: var(--fs-heading-1);
+}
+h2 {
+  font-size: var(--fs-heading-2);
+}
+h3 {
+  font-size: var(--fs-heading-3);
 }
 
 p {
@@ -158,9 +280,9 @@ img {
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: 2px solid var(--color-focus);
   outline-offset: 2px;
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
 ::selection {
@@ -171,21 +293,106 @@ img {
   font-family: var(--font-mono);
 }
 
-/* ---------- Page transition ---------- */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Etiqueta pequeña sobre un título ("eyebrow") */
+.eyebrow {
+  font-size: var(--fs-micro);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+}
+
+/* ==========================================================================
+   Motion — keyframes y utilidades (solo transform + opacity)
+   ========================================================================== */
 @keyframes page-fade-in {
   from {
     opacity: 0;
-    transform: translateY(4px);
+    transform: translateY(10px) scale(0.995);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.page-transition {
+  animation: page-fade-in var(--motion-page) var(--ease-out) both;
+}
+
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
-.page-transition {
-  animation: page-fade-in var(--duration-slow) var(--ease-out);
+@keyframes reveal-scale {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
-
+@keyframes reveal-left {
+  from {
+    opacity: 0;
+    transform: translateX(-14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@keyframes grow-x {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+@keyframes pop-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes float-soft {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
 @keyframes spin {
   to {
     transform: rotate(360deg);
@@ -195,12 +402,35 @@ img {
   animation: spin 0.85s linear infinite;
 }
 
+/* Aparición escalonada: título → descripción → contenido → acciones.
+   Uso: <section class="stagger"> y los hijos directos entran en cascada. */
+.reveal {
+  animation: reveal-up var(--motion-page) var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * var(--stagger-step));
+}
+.stagger > * {
+  animation: reveal-up var(--motion-page) var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * var(--stagger-step));
+}
+.stagger > :nth-child(1) { --i: 0; }
+.stagger > :nth-child(2) { --i: 1; }
+.stagger > :nth-child(3) { --i: 2; }
+.stagger > :nth-child(4) { --i: 3; }
+.stagger > :nth-child(5) { --i: 4; }
+.stagger > :nth-child(6) { --i: 5; }
+.stagger > :nth-child(7) { --i: 6; }
+.stagger > :nth-child(8) { --i: 7; }
+.stagger > :nth-child(n + 9) { --i: 8; }
+
+/* Accesibilidad: sin movimiento si el sistema lo pide */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     animation-duration: 0.001ms !important;
+    animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
   }
 }

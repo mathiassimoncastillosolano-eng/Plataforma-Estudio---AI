@@ -1,11 +1,12 @@
 import type { ExamConfig } from "../types";
 
+/** Configuración inicial sugerida para cada tema (el usuario la puede cambiar). */
 export const defaultExamConfigs: Record<string, ExamConfig> = {
-  "1": { topicId: "1", questionCount: 8, difficulty: "mixta", estimatedMinutes: 10 },
-  "2": { topicId: "2", questionCount: 6, difficulty: "mixta", estimatedMinutes: 8 },
-  "3": { topicId: "3", questionCount: 6, difficulty: "mixta", estimatedMinutes: 8 },
-  "4": { topicId: "4", questionCount: 5, difficulty: "media", estimatedMinutes: 7 },
-  "5": { topicId: "5", questionCount: 4, difficulty: "media", estimatedMinutes: 6 },
+  "1": { topicId: "1", questionCount: 10, difficulty: "media", timeLimitMinutes: 15 },
+  "2": { topicId: "2", questionCount: 10, difficulty: "media", timeLimitMinutes: 15 },
+  "3": { topicId: "3", questionCount: 15, difficulty: "media", timeLimitMinutes: 20 },
+  "4": { topicId: "4", questionCount: 10, difficulty: "media", timeLimitMinutes: 15 },
+  "5": { topicId: "5", questionCount: 10, difficulty: "facil", timeLimitMinutes: 10 },
 };
 
 export interface PastExam {

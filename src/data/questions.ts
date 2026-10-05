@@ -1,4 +1,5 @@
 import type { StudyQuestion } from "../types";
+import { extraQuestionBank } from "./questionsExtra";
 
 export const questionBank: Record<string, StudyQuestion[]> = {
   "1": [
@@ -422,5 +423,5 @@ export const questionBank: Record<string, StudyQuestion[]> = {
 };
 
 export function getQuestionsForTopic(topicId: string): StudyQuestion[] {
-  return questionBank[topicId] ?? [];
+  return [...(questionBank[topicId] ?? []), ...(extraQuestionBank[topicId] ?? [])];
 }

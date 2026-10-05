@@ -1,13 +1,14 @@
-import { NavLink } from "react-router-dom";
-import { LayoutDashboard, BookOpen, TrendingUp, GraduationCap, X, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
+import { Link, NavLink } from "react-router-dom";
+import { LayoutDashboard, BookOpen, TrendingUp, X, Sparkles, ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
 import { useSidebar } from "../hooks/useSidebar";
+import LogoMark from "./Logo";
 
 interface SidebarProps {
   mobileOpen: boolean;
   onCloseMobile: () => void;
 }
 
-const navItems = [
+export const navItems = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/topics", label: "Mis estudios", icon: BookOpen },
   { to: "/progress", label: "Progreso", icon: TrendingUp },
@@ -25,9 +26,7 @@ export default function Sidebar({ mobileOpen, onCloseMobile }: SidebarProps) {
         </button>
 
         <div className="sidebar-brand">
-          <div className="sidebar-brand-mark">
-            <GraduationCap size={18} color="#fff" />
-          </div>
+          <LogoMark size={36} />
           <span className="sidebar-brand-name">Cursa</span>
           <button
             className="sidebar-collapse-btn hide-mobile"
@@ -40,7 +39,7 @@ export default function Sidebar({ mobileOpen, onCloseMobile }: SidebarProps) {
         </div>
 
         <span className="sidebar-section-label">Plataforma</span>
-        <nav className="sidebar-nav">
+        <nav className="sidebar-nav" aria-label="Principal">
           {navItems.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
@@ -49,7 +48,7 @@ export default function Sidebar({ mobileOpen, onCloseMobile }: SidebarProps) {
               onClick={onCloseMobile}
               aria-label={label}
             >
-              <Icon size={18} strokeWidth={2} />
+              <Icon size={19} strokeWidth={2} />
               <span>{label}</span>
               {collapsed && <span className="sidebar-tooltip">{label}</span>}
             </NavLink>
@@ -58,10 +57,16 @@ export default function Sidebar({ mobileOpen, onCloseMobile }: SidebarProps) {
 
         <div className="sidebar-spacer" />
 
-        <div className="sidebar-help-card">
-          <Sparkles size={16} color="#93c5fd" style={{ marginBottom: 8 }} />
+        <Link to="/study/new" className="sidebar-help-card" onClick={onCloseMobile}>
+          <span className="sidebar-help-icon">
+            <Sparkles size={16} />
+          </span>
           <p>Sube un PDF o pega tu contenido y deja que la IA prepare tu material de estudio.</p>
-        </div>
+          <span className="sidebar-help-cta">
+            Nuevo tema
+            <ArrowRight size={14} />
+          </span>
+        </Link>
       </aside>
     </>
   );

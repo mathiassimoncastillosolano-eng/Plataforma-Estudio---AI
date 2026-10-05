@@ -18,7 +18,7 @@ export default function StudyTopicCard({ topic }: { topic: StudyTopic }) {
       <div>
         <h3 className="topic-card-title">{topic.title}</h3>
         {topic.description && (
-          <p className="text-muted" style={{ fontSize: 12.5, marginTop: 6, lineHeight: 1.5 }}>
+          <p className="text-muted" style={{ fontSize: "var(--fs-caption)", marginTop: 6, lineHeight: 1.5 }}>
             {topic.description}
           </p>
         )}
@@ -36,18 +36,18 @@ export default function StudyTopicCard({ topic }: { topic: StudyTopic }) {
 
       <div className="topic-card-meta">
         <span className="row gap-xs">
-          <Clock size={12} />
+          <Clock size={13} aria-hidden="true" />
           {topic.lastStudiedAt}
         </span>
         <span className="row gap-xs">
-          <HelpCircle size={12} />
+          <HelpCircle size={13} aria-hidden="true" />
           {topic.questionsAnswered} preguntas
         </span>
       </div>
 
       <span className="btn btn-secondary btn-sm" style={{ justifyContent: "space-between" }}>
         Continuar estudiando
-        <ArrowRight size={15} />
+        <ArrowRight size={15} className="icon-nudge" aria-hidden="true" />
       </span>
     </Link>
   );

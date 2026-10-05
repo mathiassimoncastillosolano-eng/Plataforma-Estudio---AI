@@ -62,6 +62,37 @@ deberían cambiar al hacer la migración.
 La API Key de cualquier proveedor de IA **nunca** debe vivir en este
 frontend; en el diseño final viaja únicamente por el backend.
 
+## Remasterización UX/UI (v2)
+
+**Apariencia.** `data-theme` (claro/oscuro) × `data-accent` (azul/morado) sobre `<html>`.
+Las 4 combinaciones salen de tokens semánticos (`styles/tokens.css`, `dark.css`, `themes.css`);
+ningún componente conoce el color del acento. Azul es el valor por defecto. Se configura
+desde el botón de paleta del header o en Configuración, y persiste en `localStorage`.
+
+**Tema.** El título es un selector tipo *command menu* (buscar, cambiar conservando la pestaña,
+volver a Mis estudios). `/study/:id` redirige a Resumen (se eliminó la pantalla intermedia).
+
+**Prueba.** Configurador (10/15/20/25 preguntas · Fácil/Media/Difícil · 5–30 min o sin límite)
+con resumen en tiempo real. La lógica pura vive en `utils/examBuilder.ts`:
+- Perfiles 75/20/5 · 20/60/20 · 5/20/75 repartidos por *resto mayor* (la suma siempre es exacta).
+- Peso: fácil 0.5 · media 1 · difícil 2. Puntaje = Σ pesos acertados / Σ pesos totales.
+- Si el banco del tema no tiene suficientes preguntas de un nivel, `planExam` redistribuye hacia el
+  nivel más afín, **lo avisa en pantalla** y nunca devuelve menos preguntas de las pedidas.
+  Si el banco total no alcanza, la opción se deshabilita.
+- Modo concentración a pantalla completa (portal), temporizador por reloj real, fin automático al
+  agotarse el tiempo, atajos ← → 1-4, confirmación al salir o finalizar con omitidas.
+- Resultados: puntaje ponderado, correctas/incorrectas/omitidas, rendimiento por dificultad,
+  temas con mayor error y recomendaciones.
+
+**Preguntas.** Lista desplegable con filtros (todas, dificultad, respondidas, pendientes, por repasar),
+búsqueda y estado por pregunta persistido. La práctica guiada original sigue disponible ("Practicar").
+
+**Resumen** (lectura con índice lateral) y **Mapa conceptual** (canvas a pantalla completa con
+zoom, selección, resaltado de vecinos, expandir/contraer ramas y panel de detalle).
+
+**Datos mock.** `data/questionsExtra.ts` amplía el banco a 25 preguntas por tema (se suma al banco
+base sin modificarlo). Los temas creados por el usuario generan 12 preguntas de ejemplo.
+
 ## Funcionalidades incluidas
 
 - Login / registro mock con sesión persistida en `localStorage`.
