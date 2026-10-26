@@ -11,15 +11,16 @@ app/
 ├── configuracion/ajustes.py Única fuente de configuración (variables de entorno)
 ├── comun/                   Errores controlados y formato de respuestas
 ├── contenido/               Texto y PDF
-│   ├── enrutador.py         POST /api/contenido/extraer-pdf
+│   ├── enrutador.py         POST /api/contenido/extraer-pdf (ya no lo usa el flujo de resúmenes)
 │   ├── servicio_contenido.py  Límites de tamaño y de texto
 │   ├── extractor_pdf.py     Extracción con pypdf (en memoria)
 │   └── validacion.py        Normalización y validación del texto
 ├── resumenes/               Módulo REAL con IA
-│   ├── enrutador.py         POST /api/resumenes
+│   ├── enrutador.py         POST /api/resumenes · POST /api/resumenes/pdf · POST /api/resumenes/descargar-pdf
 │   ├── servicio_resumen.py  Caso de uso (valida → IA → analiza respuesta)
 │   ├── instrucciones.py     Instrucciones educativas enviadas a la IA
 │   ├── analizador_respuesta.py  Valida el JSON que devuelve el modelo
+│   ├── exportador_pdf.py    PDF descargable de cada resumen (ReportLab; fuentes DejaVu en fuentes/)
 │   └── dominio.py           ResumenGeneral, ResumenEsencial, ResultadoResumen
 ├── servicios_externos/
 │   ├── proveedor_ia.py      Contrato (Protocol) que usan los servicios
@@ -41,6 +42,7 @@ Copia `.env.example` a `.env` (ignorado por git).
 | `OPENAI_MODEL` | Sí | Nombre exacto del modelo. No hay valor por defecto: se cambia aquí sin tocar código. |
 | `OPENAI_TIMEOUT_SEGUNDOS` | No (45) | Espera máxima por llamada. |
 | `OPENAI_MAX_REINTENTOS` | No (1) | Reintentos automáticos ante fallos transitorios. |
+| `OPENAI_TIMEOUT_PDF_SEGUNDOS` | No (180) | Espera máxima al analizar un PDF completo. |
 | `RESUMEN_MIN_CARACTERES` / `RESUMEN_MAX_CARACTERES` | No (100 / 20000) | Límites del contenido. Deben coincidir con `frontend/src/configuracion.ts`. |
 | `PDF_MAX_BYTES` / `PDF_MAX_PAGINAS` | No (10 MB / 100) | Límites del PDF. |
 | `ORIGENES_PERMITIDOS` | No | Orígenes CORS separados por comas (por defecto `http://localhost:5173`). |
@@ -75,12 +77,31 @@ genera ambos resúmenes:
 {
   "exito": true,
   "datos": {
-    "resumen_general":  { "titulo": "", "introduccion": "", "secciones": [{ "titulo": "", "contenido": "", "puntos": [] }], "minutos_lectura": 3 },
-    "resumen_esencial": { "idea_central": "", "ideas_clave": [], "conceptos_clave": [{ "termino": "", "definicion": "" }], "minutos_lectura": 1 },
+    "resumen_general":  { "titulo": "", "introduccion": "", "secciones": [{ "titulo": "", "contenido": "", "puntos": [], "tabla": { "titulo": "", "encabezados": [], "filas": [[]] } }], "notas_de_fidelidad": [], "minutos_lectura": 3 },
+    "resumen_esencial": { "idea_central": "", "ideas_clave": [], "conceptos_clave": [{ "termino": "", "definicion": "" }], "formulas_y_reglas": [{ "nombre": "", "expresion": "", "explicacion": "" }], "notas_de_fidelidad": [], "minutos_lectura": 1 },
     "metadatos": { "modelo": "", "generado_en": "", "caracteres_entrada": 0 }
   }
 }
 ```
+
+### `POST /api/resumenes/pdf`
+
+`multipart/form-data` con `archivo` (PDF) y, opcionalmente, `titulo` e `indicaciones`
+(el mensaje del estudiante, usado como contexto). El PDF **original** se envía a OpenAI
+con la **Responses API** (`input_file`, base64 en línea, `store=false`): el modelo analiza
+texto y elementos visuales (tablas, diagramas, gráficos) sin transcribirlo antes. Se valida
+cabecera, tamaño (`PDF_MAX_BYTES`), páginas (`PDF_MAX_PAGINAS`) y que no tenga contraseña, y
+no se guarda nada. Responde igual que `POST /api/resumenes`, con `metadatos.entrada = "pdf"`
+y `metadatos.paginas`. **Requiere un modelo que admita entrada de archivos PDF**; si el
+modelo configurado no la admite responde `502 IA_PDF_NO_SOPORTADO` (nunca cambia de modelo
+por su cuenta).
+
+### `POST /api/resumenes/descargar-pdf`
+
+JSON `{ "tipo": "esencial" | "general", "titulo_tema": "...", "esencial": {...}, "general": {...} }`
+(se envía solo el resumen pedido, con el mismo formato que devuelve `/api/resumenes`).
+Devuelve `application/pdf` (adjunto). **No llama a la IA.** Un resumen vacío responde
+`422 RESUMEN_VACIO` en lugar de un archivo vacío.
 
 ### `POST /api/contenido/extraer-pdf`
 
@@ -98,6 +119,8 @@ El PDF se lee en memoria y no se guarda. El texto extraído se envía después a
 | `CONTENIDO_VACIO` / `CONTENIDO_MUY_CORTO` / `CONTENIDO_MUY_LARGO` / `CONTENIDO_INVALIDO` | 422 | Texto no utilizable |
 | `PDF_INVALIDO` / `PDF_PROTEGIDO` / `PDF_SIN_TEXTO` | 422 | PDF dañado, con contraseña o sin texto seleccionable |
 | `PDF_MUY_PESADO` | 413 | Supera `PDF_MAX_BYTES` |
+| `RESUMEN_VACIO` | 422 | Se pidió descargar un resumen sin contenido |
+| `IA_PDF_NO_SOPORTADO` | 502 | El modelo configurado no admite archivos PDF |
 | `IA_NO_CONFIGURADA` | 503 | Falta `OPENAI_API_KEY` u `OPENAI_MODEL` |
 | `IA_CREDENCIALES_INVALIDAS` / `IA_MODELO_NO_DISPONIBLE` / `IA_ERROR` / `IA_RESPUESTA_INVALIDA` | 502 | Fallo del proveedor o respuesta inesperada |
 | `IA_LIMITE_SOLICITUDES` | 429 | Límite de uso de OpenAI |

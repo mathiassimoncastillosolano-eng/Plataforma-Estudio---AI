@@ -1,14 +1,22 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Clock, HelpCircle } from "lucide-react";
+import { ArrowRight, Clock, HelpCircle, Trash2 } from "lucide-react";
 import type { TemaEstudio } from "../tipos";
 import BarraProgreso from "./BarraProgreso";
 import Insignia from "./Insignia";
 import { obtenerEstadoTema, etiquetasEstadoTema } from "../datos/temasEstudio";
 
-export default function TarjetaTemaEstudio({ tema }: { tema: TemaEstudio }) {
+interface PropsTarjetaTemaEstudio {
+  tema: TemaEstudio;
+  /** Si se indica, la tarjeta muestra un botón para eliminar ese tema (la página pide la confirmación). */
+  alEliminar?: (tema: TemaEstudio) => void;
+}
+
+export default function TarjetaTemaEstudio({ tema, alEliminar }: PropsTarjetaTemaEstudio) {
   const estado = obtenerEstadoTema(tema);
 
-  return (
+  // El botón de eliminar es hermano del enlace (no hijo): un botón dentro de un <a> no es HTML válido
+  // y abriría el tema al pulsarlo.
+  const tarjeta = (
     <Link to={`/estudio/${tema.id}`} className="topic-card" style={{ textDecoration: "none" }}>
       <div className="topic-card-top-row">
         <Insignia tono="blue">{tema.categoria}</Insignia>
@@ -50,5 +58,22 @@ export default function TarjetaTemaEstudio({ tema }: { tema: TemaEstudio }) {
         <ArrowRight size={15} className="icon-nudge" aria-hidden="true" />
       </span>
     </Link>
+  );
+
+  if (!alEliminar) return tarjeta;
+
+  return (
+    <div className="topic-card-wrap">
+      {tarjeta}
+      <button
+        type="button"
+        className="icon-btn topic-card-delete"
+        aria-label={`Eliminar el tema ${tema.titulo}`}
+        title="Eliminar tema"
+        onClick={() => alEliminar(tema)}
+      >
+        <Trash2 size={16} aria-hidden="true" />
+      </button>
+    </div>
   );
 }

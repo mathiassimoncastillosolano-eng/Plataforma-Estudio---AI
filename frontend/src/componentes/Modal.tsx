@@ -12,7 +12,7 @@ export default function Modal({ abierto, alCerrar, titulo, children }: ModalProp
 
   return (
     <div className="modal-overlay" onClick={alCerrar}>
-      <div className="modal-panel" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-panel" role="dialog" aria-modal="true" aria-label={titulo} onClick={(e) => e.stopPropagation()}>
         {titulo && <h3 style={{ marginBottom: 14 }}>{titulo}</h3>}
         {children}
       </div>

@@ -44,8 +44,8 @@ src/
 ├── almacen/               almacenSesion: estado de la sesión SOLO en memoria
 ├── servicios/
 │   ├── clienteApi.ts      Cliente HTTP: envoltorio {exito, datos|error} → ErrorApi
-│   ├── servicioResumen.ts POST /api/resumenes (real) + resúmenes de ejemplo
-│   ├── servicioContenido.ts  POST /api/contenido/extraer-pdf (real)
+│   ├── servicioResumen.ts POST /api/resumenes y /api/resumenes/pdf (real), descarga en PDF + resúmenes de ejemplo
+│   ├── servicioContenido.ts  POST /api/contenido/extraer-pdf (ya no lo usa el flujo de resúmenes)
 │   └── …                  servicios simulados (temas, preguntas, pruebas, progreso)
 ├── componentes/
 │   ├── resumen/           Compositor, estado de generación y lector del resumen
@@ -63,16 +63,29 @@ Las rutas están en español: `/estudio/nuevo`, `/estudio/:id/resumen`, `/temas`
 ## Flujo del contenido y del resumen
 
 ```text
-Nuevo tema ── Texto ──────────────────────────┐
-           └─ PDF → POST /api/contenido/extraer-pdf → texto ┤
-                                                           ▼
-                        contenido del tema (memoria de la sesión)
-                                                           ▼
-   Generar → POST /api/resumenes (una sola llamada) → resumen general + esencial
-                                                           ▼
-                     LectorResumen: pestañas Esencial / General (sin nuevas llamadas)
+Nuevo tema ── Texto ─────────────────────────────────────────┐
+           └─ PDF (el archivo original queda en la sesión) ───┤
+                                                              ▼
+   Generar ── texto → POST /api/resumenes ─────────────────────┐
+           └─ PDF   → POST /api/resumenes/pdf (PDF original) ───┤  una sola llamada a la IA
+                       + indicaciones opcionales del estudiante  ▼
+                                          resumen esencial + resumen general
+                                                              ▼
+        LectorResumen: pestañas Esencial / General (sin nuevas llamadas)
+                       └─ «Descargar … (PDF)» → POST /api/resumenes/descargar-pdf
+                          (da formato al resumen ya generado; no llama a la IA)
 ```
 
+- **PDF directo:** el PDF no se convierte a texto en el navegador ni en el
+  backend: se envía tal cual a la IA, que analiza también tablas, diagramas y
+  gráficos. El mensaje del estudiante (campo «Indicaciones», opcional) se envía
+  como contexto del análisis. El archivo solo vive en memoria de la sesión: al
+  recargar hay que adjuntarlo de nuevo.
+- **Descarga:** cada resumen tiene su propio botón y solo descarga el suyo. Si no
+  hay contenido el botón se desactiva y el backend rechaza el archivo vacío.
+- **Eliminar temas:** cada tarjeta (Mis estudios y Panel) tiene un botón con
+  confirmación; elimina solo ese tema (por `id`) en `servicioEstudio` (hoy
+  `localStorage`) y limpia su resumen/PDF de la sesión.
 - **Carga real:** el estado «Analizando contenido… / Organizando conceptos… /
   Preparando tus resúmenes…» dura lo que tarda la petición (se puede cancelar).
 - **Errores:** el mensaje del backend se muestra sobre el formulario (o bajo el

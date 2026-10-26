@@ -22,11 +22,13 @@ interface EstadoSesion {
   iniciadoEn: number;
   /** Último contenido escrito por el usuario para cada tema. */
   fuentes: Record<string, string>;
+  /** PDF original de cada tema (solo en memoria; se envía a la IA tal cual para generar el resumen). */
+  archivos: Record<string, File>;
   resumenes: Record<string, ResumenesGenerados>;
   actividad: ActividadSesion[];
 }
 
-let estadoGlobal: EstadoSesion = { iniciadoEn: Date.now(), fuentes: {}, resumenes: {}, actividad: [] };
+let estadoGlobal: EstadoSesion = { iniciadoEn: Date.now(), fuentes: {}, archivos: {}, resumenes: {}, actividad: [] };
 const oyentes = new Set<() => void>();
 let siguienteId = 1;
 
@@ -50,6 +52,21 @@ export function obtenerSesion(): EstadoSesion {
 
 export function establecerFuenteTema(idTema: string, contenido: string) {
   actualizar({ fuentes: { ...estadoGlobal.fuentes, [idTema]: contenido } });
+}
+
+export function establecerArchivoTema(idTema: string, archivo: File | null) {
+  const { [idTema]: _anterior, ...resto } = estadoGlobal.archivos;
+  actualizar({ archivos: archivo ? { ...resto, [idTema]: archivo } : resto });
+}
+
+/** Olvida el contenido, el PDF y los resúmenes de la sesión asociados a un tema eliminado. */
+export function eliminarDatosTema(idTema: string) {
+  const sinClave = <T,>(registro: Record<string, T>) => Object.fromEntries(Object.entries(registro).filter(([clave]) => clave !== idTema));
+  actualizar({
+    fuentes: sinClave(estadoGlobal.fuentes),
+    archivos: sinClave(estadoGlobal.archivos),
+    resumenes: sinClave(estadoGlobal.resumenes),
+  });
 }
 
 export function registrarActividad(entrada: Omit<ActividadSesion, "id" | "at">) {

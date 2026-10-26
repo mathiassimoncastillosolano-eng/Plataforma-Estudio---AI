@@ -38,6 +38,26 @@ def _abrir_lector(datos: bytes) -> PdfReader:
         raise PdfInvalido(detalle=f"{type(error).__name__}: {error}") from error
 
 
+def validar_pdf(datos: bytes, *, max_paginas: int) -> int:
+    """Comprueba que sea un PDF legible (cabecera, sin contraseña, dentro del límite de páginas) y devuelve sus páginas.
+
+    No extrae texto: se usa cuando el PDF original se envía tal cual a la IA, que además interpreta
+    sus elementos visuales y los documentos escaneados.
+    """
+    lector = _abrir_lector(datos)
+    try:
+        total_paginas = len(lector.pages)
+    except Exception as error:
+        raise PdfInvalido(detalle=f"{type(error).__name__}: {error}") from error
+    if total_paginas < 1:
+        raise PdfInvalido(detalle="el PDF no tiene páginas")
+    if total_paginas > max_paginas:
+        raise ContenidoMuyLargo(
+            f"El PDF tiene {total_paginas} páginas y el máximo permitido es {max_paginas}. Sube una parte del documento."
+        )
+    return total_paginas
+
+
 def extraer_texto_pdf(datos: bytes, *, max_paginas: int, max_caracteres: int) -> TextoExtraido:
     """Extrae el texto de todas las páginas.
 

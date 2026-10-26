@@ -12,3 +12,7 @@ class ProveedorIA(Protocol):
     def generar_json(self, *, instrucciones: str, entrada: str) -> str:
         """Devuelve el texto bruto (se espera un objeto JSON) generado por el modelo."""
         ...
+
+    def generar_json_desde_pdf(self, *, instrucciones: str, entrada: str, pdf: bytes, nombre_archivo: str) -> str:
+        """Igual que `generar_json`, pero el modelo analiza el PDF original (texto y elementos visuales)."""
+        ...

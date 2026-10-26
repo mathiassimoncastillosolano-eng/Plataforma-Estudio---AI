@@ -23,6 +23,7 @@ class Ajustes:
     pdf_max_bytes: int
     pdf_max_paginas: int
     origenes_permitidos: tuple[str, ...]
+    openai_timeout_pdf_segundos: float = 180.0  # analizar un PDF completo tarda más que un texto
 
     @property
     def ia_configurada(self) -> bool:
@@ -62,6 +63,7 @@ def cargar_ajustes() -> Ajustes:
         pdf_max_bytes=int(_leer_numero("PDF_MAX_BYTES", 10 * 1024 * 1024, int)),
         pdf_max_paginas=int(_leer_numero("PDF_MAX_PAGINAS", 100, int)),
         origenes_permitidos=origenes,
+        openai_timeout_pdf_segundos=_leer_numero("OPENAI_TIMEOUT_PDF_SEGUNDOS", 180.0, float),
     )
 
 

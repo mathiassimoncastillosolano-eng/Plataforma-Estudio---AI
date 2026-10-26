@@ -4,7 +4,7 @@ import { useContextoTema } from "../disposiciones/contextoTema";
 import type { TipoResumen } from "../tipos";
 import * as servicioResumen from "../servicios/servicioResumen";
 import { ErrorApi } from "../servicios/clienteApi";
-import { guardarResumenes, establecerFuenteTema, useSesion } from "../almacen/almacenSesion";
+import { guardarResumenes, establecerFuenteTema, establecerArchivoTema, useSesion } from "../almacen/almacenSesion";
 import { useAviso } from "../hooks/useAviso";
 import Boton from "../componentes/Boton";
 import CompositorResumen from "../componentes/resumen/CompositorResumen";
@@ -27,6 +27,9 @@ export default function PaginaResumen() {
   const { mostrarAviso } = useAviso();
   const generados = useSesion((s) => s.resumenes[tema.id]);
   const fuenteGuardada = useSesion((s) => s.fuentes[tema.id]);
+  const archivoPdf = useSesion((s) => s.archivos[tema.id]) ?? null;
+  // Temas creados con PDF: se envía el documento original a la IA; el texto del compositor son solo indicaciones.
+  const esPdf = tema.tipoFuente === "pdf";
 
   const resumenes = generados ?? servicioResumen.obtenerResumenesEjemplo(tema.id);
 
@@ -64,7 +67,10 @@ export default function PaginaResumen() {
     establecerError(null);
     establecerVista("generando");
     try {
-      const resultado = await servicioResumen.generarResumenes(contenido, tema.titulo, controlador.signal);
+      const resultado =
+        esPdf && archivoPdf
+          ? await servicioResumen.generarResumenesDesdePdf(archivoPdf, tema.titulo, contenido, controlador.signal)
+          : await servicioResumen.generarResumenes(contenido, tema.titulo, controlador.signal);
       establecerFuenteTema(tema.id, contenido);
       guardarResumenes(tema.id, tema.titulo, resultado);
       establecerTipoVisible("esencial");
@@ -105,6 +111,10 @@ export default function PaginaResumen() {
     return (
       <div className="summary-stage">
         <CompositorResumen
+          modo={esPdf ? "pdf" : "texto"}
+          archivo={archivoPdf}
+          nombreArchivoEsperado={tema.nombreFuente}
+          alCambiarArchivo={(archivo) => establecerArchivoTema(tema.id, archivo)}
           contenido={borrador}
           error={error}
           alCambiarContenido={establecerBorrador}

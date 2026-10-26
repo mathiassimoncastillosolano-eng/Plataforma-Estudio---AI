@@ -19,3 +19,9 @@ class ProveedorFalso:
         if self._error:
             raise self._error
         return self._respuesta
+
+    def generar_json_desde_pdf(self, *, instrucciones: str, entrada: str, pdf: bytes, nombre_archivo: str) -> str:
+        self.llamadas.append({"instrucciones": instrucciones, "entrada": entrada, "pdf": pdf, "nombre_archivo": nombre_archivo})
+        if self._error:
+            raise self._error
+        return self._respuesta

@@ -4,9 +4,7 @@ import { FileText, PenLine, UploadCloud, X, ArrowLeft } from "lucide-react";
 import Boton from "../componentes/Boton";
 import { Entrada } from "../componentes/Entrada";
 import * as servicioEstudio from "../servicios/servicioEstudio";
-import * as servicioContenido from "../servicios/servicioContenido";
-import { ErrorApi } from "../servicios/clienteApi";
-import { registrarActividad, establecerFuenteTema } from "../almacen/almacenSesion";
+import { registrarActividad, establecerFuenteTema, establecerArchivoTema } from "../almacen/almacenSesion";
 import { LIMITE_BYTES_PDF, LIMITES_RESUMEN } from "../configuracion";
 import { formatearTamanoArchivo } from "../utilidades/formato";
 import type { BorradorFuente } from "../tipos";
@@ -68,27 +66,27 @@ export default function PaginaNuevoTema() {
     const temaNuevo = await servicioEstudio.crearTemaEstudio(borrador);
     // El contenido escrito vive solo en la sesión: el resumen lo usará directamente.
     if (borrador.textoBruto) establecerFuenteTema(temaNuevo.id, borrador.textoBruto.trim());
+    // El PDF original también vive solo en la sesión: la IA lo analiza completo al generar el resumen.
+    if (borrador.archivo) establecerArchivoTema(temaNuevo.id, borrador.archivo);
     registrarActividad({ tipo: "tema-creado", idTema: temaNuevo.id, tituloTema: temaNuevo.titulo, descripcion: "Creaste un nuevo tema de estudio." });
     navegar(`/estudio/${temaNuevo.id}/resumen`);
   }
 
-  /** El backend extrae el texto del PDF (sin guardarlo); ese texto pasa a ser el contenido del tema. */
+  /** El PDF no se convierte a texto: se conserva tal cual y se envía a la IA al generar el resumen. */
   async function enviarPdf() {
     if (!archivo) return;
     establecerErrorArchivo("");
-    establecerCreando(true);
     try {
-      const contenido = await servicioContenido.extraerTextoPdf(archivo);
       await crearTema({
         tituloTema: titulo,
         categoria,
         tipoFuente: "pdf",
         nombreArchivo: archivo.name,
         etiquetaTamanoArchivo: formatearTamanoArchivo(archivo.size),
-        textoBruto: contenido.texto,
+        archivo,
       });
-    } catch (fallo) {
-      establecerErrorArchivo(fallo instanceof ErrorApi ? fallo.message : "No pudimos leer el PDF. Inténtalo de nuevo.");
+    } catch {
+      establecerErrorArchivo("No pudimos crear el tema. Inténtalo de nuevo.");
       establecerCreando(false);
     }
   }
@@ -183,7 +181,7 @@ export default function PaginaNuevoTema() {
         <>
           <p className="flow-step-label">Paso 3 de 3</p>
           <h1 className="flow-title">Sube tu documento</h1>
-          <p className="flow-subtitle">Aceptamos archivos PDF con texto seleccionable. Extraemos el texto en el servidor y el archivo no se guarda.</p>
+          <p className="flow-subtitle">La IA analiza el documento completo, incluidas sus tablas, diagramas y gráficos. El archivo no se guarda en el servidor.</p>
 
           {!archivo ? (
             <div
@@ -236,7 +234,7 @@ export default function PaginaNuevoTema() {
               Atrás
             </Boton>
             <Boton onClick={enviarPdf} disabled={!archivo} cargando={creando}>
-              {creando ? "Leyendo PDF…" : "Crear tema"}
+              Crear tema
             </Boton>
           </div>
         </>

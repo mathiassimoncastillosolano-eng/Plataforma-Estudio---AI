@@ -74,6 +74,15 @@ class PdfMuyPesado(ErrorAplicacion):
     mensaje_predeterminado = "El PDF pesa demasiado. Sube un archivo más pequeño."
 
 
+# --- Descarga de resúmenes -------------------------------------------------
+
+
+class ResumenVacio(ErrorAplicacion):
+    codigo = "RESUMEN_VACIO"
+    estado_http = 422
+    mensaje_predeterminado = "Este resumen todavía no tiene contenido. Genéralo antes de descargarlo."
+
+
 # --- Proveedor de IA ------------------------------------------------------
 
 
@@ -117,6 +126,15 @@ class IANoDisponible(ErrorProveedorIA):
     codigo = "IA_NO_DISPONIBLE"
     estado_http = 503
     mensaje_predeterminado = "No pudimos conectar con el servicio de IA. Inténtalo de nuevo en unos minutos."
+
+
+class IAPdfNoSoportado(ErrorProveedorIA):
+    codigo = "IA_PDF_NO_SOPORTADO"
+    estado_http = 502
+    mensaje_predeterminado = (
+        "El modelo de IA configurado no admite el análisis directo de archivos PDF. "
+        "Contacta al administrador para configurar un modelo compatible."
+    )
 
 
 class IARespuestaInvalida(ErrorProveedorIA):

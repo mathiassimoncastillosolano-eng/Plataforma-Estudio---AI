@@ -37,6 +37,8 @@ export interface BorradorFuente {
   nombreArchivo?: string;
   etiquetaTamanoArchivo?: string;
   textoBruto?: string;
+  /** PDF original: se conserva en la sesión y se envía tal cual a la IA al generar el resumen. */
+  archivo?: File;
 }
 
 export interface SeccionResumenTema {
@@ -202,10 +204,24 @@ export interface ConceptoClaveResumen {
   definicion: string;
 }
 
+export interface TablaResumenGenerado {
+  titulo: string;
+  encabezados: string[];
+  filas: string[][];
+}
+
 export interface SeccionResumen {
   titulo: string;
   contenido: string;
   puntos: string[];
+  /** Tabla opcional que la IA extrae o sintetiza del material. */
+  tabla?: TablaResumenGenerado | null;
+}
+
+export interface FormulaReglaResumen {
+  nombre: string;
+  expresion: string;
+  explicacion: string;
 }
 
 export interface ResumenEsencial {
@@ -213,6 +229,9 @@ export interface ResumenEsencial {
   ideasClave: string[];
   conceptosClave: ConceptoClaveResumen[];
   minutosLectura: number;
+  formulasYReglas?: FormulaReglaResumen[];
+  /** Elementos del material que la IA no pudo interpretar con suficiente confianza. */
+  notasDeFidelidad?: string[];
 }
 
 export interface ResumenGeneral {
@@ -220,6 +239,7 @@ export interface ResumenGeneral {
   introduccion: string;
   secciones: SeccionResumen[];
   minutosLectura: number;
+  notasDeFidelidad?: string[];
 }
 
 export interface MetadatosResumen {
@@ -228,6 +248,9 @@ export interface MetadatosResumen {
   modelo: string | null;
   generadoEn: string;
   caracteresEntrada: number;
+  /** Cómo llegó el material a la IA: texto escrito/pegado o PDF original. */
+  entrada?: "texto" | "pdf";
+  paginas?: number | null;
 }
 
 export interface ResumenesGenerados {

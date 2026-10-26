@@ -7,6 +7,7 @@ import TarjetaTemaEstudio from "../componentes/TarjetaTemaEstudio";
 import { EstadoCarga, ErrorState, EmptyState } from "../componentes/Estados";
 import { EsqueletoCuadricula } from "../componentes/Esqueleto";
 import EncabezadoPagina from "../componentes/EncabezadoPagina";
+import { useEliminarTema } from "../hooks/useEliminarTema";
 import { obtenerEstadoTema, etiquetasEstadoTema, type EstadoTema } from "../datos/temasEstudio";
 
 type ClaveFiltro = "todos" | EstadoTema;
@@ -23,6 +24,7 @@ export default function PaginaListaTemas() {
   const [estado, establecerEstado] = useState<"cargando" | "exito" | "error">("cargando");
   const [consulta, establecerConsulta] = useState("");
   const [filtro, establecerFiltro] = useState<ClaveFiltro>("todos");
+  const { pedirEliminar, dialogo } = useEliminarTema((id) => establecerTemas((actuales) => (actuales ?? []).filter((t) => t.id !== id)));
 
   async function cargar() {
     establecerEstado("cargando");
@@ -94,7 +96,7 @@ export default function PaginaListaTemas() {
       {filtrados.length > 0 ? (
         <div className="topic-grid stagger">
           {filtrados.map((tema) => (
-            <TarjetaTemaEstudio key={tema.id} tema={tema} />
+            <TarjetaTemaEstudio key={tema.id} tema={tema} alEliminar={pedirEliminar} />
           ))}
         </div>
       ) : (
@@ -112,6 +114,8 @@ export default function PaginaListaTemas() {
           }
         />
       )}
+
+      {dialogo}
     </div>
   );
 }

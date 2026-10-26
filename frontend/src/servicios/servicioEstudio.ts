@@ -55,6 +55,19 @@ export async function crearTemaEstudio(borrador: BorradorFuente): Promise<TemaEs
   return retardoSimulado(temaNuevo, 300);
 }
 
+/**
+ * Elimina únicamente el tema indicado (por su id) y persiste el cambio.
+ * Devuelve false si el tema no existe (p. ej. ya fue eliminado desde otra pestaña).
+ * Hoy los temas viven en localStorage; si pasan a una API, solo cambia este método.
+ */
+export async function eliminarTemaEstudio(id: string): Promise<boolean> {
+  const temas = cargarTemas();
+  const restantes = temas.filter((t) => t.id !== id);
+  if (restantes.length === temas.length) return false;
+  guardarTemas(restantes);
+  return retardoSimulado(true, 250);
+}
+
 export async function actualizarDominioTema(idTema: string, dominio: number): Promise<TemaEstudio | undefined> {
   const temas = cargarTemas();
   const posicion = temas.findIndex((t) => t.id === idTema);

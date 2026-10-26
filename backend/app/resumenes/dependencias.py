@@ -17,6 +17,7 @@ def _crear_servicio_openai() -> ServicioOpenAI:
         modelo=ajustes.openai_model,
         timeout_segundos=ajustes.openai_timeout_segundos,
         max_reintentos=ajustes.openai_max_reintentos,
+        timeout_pdf_segundos=ajustes.openai_timeout_pdf_segundos,
     )
 
 
@@ -34,4 +35,6 @@ def obtener_servicio_resumen(
         proveedor,
         minimo_caracteres=ajustes.resumen_min_caracteres,
         maximo_caracteres=ajustes.resumen_max_caracteres,
+        pdf_max_bytes=ajustes.pdf_max_bytes,
+        pdf_max_paginas=ajustes.pdf_max_paginas,
     )

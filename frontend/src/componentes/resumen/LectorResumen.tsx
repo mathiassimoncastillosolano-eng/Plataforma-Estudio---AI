@@ -1,6 +1,7 @@
 import { Fragment, type ReactNode } from "react";
 import type { ResumenesGenerados, TipoResumen } from "../../tipos";
 import { TEXTOS_TIPO_RESUMEN, etiquetaOrigen } from "./textosResumen";
+import BotonDescargaResumen from "./BotonDescargaResumen";
 
 export interface ElementoIndice {
   id: string;
@@ -17,11 +18,14 @@ export function construirIndice(resumenes: ResumenesGenerados, tipo: TipoResumen
     if (ideaCentral) elementos.push({ id: "s-idea-central", etiqueta: "Idea central" });
     if (ideasClave.length) elementos.push({ id: "s-ideas", etiqueta: "Ideas clave" });
     if (conceptosClave.length) elementos.push({ id: "s-conceptos", etiqueta: "Conceptos fundamentales" });
+    if (resumenes.esencial.formulasYReglas?.length) elementos.push({ id: "s-formulas", etiqueta: "Fórmulas y reglas" });
+    if (resumenes.esencial.notasDeFidelidad?.length) elementos.push({ id: "s-notas", etiqueta: "Notas de fidelidad" });
     return elementos;
   }
-  const { introduccion, secciones } = resumenes.general;
+  const { introduccion, secciones, notasDeFidelidad } = resumenes.general;
   if (introduccion) elementos.push({ id: "s-introduccion", etiqueta: "Introducción" });
   secciones.forEach((seccion, i) => elementos.push({ id: slug(seccion.titulo, i), etiqueta: seccion.titulo }));
+  if (notasDeFidelidad?.length) elementos.push({ id: "s-notas", etiqueta: "Notas de fidelidad" });
   return elementos;
 }
 
@@ -44,6 +48,21 @@ function resaltar(texto: string, terminos: string[]): ReactNode {
     }
     return <Fragment key={i}>{parte}</Fragment>;
   });
+}
+
+function NotasDeFidelidad({ notas }: { notas?: string[] }) {
+  if (!notas || notas.length === 0) return null;
+  return (
+    <section id="s-notas" className="reader-notes">
+      <h2>Notas de fidelidad</h2>
+      <p>Elementos del material que no pudieron interpretarse con suficiente confianza:</p>
+      <ul className="reader-list">
+        {notas.map((nota, i) => (
+          <li key={i}>{nota}</li>
+        ))}
+      </ul>
+    </section>
+  );
 }
 
 const parrafos = (texto: string) => texto.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
@@ -69,6 +88,8 @@ export default function LectorResumen({ resumenes, tipo, tituloTema }: PropsLect
         <span>{minutos} min de lectura</span>
         <span className={`origin-tag origin-${origen.tono}`}>{origen.texto}</span>
       </p>
+
+      <BotonDescargaResumen resumenes={resumenes} tipo={tipo} tituloTema={tituloTema} />
 
       {tipo === "esencial" ? (
         <>
@@ -107,6 +128,23 @@ export default function LectorResumen({ resumenes, tipo, tituloTema }: PropsLect
               </dl>
             </section>
           )}
+
+          {esencial.formulasYReglas && esencial.formulasYReglas.length > 0 && (
+            <section id="s-formulas">
+              <h2>Fórmulas y reglas</h2>
+              <div className="reader-formulas">
+                {esencial.formulasYReglas.map((f, i) => (
+                  <div key={`${f.nombre}-${i}`} className="reader-formula">
+                    {f.nombre && <p className="reader-formula-name">{f.nombre}</p>}
+                    <code>{f.expresion}</code>
+                    {f.explicacion && <p className="reader-formula-note">{f.explicacion}</p>}
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          <NotasDeFidelidad notas={esencial.notasDeFidelidad} />
         </>
       ) : (
         <>
@@ -135,8 +173,35 @@ export default function LectorResumen({ resumenes, tipo, tituloTema }: PropsLect
                   ))}
                 </ul>
               )}
+              {seccion.tabla && seccion.tabla.encabezados.length > 0 && (
+                <div className="reader-table-wrap" role="region" aria-label={seccion.tabla.titulo || `Tabla de ${seccion.titulo}`} tabIndex={0}>
+                  <table className="reader-table">
+                    {seccion.tabla.titulo && <caption>{seccion.tabla.titulo}</caption>}
+                    <thead>
+                      <tr>
+                        {seccion.tabla.encabezados.map((encabezado, j) => (
+                          <th key={j} scope="col">
+                            {encabezado}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {seccion.tabla.filas.map((fila, j) => (
+                        <tr key={j}>
+                          {fila.map((celda, k) => (
+                            <td key={k}>{celda}</td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </section>
           ))}
+
+          <NotasDeFidelidad notas={general.notasDeFidelidad} />
         </>
       )}
     </article>

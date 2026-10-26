@@ -9,6 +9,12 @@ export const TIEMPO_ESPERA_IA_MS = 120_000;
 /** Tiempo máximo de espera al extraer el texto de un PDF. */
 export const TIEMPO_ESPERA_PDF_MS = 60_000;
 
+/** Analizar un PDF completo (con sus elementos visuales) tarda más que un texto corto. */
+export const TIEMPO_ESPERA_PDF_IA_MS = 240_000;
+
+/** Dar formato al PDF descargable es local y rápido; no llama a la IA. */
+export const TIEMPO_ESPERA_DESCARGA_MS = 60_000;
+
 /** Deben coincidir con RESUMEN_MIN_CARACTERES / RESUMEN_MAX_CARACTERES del backend (que valida igualmente). */
 export const LIMITES_RESUMEN = { min: 100, max: 20_000 } as const;
 

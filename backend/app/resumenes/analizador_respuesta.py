@@ -9,9 +9,11 @@ import re
 from app.comun.errores import IARespuestaInvalida
 from app.resumenes.dominio import (
     ConceptoClave,
+    FormulaRegla,
     ResumenEsencial,
     ResumenGeneral,
     SeccionGeneral,
+    TablaResumen,
     calcular_minutos_lectura,
 )
 
@@ -72,6 +74,30 @@ def _lista_de_textos(objeto: dict, campo: str, *, obligatoria: bool) -> list[str
     return textos
 
 
+def _leer_tabla(valor) -> TablaResumen | None:
+    """La tabla es opcional: si viene mal formada se descarta sin invalidar todo el resumen."""
+    if not isinstance(valor, dict):
+        return None
+    try:
+        encabezados = _lista_de_textos(valor, "encabezados", obligatoria=False)
+        filas_brutas = _lista(valor, "filas", obligatoria=False)
+    except IARespuestaInvalida:
+        return None
+    filas = []
+    for fila in filas_brutas:
+        if not isinstance(fila, list):
+            continue
+        celdas = ["" if celda is None else str(celda).strip() for celda in fila]
+        if any(celdas):
+            filas.append(celdas)
+    if not encabezados or not filas:
+        return None
+    columnas = len(encabezados)
+    filas = [(fila + [""] * columnas)[:columnas] for fila in filas]  # cada fila con tantas celdas como encabezados
+    titulo = valor.get("titulo")
+    return TablaResumen(titulo=titulo.strip() if isinstance(titulo, str) else "", encabezados=encabezados, filas=filas)
+
+
 def _leer_resumen_general(datos: dict) -> ResumenGeneral:
     secciones = []
     for elemento in _lista(datos, "secciones", obligatoria=True):
@@ -86,6 +112,7 @@ def _leer_resumen_general(datos: dict) -> ResumenGeneral:
                 titulo=titulo.strip(),
                 contenido=contenido.strip(),
                 puntos=_lista_de_textos(elemento, "puntos", obligatoria=False),
+                tabla=_leer_tabla(elemento.get("tabla")),
             )
         )
     if not secciones:
@@ -93,12 +120,15 @@ def _leer_resumen_general(datos: dict) -> ResumenGeneral:
 
     titulo = _texto(datos, "titulo", obligatorio=False)
     introduccion = _texto(datos, "introduccion", obligatorio=False)
+    notas = _lista_de_textos(datos, "notas_de_fidelidad", obligatoria=False)
     textos = [titulo, introduccion] + [f"{s.titulo} {s.contenido} {' '.join(s.puntos)}" for s in secciones]
+    textos += [" ".join(fila_celda for fila in s.tabla.filas for fila_celda in fila) for s in secciones if s.tabla]
     return ResumenGeneral(
         titulo=titulo,
         introduccion=introduccion,
         secciones=secciones,
         minutos_lectura=calcular_minutos_lectura(*textos),
+        notas_de_fidelidad=notas,
     )
 
 
@@ -114,12 +144,30 @@ def _leer_resumen_esencial(datos: dict) -> ResumenEsencial:
         if isinstance(termino, str) and termino.strip() and isinstance(definicion, str) and definicion.strip():
             conceptos.append(ConceptoClave(termino=termino.strip(), definicion=definicion.strip()))
 
+    formulas = []
+    for elemento in _lista(datos, "formulas_y_reglas", obligatoria=False):
+        if not isinstance(elemento, dict):
+            continue
+        nombre, expresion, explicacion = elemento.get("nombre"), elemento.get("expresion"), elemento.get("explicacion")
+        if isinstance(expresion, str) and expresion.strip():
+            formulas.append(
+                FormulaRegla(
+                    nombre=nombre.strip() if isinstance(nombre, str) else "",
+                    expresion=expresion.strip(),
+                    explicacion=explicacion.strip() if isinstance(explicacion, str) else "",
+                )
+            )
+
+    notas = _lista_de_textos(datos, "notas_de_fidelidad", obligatoria=False)
     textos = [idea_central, *ideas_clave] + [f"{c.termino} {c.definicion}" for c in conceptos]
+    textos += [f"{f.nombre} {f.expresion} {f.explicacion}" for f in formulas]
     return ResumenEsencial(
         idea_central=idea_central,
         ideas_clave=ideas_clave,
         conceptos_clave=conceptos,
         minutos_lectura=calcular_minutos_lectura(*textos),
+        formulas_y_reglas=formulas,
+        notas_de_fidelidad=notas,
     )
 
 

@@ -11,6 +11,7 @@ import { formatearTiempoRelativo } from "../utilidades/formato";
 import ListaActividad from "../componentes/ListaActividad";
 import { dominioPorCategoria } from "../datos/progreso";
 import TarjetaTemaEstudio from "../componentes/TarjetaTemaEstudio";
+import { useEliminarTema } from "../hooks/useEliminarTema";
 import MedidorDominio from "../componentes/MedidorDominio";
 import BarraProgreso from "../componentes/BarraProgreso";
 import Tarjeta from "../componentes/Tarjeta";
@@ -23,6 +24,7 @@ export default function PaginaPanel() {
   const [estadisticas, establecerEstadisticas] = useState<EstadisticasPanel | null>(null);
   const [estado, establecerEstado] = useState<"cargando" | "exito" | "error">("cargando");
   const actividadSesion = useSesion((s) => s.actividad);
+  const { pedirEliminar, dialogo } = useEliminarTema((id) => establecerTemas((actuales) => (actuales ?? []).filter((t) => t.id !== id)));
 
   async function cargar() {
     establecerEstado("cargando");
@@ -229,7 +231,7 @@ export default function PaginaPanel() {
             {otrosTemas.length > 0 ? (
               <div className="topic-grid stagger">
                 {otrosTemas.map((tema) => (
-                  <TarjetaTemaEstudio key={tema.id} tema={tema} />
+                  <TarjetaTemaEstudio key={tema.id} tema={tema} alEliminar={pedirEliminar} />
                 ))}
               </div>
             ) : temaEnfocado ? (
@@ -305,6 +307,8 @@ export default function PaginaPanel() {
           </section>
         </aside>
       </div>
+
+      {dialogo}
     </div>
   );
 }

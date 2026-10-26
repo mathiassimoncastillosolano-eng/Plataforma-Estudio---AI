@@ -66,3 +66,30 @@ def test_conceptos_mal_formados_se_descartan_sin_fallar():
     datos["resumen_esencial"]["conceptos_clave"].append({"termino": "Sin definición"})
     _, esencial = analizar_respuesta_ia(json.dumps(datos))
     assert len(esencial.conceptos_clave) == 1
+
+
+def test_lee_tabla_formulas_y_notas_opcionales():
+    from pruebas.respuestas_ia import RESPUESTA_COMPLETA_JSON
+
+    general, esencial = analizar_respuesta_ia(RESPUESTA_COMPLETA_JSON)
+    tabla = general.secciones[0].tabla
+    assert tabla and tabla.encabezados == ["Vaso", "Función"]
+    assert tabla.filas == [["Arteria", "Sale del corazón"], ["Vena", ""]]  # la fila corta se completa
+    assert esencial.formulas_y_reglas[0].expresion == "GC = FC × VS"
+    assert esencial.notas_de_fidelidad == ["La figura 2 está borrosa y no pudo interpretarse."]
+
+
+def test_una_tabla_mal_formada_se_descarta_sin_invalidar_el_resumen():
+    import json
+
+    from pruebas.respuestas_ia import RESPUESTA_VALIDA
+
+    datos = json.loads(json.dumps(RESPUESTA_VALIDA))
+    datos["resumen_general"]["secciones"][0]["tabla"] = {"encabezados": [], "filas": "no es lista"}
+    general, _ = analizar_respuesta_ia(json.dumps(datos))
+    assert general.secciones[0].tabla is None
+
+
+def test_los_campos_nuevos_son_opcionales():
+    general, esencial = analizar_respuesta_ia(__import__("pruebas.respuestas_ia", fromlist=["x"]).RESPUESTA_VALIDA_JSON)
+    assert esencial.formulas_y_reglas == [] and esencial.notas_de_fidelidad == [] and general.notas_de_fidelidad == []
