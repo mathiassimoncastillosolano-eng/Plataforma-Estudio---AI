@@ -137,3 +137,12 @@ def test_pdf_errores_de_openai_se_traducen():
     ]:
         with pytest.raises(esperado):
             _servicio(ClienteFalso(error=error)).generar_json_desde_pdf(instrucciones="i", entrada="e", pdf=b"%PDF-", nombre_archivo="a.pdf")
+
+
+def test_pdf_la_entrada_enviada_a_openai_contiene_la_palabra_json():
+    from app.resumenes.instrucciones import construir_entrada_pdf
+
+    cliente = ClienteFalso(resultado=_respuesta_pdf('{"ok": true}'))
+    _servicio(cliente).generar_json_desde_pdf(instrucciones="i", entrada=construir_entrada_pdf("T", None), pdf=b"%PDF-", nombre_archivo="a.pdf")
+    textos = [c["text"] for c in cliente.llamadas[0]["input"][0]["content"] if c["type"] == "input_text"]
+    assert any("json" in t.lower() for t in textos)

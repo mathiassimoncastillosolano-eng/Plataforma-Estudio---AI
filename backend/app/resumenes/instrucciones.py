@@ -125,5 +125,10 @@ def construir_entrada_pdf(titulo: str | None, indicaciones: str | None = None) -
     bloque = _bloque_indicaciones(indicaciones)
     if bloque:
         partes.append(bloque)
-    partes.append("Analiza el documento PDF adjunto completo y genera el resumen esencial y el resumen general según las instrucciones.")
+    # La Responses API exige que la palabra "JSON" aparezca en el mensaje de entrada (no basta en las instrucciones)
+    # cuando se usa el formato json_object.
+    partes.append(
+        "Analiza el documento PDF adjunto completo y genera el resumen esencial y el resumen general según las instrucciones. "
+        "Responde únicamente con el objeto JSON descrito en el formato de salida."
+    )
     return "\n\n".join(partes)
