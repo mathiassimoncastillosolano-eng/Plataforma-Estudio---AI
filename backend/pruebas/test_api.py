@@ -172,3 +172,25 @@ def test_descarga_con_tipo_desconocido_o_sin_titulo_es_solicitud_invalida():
     cliente = _cliente()
     for cuerpo in [{"tipo": "otro", "titulo_tema": "T"}, {"tipo": "esencial", "titulo_tema": ""}]:
         assert cliente.post("/api/resumenes/descargar-pdf", json=cuerpo).json()["error"]["codigo"] == "SOLICITUD_INVALIDA"
+
+
+def test_salud_es_ligera_sin_cache_y_no_expone_secretos():
+    respuesta = _cliente().get("/api/salud", headers={"Origin": "http://localhost:5173"})
+    assert respuesta.status_code == 200
+    cuerpo = respuesta.json()
+    assert cuerpo["estado"] == "ok" and set(cuerpo) == {"estado", "ia_configurada"}
+    assert isinstance(cuerpo["ia_configurada"], bool)
+    assert respuesta.headers["cache-control"] == "no-store"
+    assert respuesta.headers["access-control-allow-origin"] == "http://localhost:5173"
+    assert "clave-falsa" not in respuesta.text and "modelo-de-prueba" not in respuesta.text
+
+
+def test_salud_no_llama_a_la_ia():
+    proveedor = ProveedorFalso()
+    assert _cliente(proveedor).get("/api/salud").status_code == 200
+    assert proveedor.llamadas == []
+
+
+def test_salud_rechaza_origenes_no_autorizados_en_cors():
+    respuesta = _cliente().get("/api/salud", headers={"Origin": "https://otro-sitio.example"})
+    assert "access-control-allow-origin" not in respuesta.headers

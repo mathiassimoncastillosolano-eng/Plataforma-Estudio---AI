@@ -20,3 +20,30 @@ export const LIMITES_RESUMEN = { min: 100, max: 20_000 } as const;
 
 /** Debe coincidir con PDF_MAX_BYTES del backend (que valida igualmente). */
 export const LIMITE_BYTES_PDF = 10 * 1024 * 1024;
+
+/**
+ * ID de cliente OAuth de Google (tipo "Aplicación web"). Es un dato PÚBLICO: no es un secreto.
+ * Vacío = el acceso con Google no está configurado y el login lo indica.
+ */
+export const GOOGLE_CLIENT_ID = (import.meta.env.VITE_GOOGLE_CLIENT_ID ?? "").trim();
+
+/**
+ * Comprobación de disponibilidad del backend (pantalla de inicialización).
+ * Render en plan gratuito suspende el servicio por inactividad: la primera petición puede
+ * tardar cerca de un minuto, así que se reintenta con pausas crecientes hasta un límite total.
+ */
+export const SALUD_RUTA = "/api/salud";
+/** Espera máxima de cada intento (un servicio dormido puede dejar la petición colgada). */
+export const SALUD_TIEMPO_INTENTO_MS = 15_000;
+/** Pausas entre intentos; la última se repite. */
+export const SALUD_PAUSAS_MS = [1_000, 2_000, 3_000, 4_000, 5_000] as const;
+/** Tiempo total antes de mostrar el error con el botón de reintento. */
+export const SALUD_TIEMPO_TOTAL_MS = 150_000;
+/** A partir de aquí se explica al usuario que el servidor estaba en reposo. */
+export const SALUD_UMBRAL_DESPERTAR_MS = 6_000;
+
+/** En producción, una URL local casi seguro es una variable de Vercel sin configurar. */
+export const URL_API_LOCAL_EN_PRODUCCION =
+  import.meta.env.PROD &&
+  /^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/i.test(URL_BASE_API) &&
+  !["localhost", "127.0.0.1"].includes(window.location.hostname);

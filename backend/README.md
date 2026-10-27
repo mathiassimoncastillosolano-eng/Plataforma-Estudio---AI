@@ -45,7 +45,7 @@ Copia `.env.example` a `.env` (ignorado por git).
 | `OPENAI_TIMEOUT_PDF_SEGUNDOS` | No (180) | Espera máxima al analizar un PDF completo. |
 | `RESUMEN_MIN_CARACTERES` / `RESUMEN_MAX_CARACTERES` | No (100 / 20000) | Límites del contenido. Deben coincidir con `frontend/src/configuracion.ts`. |
 | `PDF_MAX_BYTES` / `PDF_MAX_PAGINAS` | No (10 MB / 100) | Límites del PDF. |
-| `ORIGENES_PERMITIDOS` | No | Orígenes CORS separados por comas (por defecto `http://localhost:5173`). |
+| `ORIGENES_PERMITIDOS` | No (sí en producción) | Orígenes CORS separados por comas, sin barra final (por defecto `http://localhost:5173`). En Render debe incluir la URL exacta de Vercel, p. ej. `https://tu-app.vercel.app,http://localhost:5173`. |
 
 Si faltan la clave o el modelo, el backend arranca igual y responde `503
 IA_NO_CONFIGURADA` al pedir un resumen.
@@ -110,7 +110,11 @@ El PDF se lee en memoria y no se guarda. El texto extraído se envía después a
 
 ### `GET /api/salud`
 
-`{ "estado": "ok", "ia_configurada": true }` (no expone la clave).
+`{ "estado": "ok", "ia_configurada": true }` (no expone la clave). Responde `200` con
+`Cache-Control: no-store`, no requiere sesión y **no llama a OpenAI**: solo confirma que
+el servidor HTTP está levantado y la aplicación lista. `ia_configurada` indica que hay
+clave y modelo definidos, no que OpenAI esté disponible. El frontend la consulta antes
+del login (pantalla de inicialización) para saber cuándo Render ha despertado.
 
 ## Errores
 

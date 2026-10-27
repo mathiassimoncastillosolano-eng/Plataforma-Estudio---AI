@@ -5,11 +5,16 @@
 // contrato real con el backend FastAPI.
 // ---------------------------------------------------------------------------
 
+/** Perfil de la cuenta de Google autenticada. Vive solo en memoria mientras dura la sesión. */
 export interface Usuario {
+  /** Identificador estable de Google (`sub`). */
   id: string;
   nombre: string;
   apellido: string;
   correo: string;
+  /** Foto de perfil de Google (opcional). */
+  foto?: string;
+  /** Momento (ISO) en que se inició la sesión actual. */
   creadoEn: string;
 }
 

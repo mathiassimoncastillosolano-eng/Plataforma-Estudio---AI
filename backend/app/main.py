@@ -1,6 +1,6 @@
 import logging
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException as ExcepcionHTTP
@@ -58,7 +58,12 @@ def crear_aplicacion() -> FastAPI:
     aplicacion.include_router(enrutador_contenido)
 
     @aplicacion.get("/api/salud", tags=["sistema"])
-    def salud():
+    def salud(respuesta: Response):
+        # Comprobación ligera: no toca OpenAI ni ningún recurso externo. Solo confirma que el
+        # servidor HTTP está levantado y la aplicación lista (`ia_configurada` indica si hay
+        # clave y modelo definidos, NO que OpenAI esté disponible). Sin caché: el frontend
+        # la usa para saber si Render ya despertó.
+        respuesta.headers["Cache-Control"] = "no-store"
         return {"estado": "ok", "ia_configurada": ajustes.ia_configurada}
 
     return aplicacion

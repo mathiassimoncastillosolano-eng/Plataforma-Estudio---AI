@@ -50,6 +50,11 @@ export function obtenerSesion(): EstadoSesion {
   return estadoGlobal;
 }
 
+/** Olvida todo el contenido de estudio de la sesión (al cerrar sesión o cambiar de cuenta). */
+export function reiniciarSesionEstudio() {
+  actualizar({ iniciadoEn: Date.now(), fuentes: {}, archivos: {}, resumenes: {}, actividad: [] });
+}
+
 export function establecerFuenteTema(idTema: string, contenido: string) {
   actualizar({ fuentes: { ...estadoGlobal.fuentes, [idTema]: contenido } });
 }

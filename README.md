@@ -18,9 +18,21 @@ solicitud en memoria y no guarda nada (ni texto, ni PDFs, ni resúmenes). El
 frontend mantiene la sesión de estudio en memoria: al recargar o cerrar la
 pestaña se pierde. Esto es una decisión de diseño, no un error.
 
-> Los datos de demostración del frontend (cuenta de acceso, temas creados,
-> preferencias de apariencia) sí usan `localStorage` del navegador, como en la
-> versión anterior; no tiene relación con el backend.
+> Los datos de demostración del frontend (temas creados, estado de preguntas,
+> preferencias de apariencia) usan `localStorage`; no tienen relación con el
+> backend. Se borran al cerrar sesión (salvo la apariencia).
+
+## Acceso con Google y pantalla de inicialización
+
+- Al abrir la app aparece una **pantalla de inicialización** que consulta
+  `GET /api/salud` del backend (Render puede estar suspendido) con reintentos y
+  pausas crecientes. Cuando responde, se muestra el login.
+- El login es **solo con Google** (OAuth 2.0 / OIDC, ventana emergente). El primer
+  acceso ya es el «registro»: no hay formulario ni contraseña propia.
+- El perfil (nombre, correo, foto, `sub`) vive **en memoria**: no se guarda en
+  `localStorage`, `sessionStorage` ni cookies. Al recargar hay que volver a entrar.
+- Configuración paso a paso: [`docs/MANUAL_CONFIGURACION.md`](docs/MANUAL_CONFIGURACION.md).
+  Detalle técnico y limitaciones: [`docs/INFORME_TECNICO.md`](docs/INFORME_TECNICO.md).
 
 ## Puesta en marcha
 
@@ -41,10 +53,12 @@ Terminal 2 — frontend:
 ```bash
 cd frontend
 npm install
+cp .env.example .env.local      # completa VITE_GOOGLE_CLIENT_ID (y VITE_URL_BASE_API si hace falta)
 npm run dev
 ```
 
-Abre `http://localhost:5173` (cuenta demo: `estudiante@demo.com` / `123456`).
+Abre `http://localhost:5173`. Para entrar necesitas un ID de cliente de Google
+(`VITE_GOOGLE_CLIENT_ID` en `frontend/.env.local`; ver el manual de configuración).
 
 ## Documentación
 

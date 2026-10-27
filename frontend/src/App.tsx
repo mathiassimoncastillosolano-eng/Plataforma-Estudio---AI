@@ -5,7 +5,6 @@ import DisposicionTema from "./disposiciones/DisposicionTema";
 import { EstadoCarga } from "./componentes/Estados";
 
 import PaginaInicioSesion from "./paginas/PaginaInicioSesion";
-import PaginaRegistro from "./paginas/PaginaRegistro";
 import PaginaPanel from "./paginas/PaginaPanel";
 import PaginaNoEncontrada from "./paginas/PaginaNoEncontrada";
 
@@ -28,7 +27,8 @@ export default function Aplicacion() {
     <Routes>
       <Route path="/" element={<Navigate to="/panel" replace />} />
       <Route path="/iniciar-sesion" element={<PaginaInicioSesion />} />
-      <Route path="/registro" element={<PaginaRegistro />} />
+      {/* El primer acceso con Google ya crea el espacio del usuario: no hay registro aparte. */}
+      <Route path="/registro" element={<Navigate to="/iniciar-sesion" replace />} />
 
       <Route element={<DisposicionApp />}>
         <Route path="/panel" element={<PaginaPanel />} />

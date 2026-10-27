@@ -8,25 +8,27 @@ con datos simulados del frontend y se conectarán al backend en futuras HU.
 
 ```bash
 npm install
-cp .env.example .env   # opcional: solo si el backend no está en http://localhost:8000
+cp .env.example .env.local   # completa VITE_GOOGLE_CLIENT_ID; VITE_URL_BASE_API solo si el backend no está en http://localhost:8000
 npm run dev
+npm test                     # pruebas (Vitest)
+npm run build                # tsc + vite build
 ```
 
 Abre `http://localhost:5173`. Para generar resúmenes o leer PDFs, el backend debe
 estar en marcha (ver `../backend/README.md`).
 
-### Cuenta de acceso (demo)
+### Acceso
 
-```
-correo:      estudiante@demo.com
-contraseña:  123456
-```
+El acceso es **solo con Google** (sin contraseña propia ni registro manual). Antes
+del login hay una pantalla de inicialización que espera a que el backend responda.
+Guía de configuración: `../docs/MANUAL_CONFIGURACION.md`.
 
 ## Variables de entorno
 
 | Variable | Por defecto | Descripción |
 |---|---|---|
-| `VITE_URL_BASE_API` | `http://localhost:8000` | URL del backend FastAPI. |
+| `VITE_URL_BASE_API` | `http://localhost:8000` | URL del backend FastAPI (en Vercel: la URL de Render, con `https://`, sin barra final). |
+| `VITE_GOOGLE_CLIENT_ID` | — (obligatoria para entrar) | ID de cliente OAuth de Google, tipo «Aplicación web». Es público; **nunca** pongas aquí un secreto de cliente. |
 
 Todo lo que empieza por `VITE_` se publica en el navegador. **Nunca** pongas
 aquí una API Key de OpenAI: el frontend solo habla con el backend.
@@ -97,6 +99,9 @@ Nuevo tema ── Texto ──────────────────�
 
 - Contenido, resúmenes generados y actividad de la sesión viven en
   `almacen/almacenSesion.ts` (memoria). Al recargar o cerrar la pestaña, se pierden.
-- Siguen en `localStorage` solo los datos de demostración: sesión de acceso,
-  temas creados, preferencias de apariencia y estado de preguntas. Sus claves
-  empiezan por `estudioai.`.
+- La sesión de acceso (perfil de Google) vive solo en memoria
+  (`servicios/servicioAutenticacion.ts`): no se persiste en ningún almacenamiento.
+- Siguen en `localStorage` solo los datos de demostración: temas creados,
+  preferencias de apariencia y estado de preguntas. Sus claves empiezan por
+  `estudioai.`. Al cerrar sesión se borran todas salvo las de apariencia
+  (`utilidades/limpiezaSesion.ts`).

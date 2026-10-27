@@ -5,30 +5,23 @@ import * as authService from "../servicios/servicioAutenticacion";
 interface ValorContextoAutenticacion {
   usuario: Usuario | null;
   estaAutenticado: boolean;
-  iniciarSesion: (correo: string, contrasena: string) => Promise<Usuario>;
-  registrar: (datos: { nombre: string; apellido: string; correo: string; contrasena: string }) => Promise<Usuario>;
+  /** Abre el selector de cuentas de Google. Llamar directamente desde un clic. */
+  iniciarSesionConGoogle: () => Promise<Usuario>;
   cerrarSesion: () => void;
 }
 
 const ContextoAutenticacion = createContext<ValorContextoAutenticacion | undefined>(undefined);
 
 export function ProveedorAutenticacion({ children }: { children: ReactNode }) {
+  // Sin persistencia: al recargar la página la sesión empieza vacía.
   const [usuario, establecerUsuario] = useState<Usuario | null>(() => authService.obtenerUsuarioActual());
 
-  const iniciarSesion = useCallback(async (correo: string, contrasena: string) => {
-    const usuarioAutenticado = await authService.iniciarSesion(correo, contrasena);
-    establecerUsuario(usuarioAutenticado);
-    return usuarioAutenticado;
+  const iniciarSesionConGoogle = useCallback(() => {
+    return authService.iniciarSesionConGoogle().then((usuarioAutenticado) => {
+      establecerUsuario(usuarioAutenticado);
+      return usuarioAutenticado;
+    });
   }, []);
-
-  const registrar = useCallback(
-    async (datos: { nombre: string; apellido: string; correo: string; contrasena: string }) => {
-      const usuarioNuevo = await authService.registrar(datos);
-      establecerUsuario(usuarioNuevo);
-      return usuarioNuevo;
-    },
-    []
-  );
 
   const cerrarSesion = useCallback(() => {
     authService.cerrarSesion();
@@ -36,8 +29,8 @@ export function ProveedorAutenticacion({ children }: { children: ReactNode }) {
   }, []);
 
   const valor = useMemo(
-    () => ({ usuario, estaAutenticado: usuario !== null, iniciarSesion, registrar, cerrarSesion }),
-    [usuario, iniciarSesion, registrar, cerrarSesion]
+    () => ({ usuario, estaAutenticado: usuario !== null, iniciarSesionConGoogle, cerrarSesion }),
+    [usuario, iniciarSesionConGoogle, cerrarSesion]
   );
 
   return <ContextoAutenticacion.Provider value={valor}>{children}</ContextoAutenticacion.Provider>;
@@ -45,6 +38,6 @@ export function ProveedorAutenticacion({ children }: { children: ReactNode }) {
 
 export function useAutenticacion(): ValorContextoAutenticacion {
   const ctx = useContext(ContextoAutenticacion);
-  if (!ctx) throw new Error("useAuth debe usarse dentro de un AuthProvider");
+  if (!ctx) throw new Error("useAutenticacion debe usarse dentro de un ProveedorAutenticacion");
   return ctx;
 }

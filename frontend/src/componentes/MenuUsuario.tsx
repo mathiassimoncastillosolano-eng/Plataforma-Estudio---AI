@@ -34,7 +34,7 @@ export default function MenuUsuario() {
         aria-expanded={abierto}
         aria-label="Menú de cuenta"
       >
-        <Avatar nombre={usuario.nombre} apellido={usuario.apellido} />
+        <Avatar nombre={usuario.nombre} apellido={usuario.apellido} foto={usuario.foto} />
         <div className="hide-mobile" style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
           <span className="header-user-name">
             {usuario.nombre} {usuario.apellido}

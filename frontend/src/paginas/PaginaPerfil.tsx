@@ -22,10 +22,11 @@ export default function PaginaPerfil() {
 
   if (!usuario) return null;
 
-  const fechaIngreso = new Date(usuario.creadoEn).toLocaleDateString("es-ES", {
-    year: "numeric",
-    month: "long",
+  const inicioSesion = new Date(usuario.creadoEn).toLocaleString("es-ES", {
     day: "numeric",
+    month: "long",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 
   const categorias = Array.from(new Set((temas ?? []).map((t) => t.categoria)));
@@ -33,7 +34,7 @@ export default function PaginaPerfil() {
   return (
     <div className="page-narrow">
       <div className="profile-header reveal">
-        <Avatar nombre={usuario.nombre} apellido={usuario.apellido} tamano={68} />
+        <Avatar nombre={usuario.nombre} apellido={usuario.apellido} foto={usuario.foto} tamano={68} />
         <div>
           <div className="profile-name">
             <h1>
@@ -73,9 +74,9 @@ export default function PaginaPerfil() {
           </div>
           <div className="profile-stat-row">
             <span className="row gap-sm text-muted">
-              <Calendar size={15} /> Miembro desde
+              <Calendar size={15} /> Sesión iniciada
             </span>
-            <span className="text-strong">{fechaIngreso}</span>
+            <span className="text-strong">{inicioSesion}</span>
           </div>
           <div className="profile-stat-row">
             <span className="row gap-sm text-muted">

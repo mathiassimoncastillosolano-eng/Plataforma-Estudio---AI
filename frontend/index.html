@@ -23,7 +23,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;600;700;800&family=Figtree:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Pantalla de arranque mínima mientras carga el JavaScript; React la reemplaza al montar. -->
+      <div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;font-family:'Figtree',system-ui,sans-serif;color:var(--color-text-secondary,#46456a);background:var(--color-bg,#f5f4fb)">
+        <svg width="64" height="64" viewBox="0 0 40 40" fill="none" aria-hidden="true"><rect width="40" height="40" rx="12" fill="#4f46e5"/><path d="M27.2 13.4A10.4 10.4 0 1 0 27.2 26.6" stroke="#fff" stroke-width="3.6" stroke-linecap="round"/><circle cx="29.2" cy="20" r="2.6" fill="#fff"/></svg>
+        <p style="margin:0;font-size:15px">Preparando tu entorno de estudio…</p>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
