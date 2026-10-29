@@ -5,7 +5,7 @@ Frontend (React + Vite)  ──HTTP──►  Backend (FastAPI)  ──►  Open
       frontend/                        backend/
 ```
 
-| Funcionalidad | Estado |
+| Funcionalidad | Estados |
 |---|---|
 | Resumen general + resumen esencial | **OpenAI real** (una sola llamada devuelve ambos) |
 | Lectura de PDF (extracción de texto) | **Real**, en el backend, sin guardar el archivo |
