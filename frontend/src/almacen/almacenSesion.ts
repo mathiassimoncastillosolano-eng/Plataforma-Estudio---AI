@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-import type { ResumenesGenerados } from "../tipos";
+import type { MapaMental, ResumenesGenerados } from "../tipos";
 import type { TipoActividad } from "../datos/actividades";
 
 // -----------------------------------------------------------------------
@@ -18,6 +18,12 @@ export interface ActividadSesion {
   at: number;
 }
 
+/** Mapa conceptual generado y la huella de la fuente con la que se generó (si la fuente cambia, deja de valer). */
+export interface MapaGuardado {
+  mapa: MapaMental;
+  huella: string;
+}
+
 interface EstadoSesion {
   iniciadoEn: number;
   /** Último contenido escrito por el usuario para cada tema. */
@@ -25,10 +31,11 @@ interface EstadoSesion {
   /** PDF original de cada tema (solo en memoria; se envía a la IA tal cual para generar el resumen). */
   archivos: Record<string, File>;
   resumenes: Record<string, ResumenesGenerados>;
+  mapas: Record<string, MapaGuardado>;
   actividad: ActividadSesion[];
 }
 
-let estadoGlobal: EstadoSesion = { iniciadoEn: Date.now(), fuentes: {}, archivos: {}, resumenes: {}, actividad: [] };
+let estadoGlobal: EstadoSesion = { iniciadoEn: Date.now(), fuentes: {}, archivos: {}, resumenes: {}, mapas: {}, actividad: [] };
 const oyentes = new Set<() => void>();
 let siguienteId = 1;
 
@@ -52,7 +59,7 @@ export function obtenerSesion(): EstadoSesion {
 
 /** Olvida todo el contenido de estudio de la sesión (al cerrar sesión o cambiar de cuenta). */
 export function reiniciarSesionEstudio() {
-  actualizar({ iniciadoEn: Date.now(), fuentes: {}, archivos: {}, resumenes: {}, actividad: [] });
+  actualizar({ iniciadoEn: Date.now(), fuentes: {}, archivos: {}, resumenes: {}, mapas: {}, actividad: [] });
 }
 
 export function establecerFuenteTema(idTema: string, contenido: string) {
@@ -64,13 +71,14 @@ export function establecerArchivoTema(idTema: string, archivo: File | null) {
   actualizar({ archivos: archivo ? { ...resto, [idTema]: archivo } : resto });
 }
 
-/** Olvida el contenido, el PDF y los resúmenes de la sesión asociados a un tema eliminado. */
+/** Olvida el contenido, el PDF, los resúmenes y el mapa conceptual de la sesión asociados a un tema eliminado. */
 export function eliminarDatosTema(idTema: string) {
   const sinClave = <T,>(registro: Record<string, T>) => Object.fromEntries(Object.entries(registro).filter(([clave]) => clave !== idTema));
   actualizar({
     fuentes: sinClave(estadoGlobal.fuentes),
     archivos: sinClave(estadoGlobal.archivos),
     resumenes: sinClave(estadoGlobal.resumenes),
+    mapas: sinClave(estadoGlobal.mapas),
   });
 }
 
@@ -82,4 +90,9 @@ export function registrarActividad(entrada: Omit<ActividadSesion, "id" | "at">) 
 export function guardarResumenes(idTema: string, tituloTema: string, resultado: ResumenesGenerados) {
   actualizar({ resumenes: { ...estadoGlobal.resumenes, [idTema]: resultado } });
   registrarActividad({ tipo: "resumen", idTema, tituloTema, descripcion: "Generaste el resumen general y el esencial." });
+}
+
+/** Guarda el mapa conceptual generado con IA para un tema (solo en memoria, como los resúmenes). */
+export function guardarMapa(idTema: string, mapa: MapaMental, huella: string) {
+  actualizar({ mapas: { ...estadoGlobal.mapas, [idTema]: { mapa, huella } } });
 }

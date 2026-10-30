@@ -1,8 +1,10 @@
 # Cursa — Frontend de estudio asistido por IA
 
 React + TypeScript + Vite. El módulo de **Resúmenes** está conectado al backend
-FastAPI (`../backend`). Preguntas, Prueba y Mapa conceptual siguen funcionando
-con datos simulados del frontend y se conectarán al backend en futuras HU.
+FastAPI (`../backend`). Preguntas y Prueba siguen funcionando con datos simulados del frontend y se
+conectarán al backend en futuras HU. El Mapa conceptual se genera con IA desde
+la fuente del tema (texto o PDF) mediante `servicios/servicioMapaConceptual.ts`;
+los temas demo conservan su mapa de ejemplo.
 
 ## Cómo ejecutar
 

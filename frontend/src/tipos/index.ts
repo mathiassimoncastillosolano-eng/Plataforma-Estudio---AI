@@ -111,6 +111,8 @@ export interface DatosAristaMapaMental {
   id: string;
   fuente: string;
   objetivo: string;
+  /** Frase de enlace (solo mapas generados con IA): se lee «fuente —etiqueta→ objetivo». */
+  etiqueta?: string;
 }
 
 export interface MapaMental {

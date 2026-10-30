@@ -9,7 +9,8 @@ Frontend (React + Vite)  ──HTTP──►  Backend (FastAPI)  ──►  Open
 |---|---|
 | Resumen general + resumen esencial | **OpenAI real** (una sola llamada devuelve ambos) |
 | Lectura de PDF (extracción de texto) | **Real**, en el backend, sin guardar el archivo |
-| Preguntas · Práctica · Pruebas · Mapa conceptual | **Simulado** en el frontend (no usa OpenAI) |
+| Preguntas · Práctica · Pruebas | **Simulado** en el frontend (no usa OpenAI) |
+| Mapa conceptual | **Real con IA** desde la fuente (texto o PDF); los temas demo conservan su mapa de ejemplo. Validación con material real pendiente — ver [docs/MOD-05-mapas-conceptuales.md](docs/MOD-05-mapas-conceptuales.md) |
 
 ## Sin base de datos: los datos son temporales
 
