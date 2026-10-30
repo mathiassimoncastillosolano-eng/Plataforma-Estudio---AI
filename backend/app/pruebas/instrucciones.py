@@ -19,7 +19,7 @@ _REGLAS = """REGLAS ESTRICTAS
 10. Conceptos: en "conceptos" lista de 1 a 3 conceptos del resumen que evalúa la pregunta (nombres cortos, tal como aparecen en el resumen). Sirven para recomendar qué repasar.
 11. Idioma: el mismo del resumen. Texto plano, sin Markdown. Las fórmulas, en texto plano legible."""
 
-_REGLA_TERMINOS = """12. Términos de ayuda (modo asistido): en "terminos" lista de 0 a 4 términos técnicos que aparezcan TEXTUALMENTE en el enunciado ("texto", escrito exactamente igual que en el enunciado) con una "definicion" breve (máximo 160 caracteres) basada en el resumen. La definición ayuda a entender el término SIN revelar la respuesta: no menciones ni insinúes la alternativa correcta ni resuelvas la pregunta. Si el resumen no define con fiabilidad un término, NO lo incluyas. No incluyas palabras comunes."""
+_REGLA_TERMINOS = """12. Términos de ayuda (modo asistido): en "terminos" lista de 1 a 4 términos técnicos (incluye al menos 1 en cada pregunta siempre que el enunciado contenga alguno que el resumen defina) que aparezcan TEXTUALMENTE en el enunciado ("texto", escrito exactamente igual que en el enunciado) con una "definicion" breve (máximo 160 caracteres) basada en el resumen. La definición ayuda a entender el término SIN revelar la respuesta: no menciones ni insinúes la alternativa correcta ni resuelvas la pregunta. Si el resumen no define con fiabilidad un término, NO lo incluyas; en ese caso usa otro término del enunciado que sí esté en el resumen. No incluyas palabras comunes."""
 
 _FORMATO_BASE = """FORMATO DE SALIDA
 Responde ÚNICAMENTE con un objeto JSON válido, sin texto antes ni después y sin bloques de código:

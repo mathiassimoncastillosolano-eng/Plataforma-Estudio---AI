@@ -90,7 +90,9 @@ export default function EjecutorPrueba(props: Props) {
           <h3 id="pr-enunciado" className="pr-enunciado">
             {prueba.modoAsistido ? <TextoConTerminos enunciado={pregunta.enunciado} terminos={pregunta.terminos} /> : pregunta.enunciado}
           </h3>
-          {prueba.modoAsistido && pregunta.terminos.length > 0 && <p className="pr-nota">Toca los términos subrayados para ver su definición.</p>}
+          {prueba.modoAsistido && (
+            <p className="pr-nota">{pregunta.terminos.length > 0 ? "Toca los términos subrayados para ver su definición." : "Modo asistido activo: esta pregunta no tiene términos con definición."}</p>
+          )}
 
           <ul className="pr-opciones" role="radiogroup" aria-labelledby="pr-enunciado">
             {pregunta.opciones.map((o, i) => {

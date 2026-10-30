@@ -6,6 +6,7 @@ un motivo. Esas descartadas nunca llegan al estudiante; el servicio pide las que
 """
 import json
 import re
+import unicodedata
 from dataclasses import dataclass, field
 
 from app.comun.errores import IARespuestaInvalida
@@ -94,6 +95,34 @@ def es_duplicada(pregunta: "PreguntaGenerada", existentes: list["PreguntaGenerad
     return False
 
 
+def _sin_tildes(texto: str) -> str:
+    """Minúsculas y sin tildes, conservando la longitud para que las posiciones sirvan sobre el original."""
+    plano = "".join(
+        (base if len(base := "".join(c for c in unicodedata.normalize("NFD", ch) if unicodedata.category(c) != "Mn")) == 1 else ch)
+        for ch in texto
+    )
+    return plano.lower() if len(plano.lower()) == len(plano) else plano
+
+
+def _buscar_termino(texto: str, enunciado: str) -> tuple[int, int] | None:
+    """Posición del término en el enunciado, sin distinguir mayúsculas ni tildes y como palabra completa."""
+    coincidencia = re.search(rf"(?<!\w){re.escape(_sin_tildes(texto))}(?!\w)", _sin_tildes(enunciado))
+    return coincidencia.span() if coincidencia else None
+
+
+def _en_resumen(texto: str, fuente: Fuente) -> bool:
+    """El término (o su singular/plural) aparece en el resumen: sin fuente no hay definición fiable."""
+    if fuente.contiene(texto):
+        return True
+    palabras = texto.split()
+    if not palabras:
+        return False
+    ultima = normalizar(palabras[-1])
+    variantes = {ultima[:-2] if ultima.endswith("es") else ultima, ultima[:-1] if ultima.endswith("s") else ultima, ultima + "s", ultima + "es"}
+    base = " ".join(palabras[:-1])
+    return any(fuente.contiene(f"{base} {v}".strip()) for v in variantes if len(v) >= 3)
+
+
 def _terminos(crudos, enunciado: str, correcta: str, fuente: Fuente) -> list[dict]:
     """Términos de ayuda válidos: están en el enunciado, no delatan la respuesta y salen del resumen."""
     if not isinstance(crudos, list):
@@ -107,18 +136,17 @@ def _terminos(crudos, enunciado: str, correcta: str, fuente: Fuente) -> list[dic
         definicion = _texto(crudo.get("definicion"), LONG_MAX_DEFINICION)
         if not texto or not definicion or len(texto) < 3:
             continue
-        coincidencia = re.search(rf"(?<!\w){re.escape(texto)}(?!\w)", enunciado, re.IGNORECASE)
-        if not coincidencia:
+        posicion = _buscar_termino(texto, enunciado)
+        if posicion is None:
             continue
-        inicio, fin = coincidencia.span()
+        inicio, fin = posicion
         if any(inicio < t["fin"] and fin > t["inicio"] for t in resultado):
             continue
         texto_norm = normalizar(texto)
         # La ayuda no puede resolver la pregunta ni ser la respuesta misma.
         if texto_norm == correcta_norm or (len(correcta_norm) >= 5 and correcta_norm in normalizar(definicion)):
             continue
-        # Solo se explican términos que existen en el resumen: sin fuente no hay definición fiable.
-        if not fuente.contiene(texto):
+        if not _en_resumen(texto, fuente):
             continue
         resultado.append({"inicio": inicio, "fin": fin, "definicion": definicion})
         if len(resultado) == MAX_TERMINOS:

@@ -104,3 +104,18 @@ def test_respuesta_sin_lista_utilizable_lanza_error(bruto):
 def test_acepta_bloque_de_codigo_markdown():
     bruto = "```json\n" + json.dumps({"preguntas": [valida()]}) + "\n```"
     assert len(analizar_preguntas(bruto, FUENTE, modo_asistido=False)[0]) == 1
+
+
+def test_terminos_toleran_tildes_mayusculas_y_plurales():
+    from app.pruebas.analizador import _terminos
+    from app.pruebas.texto import Fuente
+
+    fuente = Fuente("La difracción es la desviación de una onda. Las ondas transportan energía.")
+    enunciado = "¿Qué describe la DIFRACCION de las ondas?"
+    crudos = [
+        {"texto": "difracción", "definicion": "Desviación de una onda al rodear un obstáculo."},
+        {"texto": "ondas", "definicion": "Perturbaciones que transportan energía."},
+        {"texto": "onda estacionaria", "definicion": "No está en el enunciado."},
+    ]
+    terminos = _terminos(crudos, enunciado, "Otra cosa distinta", fuente)
+    assert [enunciado[t["inicio"]:t["fin"]] for t in terminos] == ["DIFRACCION", "ondas"]
