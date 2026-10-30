@@ -1,14 +1,3 @@
-import type { ConfiguracionPrueba } from "../tipos";
-
-/** Configuración inicial sugerida para cada tema (el usuario la puede cambiar). */
-export const configuracionesPruebaPorDefecto: Record<string, ConfiguracionPrueba> = {
-  "1": { idTema: "1", cantidadPreguntas: 10, dificultad: "media", limiteTiempoMinutos: 15 },
-  "2": { idTema: "2", cantidadPreguntas: 10, dificultad: "media", limiteTiempoMinutos: 15 },
-  "3": { idTema: "3", cantidadPreguntas: 15, dificultad: "media", limiteTiempoMinutos: 20 },
-  "4": { idTema: "4", cantidadPreguntas: 10, dificultad: "media", limiteTiempoMinutos: 15 },
-  "5": { idTema: "5", cantidadPreguntas: 10, dificultad: "facil", limiteTiempoMinutos: 10 },
-};
-
 export interface PruebaPasada {
   id: string;
   idTema: string;

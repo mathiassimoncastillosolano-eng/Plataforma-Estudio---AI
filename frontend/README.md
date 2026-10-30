@@ -107,3 +107,14 @@ Nuevo tema ── Texto ──────────────────�
   preferencias de apariencia y estado de preguntas. Sus claves empiezan por
   `estudioai.`. Al cerrar sesión se borran todas salvo las de apariencia
   (`utilidades/limpiezaSesion.ts`).
+
+
+## Módulo Pruebas
+
+- Flujo: configuración → generación en el servidor → «lista» → ejecución (con pausa opcional) → entrega → resultados. Controlador: `hooks/useControlPrueba.ts`; servicio: `servicios/servicioPruebas.ts`.
+- Se guarda en `localStorage` solo el sello cifrado, las respuestas, descartes, marcas y la posición (nunca las preguntas): al recargar o abrir otra pestaña se reanuda sin regenerar.
+- **Alerta de tiempo** (única regla): con el cronómetro oculto solo se ve una barra; el número reaparece en rojo y con el texto «Quedan…» cuando resta `min(10 min, 25 % del tiempo)`, con mínimo 60 s (`utilidades/tiempoPrueba.ts`).
+- **Descarte:** alternativas atenuadas con etiqueta e icono, reversibles y persistentes; elegir una descartada la restaura.
+- **Asistido:** términos subrayados con definiciones precalculadas por el servidor (texto plano, sin llamadas en hover).
+- **Anti-copia:** bloquea copiar/cortar/clic derecho/arrastrar solo dentro del área del examen. Es una barrera de conveniencia, no una garantía anti-trampa.
+- Tests de lógica pura: `src/utilidades/*.test.ts` (`npm test`).

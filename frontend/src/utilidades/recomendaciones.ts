@@ -1,4 +1,4 @@
-import type { ResultadoPrueba, DificultadPregunta } from "../tipos";
+import type { NivelPregunta as DificultadPregunta, ResultadoPrueba } from "../tipos/prueba";
 import { DIFICULTADES } from "./constructorPruebas";
 
 export interface Recomendacion {
@@ -18,8 +18,8 @@ export function construirRecomendaciones(resultado: ResultadoPrueba): Recomendac
 
   if (resultado.tiempoAgotado) {
     salida.push({ tono: "warn", texto: "Se acabó el tiempo antes de terminar. Prueba con más minutos o practica a un ritmo menor a 1 minuto por pregunta." });
-  } else if (resultado.cantidadOmitidas > 0) {
-    salida.push({ tono: "warn", texto: `Dejaste ${resultado.cantidadOmitidas} ${resultado.cantidadOmitidas === 1 ? "pregunta" : "preguntas"} sin responder. Si dudas, descarta opciones y elige la más probable.` });
+  } else if (resultado.omitidas > 0) {
+    salida.push({ tono: "warn", texto: `Dejaste ${resultado.omitidas} ${resultado.omitidas === 1 ? "pregunta" : "preguntas"} sin responder. Si dudas, descarta opciones y elige la más probable.` });
   }
 
   for (const w of resultado.conceptosDebiles) {
@@ -31,11 +31,11 @@ export function construirRecomendaciones(resultado: ResultadoPrueba): Recomendac
     salida.push({ tono: "info", texto: `Refuerza las preguntas ${nombreNivel[masDebil]}: tu acierto fue ${resultado.porDificultad[masDebil].porcentaje}%.` });
   }
 
-  if (resultado.porcentajePuntaje >= 85 && resultado.configuracion.dificultad !== "dificil") {
+  if (resultado.porcentaje >= 85 && resultado.configuracion.dificultad !== "dificil") {
     salida.push({ tono: "good", texto: "Dominas este nivel. Sube la dificultad para seguir progresando." });
-  } else if (resultado.porcentajePuntaje >= 85) {
+  } else if (resultado.porcentaje >= 85) {
     salida.push({ tono: "good", texto: "Excelente resultado incluso en dificultad alta. Puedes pasar al siguiente tema." });
-  } else if (resultado.porcentajePuntaje < 50) {
+  } else if (resultado.porcentaje < 50) {
     salida.push({ tono: "info", texto: "Lee de nuevo el resumen completo antes de volver a intentarlo; después, practica con preguntas sueltas." });
   }
 

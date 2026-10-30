@@ -9,8 +9,11 @@ from typing import Protocol
 class ProveedorIA(Protocol):
     modelo: str
 
-    def generar_json(self, *, instrucciones: str, entrada: str) -> str:
-        """Devuelve el texto bruto (se espera un objeto JSON) generado por el modelo."""
+    def generar_json(self, *, instrucciones: str, entrada: str, timeout_segundos: float | None = None) -> str:
+        """Devuelve el texto bruto (se espera un objeto JSON) generado por el modelo.
+
+        `timeout_segundos` (opcional) sustituye el tiempo de espera predeterminado en esa llamada.
+        """
         ...
 
     def generar_json_desde_pdf(self, *, instrucciones: str, entrada: str, pdf: bytes, nombre_archivo: str) -> str:

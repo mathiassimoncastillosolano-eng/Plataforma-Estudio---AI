@@ -14,8 +14,8 @@ class ProveedorFalso:
         self._error = error
         self.llamadas: list[dict] = []
 
-    def generar_json(self, *, instrucciones: str, entrada: str) -> str:
-        self.llamadas.append({"instrucciones": instrucciones, "entrada": entrada})
+    def generar_json(self, *, instrucciones: str, entrada: str, timeout_segundos: float | None = None) -> str:
+        self.llamadas.append({"instrucciones": instrucciones, "entrada": entrada, "timeout_segundos": timeout_segundos})
         if self._error:
             raise self._error
         return self._respuesta

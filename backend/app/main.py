@@ -10,6 +10,7 @@ from app.comun.respuestas import respuesta_error
 from app.configuracion.ajustes import obtener_ajustes
 from app.contenido.enrutador import enrutador as enrutador_contenido
 from app.mapas_conceptuales.enrutador import enrutador as enrutador_mapas
+from app.pruebas.enrutador import enrutador as enrutador_pruebas
 from app.resumenes.enrutador import enrutador as enrutador_resumenes
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -58,6 +59,7 @@ def crear_aplicacion() -> FastAPI:
     aplicacion.include_router(enrutador_resumenes)
     aplicacion.include_router(enrutador_contenido)
     aplicacion.include_router(enrutador_mapas)
+    aplicacion.include_router(enrutador_pruebas)
 
     @aplicacion.get("/api/salud", tags=["sistema"])
     def salud(respuesta: Response):

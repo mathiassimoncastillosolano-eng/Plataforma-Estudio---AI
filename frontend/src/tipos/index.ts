@@ -97,66 +97,6 @@ export interface IntentoPregunta {
   esCorrecta: boolean;
 }
 
-export type DificultadPrueba = DificultadPregunta;
-export type LimiteTiempoPrueba = number | null; // minutos; null = sin límite
-
-/** Configuración elegida por el usuario antes de iniciar una prueba. */
-export interface ConfiguracionPrueba {
-  idTema: string;
-  cantidadPreguntas: number;
-  dificultad: DificultadPrueba;
-  /** Duración en minutos. null = sin límite de tiempo. */
-  limiteTiempoMinutos: LimiteTiempoPrueba;
-}
-
-export type ConteosDificultad = Record<DificultadPregunta, number>;
-
-export interface IntentoPrueba {
-  id: string;
-  idTema: string;
-  iniciadoEn: string;
-  finalizadoEn?: string;
-  respuestas: IntentoPregunta[];
-  idsPreguntas: string[];
-  duracionSegundos?: number;
-}
-
-export interface RendimientoDificultad {
-  total: number;
-  correcta: number;
-  /** puntos obtenidos / puntos máximos de este nivel */
-  obtenidos: number;
-  max: number;
-  porcentaje: number;
-}
-
-export interface ConceptoDebil {
-  termino: string;
-  falladas: number;
-  total: number;
-}
-
-export interface ResultadoPrueba {
-  idPrueba: string;
-  idTema: string;
-  configuracion: ConfiguracionPrueba;
-  cantidadCorrectas: number;
-  cantidadIncorrectas: number;
-  cantidadOmitidas: number;
-  totalPreguntas: number;
-  /** Puntaje ponderado (fácil 0.5 · media 1 · difícil 2) */
-  puntaje: number;
-  puntajeMaximo: number;
-  /** Porcentaje ponderado = score / maxScore */
-  porcentajePuntaje: number;
-  duracionSegundos: number;
-  etiquetaDuracion: string;
-  tiempoAgotado: boolean;
-  porDificultad: Record<DificultadPregunta, RendimientoDificultad>;
-  conceptosDebiles: ConceptoDebil[];
-  idsPreguntasRepaso: string[];
-}
-
 export interface DatosNodoMapaMental {
   id: string;
   etiqueta: string;
