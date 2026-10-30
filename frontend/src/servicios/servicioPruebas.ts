@@ -71,7 +71,8 @@ interface TiempoApi {
 interface RespuestaApi {
   sello: string;
   prueba: PruebaApi;
-  tiempo: TiempoApi;
+  /** `crear` no lo incluye: la prueba todavía no ha empezado. */
+  tiempo?: TiempoApi;
 }
 
 interface RendimientoApi {
@@ -147,15 +148,23 @@ function aPrueba(p: PruebaApi): PruebaPublica {
 }
 
 function aRespuesta(r: RespuestaApi): RespuestaPrueba {
+  // Sin `tiempo` (recién creada) el reloj no corre: queda todo el límite y nada transcurrido.
+  const t: TiempoApi = r.tiempo ?? {
+    estado: r.prueba.estado,
+    limite_segundos: r.prueba.limite_segundos,
+    restante_segundos: r.prueba.limite_segundos,
+    transcurrido_segundos: 0,
+    vencida: false,
+  };
   return {
     sello: r.sello,
     prueba: aPrueba(r.prueba),
     tiempo: {
-      estado: r.tiempo.estado,
-      limiteSegundos: r.tiempo.limite_segundos,
-      restanteSegundos: r.tiempo.restante_segundos,
-      transcurridoSegundos: r.tiempo.transcurrido_segundos,
-      vencida: r.tiempo.vencida,
+      estado: t.estado,
+      limiteSegundos: t.limite_segundos,
+      restanteSegundos: t.restante_segundos,
+      transcurridoSegundos: t.transcurrido_segundos,
+      vencida: t.vencida,
     },
   };
 }

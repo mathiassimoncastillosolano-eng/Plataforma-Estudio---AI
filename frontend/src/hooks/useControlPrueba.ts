@@ -32,7 +32,11 @@ interface Opciones {
   alFinalizar: (resultado: ResultadoCompleto) => void | Promise<void>;
 }
 
-const mensajeDe = (e: unknown) => (e instanceof ErrorApi ? e.message : "No pudimos completar la operación. Inténtalo de nuevo.");
+const mensajeDe = (e: unknown) => {
+  if (e instanceof ErrorApi) return e.message;
+  console.error("[pruebas] error inesperado:", e);
+  return "No pudimos completar la operación. Inténtalo de nuevo.";
+};
 
 /**
  * Controlador de una prueba: coordina el servidor (fuente de verdad del reloj, las preguntas y la
