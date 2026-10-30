@@ -356,6 +356,8 @@
 .page-content.canvas { max-width: none; padding-bottom: 16px; display: flex; flex-direction: column; height: calc(100dvh - var(--header-h)); }
 .page-content.canvas .topic-shell { flex: 1; min-height: 0; }
 .page-content.canvas .topic-body { flex: 1; min-height: 0; display: flex; }
+/* Los estados (invitación, carga, error) ocupan todo el ancho del cuerpo para quedar centrados, no pegados a la izquierda. */
+.page-content.canvas .topic-body > .state-block { flex: 1; }
 .page-content.canvas .topic-head { margin-bottom: 12px; }
 .cm-wrap { position: relative; flex: 1; min-height: 420px; border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow: hidden; background: var(--color-surface); }
 .cm-wrap .react-flow { background: transparent; --xy-edge-stroke: var(--color-border-strong); }
@@ -382,12 +384,18 @@
 .cm-title-input:hover { border-color: var(--color-border); }
 .cm-title-input:focus { outline: none; border-color: var(--color-primary); background: var(--color-surface); }
 .cm-def { color: var(--color-text-secondary); line-height: 1.65; font-size: var(--fs-body-sm); }
+textarea.cm-def, .cm-link-input { width: 100%; font-family: inherit; border: 1px solid var(--color-border); background: var(--color-surface); border-radius: var(--radius-xs); padding: 8px 10px; }
+textarea.cm-def { min-height: 96px; resize: vertical; }
+.cm-link-input { padding: 6px 10px; font-size: var(--fs-body-sm); color: var(--color-text-secondary); }
+textarea.cm-def:hover, .cm-link-input:hover { border-color: var(--color-border-strong); }
+textarea.cm-def:focus, .cm-link-input:focus { outline: none; border-color: var(--color-primary); }
+textarea.cm-def::placeholder, .cm-link-input::placeholder, .cm-title-input::placeholder { color: var(--color-text-muted); }
 .cm-rel h4 { font-family: var(--font-body); font-size: var(--fs-micro); text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-text-muted); margin-bottom: 8px; }
 .cm-panel footer { display: flex; gap: 8px; flex-wrap: wrap; margin-top: auto; padding-top: 8px; }
 .cm-wrap .react-flow__controls { box-shadow: var(--shadow-sm); border: 1px solid var(--color-border); border-radius: var(--radius-sm); overflow: hidden; }
 .cm-wrap .react-flow__controls-button { background: var(--color-surface-elevated); border-bottom: 1px solid var(--color-border); color: var(--color-text); fill: var(--color-text); }
 .cm-wrap .react-flow__controls-button:hover { background: var(--color-surface-interactive); }
-.cm-minimap { background: var(--color-surface-elevated) !important; border: 1px solid var(--color-border); border-radius: var(--radius-sm); bottom: 14px !important; right: 14px !important; width: 150px !important; height: 100px !important; }
+.cm-minimap { background: var(--color-surface-elevated) !important; border: 1px solid var(--color-border); border-radius: var(--radius-sm); bottom: 14px !important; right: 14px !important; } /* el tamaño (150×100) lo fija MapaConceptual en el propio MiniMap */
 .cm-wrap:has(.cm-panel) .cm-minimap { display: none; }
 .cm-wrap .react-flow__edge-path { transition: stroke var(--motion-standard), opacity var(--motion-standard); }
 

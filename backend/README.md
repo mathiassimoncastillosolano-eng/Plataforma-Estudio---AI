@@ -25,7 +25,13 @@ app/
 ├── servicios_externos/
 │   ├── proveedor_ia.py      Contrato (Protocol) que usan los servicios
 │   └── servicio_openai.py   Único módulo que conoce el SDK de OpenAI
-└── preguntas/ practica/ pruebas/ mapas_conceptuales/   Reservados (hoy simulados en el frontend)
+├── mapas_conceptuales/      Módulo REAL con IA (MOD-05)
+│   ├── enrutador.py         POST /api/mapas-conceptuales · POST /api/mapas-conceptuales/pdf
+│   ├── servicio_mapa.py     Caso de uso (valida → IA → analiza respuesta)
+│   ├── instrucciones.py     Instrucciones y esquema JSON enviados a la IA
+│   ├── analizador_respuesta.py  Valida y depura el JSON que devuelve el modelo
+│   └── dominio.py           MapaConceptual, NodoMapa, RelacionMapa y límites
+└── preguntas/ practica/ pruebas/   Reservados (hoy simulados en el frontend)
 ```
 
 Flujo: `enrutador → servicio → proveedor de IA → OpenAI`. Los servicios dependen
@@ -95,6 +101,36 @@ no se guarda nada. Responde igual que `POST /api/resumenes`, con `metadatos.entr
 y `metadatos.paginas`. **Requiere un modelo que admita entrada de archivos PDF**; si el
 modelo configurado no la admite responde `502 IA_PDF_NO_SOPORTADO` (nunca cambia de modelo
 por su cuenta).
+
+### `POST /api/mapas-conceptuales`
+
+JSON `{ "texto": "...", "titulo": "..." }` (el título es opcional). Genera un **mapa conceptual**
+desde la fuente original; no necesita un resumen previo. Datos devueltos:
+
+```json
+{ "mapa": {
+    "titulo": "...",
+    "nodos": [{ "id": "root", "etiqueta": "...", "definicion": "...", "nivel": 0, "id_padre": null }],
+    "relaciones": [{ "id": "e1", "origen": "root", "destino": "n1", "frase_enlace": "transporta", "tipo": "jerarquica" }]
+  },
+  "metadatos": { "modelo": "...", "generado_en": "...", "caracteres_entrada": 0, "entrada": "texto", "paginas": null } }
+```
+
+Cada relación se lee como «origen —frase_enlace→ destino». `tipo` es `jerarquica` (padre → hijo) o
+`cruzada` (entre ramas distintas). El prompt solo pide relaciones jerárquicas; el analizador sigue
+tolerando las `cruzada` si la IA las enviara y el frontend las descarta (no se dibujan). El backend **no devuelve coordenadas**: las calcula el frontend.
+El JSON de la IA se valida y depura (ids únicos, una sola raíz, sin ciclos ni huérfanos, relaciones
+con extremos existentes, textos no vacíos, máx. 30 nodos y 12 relaciones cruzadas); si el resultado
+no es un mapa coherente responde `502 IA_RESPUESTA_INVALIDA`. Reutiliza los mismos límites de texto,
+errores y proveedor de IA que los resúmenes.
+
+### `POST /api/mapas-conceptuales/pdf`
+
+`multipart/form-data` con `archivo` (y `titulo` opcional). Igual que `/api/resumenes/pdf`: el PDF
+original se envía a la IA (se valida, no se guarda). Mismo formato de respuesta.
+
+Validación con material real: `python scripts/validar_mapa_real.py material.pdf --titulo "Tema"`
+(usa OpenAI real y consume créditos; imprime métricas y todas las proposiciones para revisarlas).
 
 ### `POST /api/resumenes/descargar-pdf`
 
