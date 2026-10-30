@@ -1,211 +1,218 @@
-import { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
-import { ChevronLeft, ChevronRight, Flag } from "lucide-react";
-import type { ConfiguracionPrueba, PreguntaEstudio } from "../../tipos";
-import { PESO_PREGUNTA, formatearPuntos } from "../../utilidades/constructorPruebas";
-import { etiquetaDificultad } from "../../utilidades/formato";
-import type { MapaRespuestas } from "../../servicios/servicioPruebas";
+import { useMemo, useRef, useState } from "react";
+import { AlertTriangle, ArrowLeft, ArrowRight, Ban, Bookmark, Check, PauseCircle, Send, Undo2 } from "lucide-react";
+import type { MapaDescartes, MapaRespuestas, PreguntaExamen, PruebaPublica, TiempoPrueba } from "../../tipos/prueba";
+import { useProteccionExamen } from "../../hooks/useProteccionExamen";
+import { formatearPuntos } from "../../utilidades/constructorPruebas";
 import Boton from "../Boton";
 import Modal from "../Modal";
-import ProgresoPrueba from "./ProgresoPrueba";
+import RelojPrueba from "./RelojPrueba";
+import TextoConTerminos from "./TextoConTerminos";
 
 interface Props {
-  tituloTema: string;
-  preguntas: PreguntaEstudio[];
-  configuracion: ConfiguracionPrueba;
-  enviando: boolean;
-  alEnviar: (carga: { respuestas: MapaRespuestas; segundos: number; tiempoAgotado: boolean }) => void;
-  alSalir: () => void;
+  prueba: PruebaPublica;
+  preguntas: PreguntaExamen[];
+  tiempo: TiempoPrueba;
+  respuestas: MapaRespuestas;
+  descartes: MapaDescartes;
+  marcadas: string[];
+  indice: number;
+  aviso: string | null;
+  ocupado: boolean;
+  entregando: boolean;
+  alIr: (indice: number) => void;
+  alElegir: (idPregunta: string, idOpcion: string) => void;
+  alDescartar: (idPregunta: string, idOpcion: string) => void;
+  alMarcar: (idPregunta: string) => void;
+  alPausar: () => void;
+  alEntregar: () => void;
+  alAgotarTiempo: () => void;
 }
 
-/**
- * Modo concentración: pantalla completa sin sidebar ni header.
- * Solo pregunta, alternativas, progreso y tiempo.
- */
-export default function EjecutorPrueba({ tituloTema, preguntas, configuracion, enviando, alEnviar, alSalir }: Props) {
-  const [indice, establecerIndice] = useState(0);
-  const [direccion, establecerDireccion] = useState<"next" | "prev">("next");
-  const [respuestas, establecerRespuestas] = useState<MapaRespuestas>({});
-  const [segundos, establecerSegundos] = useState(0);
-  const [confirmar, establecerConfirmar] = useState<null | "finish" | "exit">(null);
-  const refInicio = useRef(Date.now());
-  const refTerminado = useRef(false);
+const LETRAS = ["A", "B", "C", "D", "E", "F"];
+const NIVEL: Record<PreguntaExamen["dificultad"], string> = { facil: "Fácil", media: "Media", dificil: "Difícil" };
 
-  const limiteSegundos = configuracion.limiteTiempoMinutos === null ? null : configuracion.limiteTiempoMinutos * 60;
-  const total = preguntas.length;
-  const actual = preguntas[indice];
-  const respuesta = respuestas[actual.id];
-  const estaRespondida = (q: PreguntaEstudio) => {
-    const a = respuestas[q.id];
-    return q.tipo === "abierta" ? !!a?.textoAbierto?.trim() : !!a?.idOpcion;
-  };
-  const cantidadRespondidas = preguntas.filter(estaRespondida).length;
+export default function EjecutorPrueba(props: Props) {
+  const { prueba, preguntas, tiempo, respuestas, descartes, marcadas, indice, aviso, ocupado, entregando } = props;
+  const contenedor = useRef<HTMLDivElement>(null);
+  const [confirmando, establecerConfirmando] = useState(false);
+  useProteccionExamen(contenedor, true);
 
-  // Cronómetro basado en reloj real (no se desfasa si la pestaña queda en segundo plano)
-  useEffect(() => {
-    const temporizador = setInterval(() => establecerSegundos(Math.floor((Date.now() - refInicio.current) / 1000)), 250);
-    return () => clearInterval(temporizador);
-  }, []);
+  const pregunta = preguntas[Math.min(indice, preguntas.length - 1)];
+  const pendientes = useMemo(() => preguntas.filter((q) => !respuestas[q.id]), [preguntas, respuestas]);
+  const respondidas = preguntas.length - pendientes.length;
+  const descartadas = descartes[pregunta.id] ?? [];
+  const esUltima = indice >= preguntas.length - 1;
 
-  function enviar(tiempoAgotado: boolean) {
-    if (refTerminado.current) return;
-    refTerminado.current = true;
-    alEnviar({ respuestas, segundos: limiteSegundos !== null ? Math.min(segundos, limiteSegundos) : segundos, tiempoAgotado });
+  function irAPrimeraPendiente() {
+    const i = preguntas.findIndex((q) => !respuestas[q.id]);
+    if (i >= 0) props.alIr(i);
+    establecerConfirmando(false);
   }
 
-  // Fin automático al agotarse el tiempo
-  useEffect(() => {
-    if (limiteSegundos !== null && segundos >= limiteSegundos) enviar(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [segundos]);
+  return (
+    <div className="pr-examen" ref={contenedor} data-modo={prueba.modoAsistido ? "asistido" : undefined}>
+      <header className="pr-barra">
+        <div className="pr-barra-titulo">
+          <p className="eyebrow">Prueba en curso</p>
+          <h2>{prueba.tituloTema}</h2>
+        </div>
+        <RelojPrueba tiempo={tiempo} cronometroVisible={prueba.cronometroVisible} alAgotar={props.alAgotarTiempo} />
+        <div className="pr-barra-acciones">
+          {prueba.pausaBlindada && (
+            <Boton variante="secondary" onClick={props.alPausar} cargando={ocupado} icono={<PauseCircle size={16} />}>
+              Pausar
+            </Boton>
+          )}
+          <Boton onClick={() => establecerConfirmando(true)} disabled={entregando} icono={<Send size={16} />}>
+            Entregar
+          </Boton>
+        </div>
+      </header>
 
-  function irA(siguiente: number) {
-    if (siguiente < 0 || siguiente >= total || siguiente === indice) return;
-    establecerDireccion(siguiente > indice ? "next" : "prev");
-    establecerIndice(siguiente);
-  }
+      {aviso && (
+        <div className="pr-banner pr-banner-warn" role="status">
+          <AlertTriangle size={18} aria-hidden="true" />
+          <span>{aviso}</span>
+        </div>
+      )}
 
-  function seleccionarOpcion(idOpcion: string) {
-    establecerRespuestas((previo) => ({ ...previo, [actual.id]: { idOpcion } }));
-  }
-
-  function solicitarFinalizar() {
-    if (cantidadRespondidas < total) establecerConfirmar("finish");
-    else enviar(false);
-  }
-
-  // Atajos: ← → navegan · 1-4 / A-D eligen alternativa
-  useEffect(() => {
-    function alTecla(e: KeyboardEvent) {
-      if (confirmar || enviando) return;
-      const el = e.target as HTMLElement;
-      if (el.tagName === "TEXTAREA" || el.tagName === "INPUT") return;
-      if (e.key === "ArrowRight") irA(indice + 1);
-      else if (e.key === "ArrowLeft") irA(indice - 1);
-      else if (e.key === "Escape") establecerConfirmar("exit");
-      else if (actual.tipo !== "abierta" && actual.opciones) {
-        const k = e.key.toLowerCase();
-        const porNumero = "1234".indexOf(k);
-        const porLetra = "abcd".indexOf(k);
-        const posicion = porNumero >= 0 ? porNumero : porLetra;
-        const opcion = posicion >= 0 ? actual.opciones[posicion] : undefined;
-        if (opcion) seleccionarOpcion(opcion.id);
-      }
-    }
-    window.addEventListener("keydown", alTecla);
-    return () => window.removeEventListener("keydown", alTecla);
-  });
-
-  const esUltima = indice === total - 1;
-
-  // Portal al body: el modo concentración cubre toda la pantalla sin depender de los transforms del layout
-  return createPortal(
-    <div className="exam-focus" role="dialog" aria-modal="true" aria-label="Prueba en curso">
-      <ProgresoPrueba tituloTema={tituloTema} indice={indice} total={total} segundos={segundos} limiteSegundos={limiteSegundos} alSalir={() => establecerConfirmar("exit")} />
-
-      <main className="focus-main">
-        <div className="focus-col">
-          <div className="focus-qmeta">
-            <span className="mono">
-              Pregunta {indice + 1} de {total}
+      <div className="pr-cuerpo">
+        <article className="pr-pregunta" aria-labelledby="pr-enunciado" key={pregunta.id}>
+          <div className="pr-pregunta-meta">
+            <span>
+              Pregunta <strong>{indice + 1}</strong> de {preguntas.length}
             </span>
-            <span className={`pts-tag mix-${actual.dificultad}-soft`} title={`Dificultad ${etiquetaDificultad(actual.dificultad).toLowerCase()}`}>
-              {formatearPuntos(PESO_PREGUNTA[actual.dificultad])} {PESO_PREGUNTA[actual.dificultad] === 1 ? "punto" : "puntos"}
+            <span className={`pr-etiqueta pr-nivel-${pregunta.dificultad}`}>
+              {NIVEL[pregunta.dificultad]} · {formatearPuntos(pregunta.puntos)} {pregunta.puntos === 1 ? "punto" : "puntos"}
             </span>
           </div>
 
-          <div key={actual.id} className={`focus-question q-enter-${direccion}`}>
-            <p className="focus-prompt">{actual.enunciado}</p>
+          <h3 id="pr-enunciado" className="pr-enunciado">
+            {prueba.modoAsistido ? <TextoConTerminos enunciado={pregunta.enunciado} terminos={pregunta.terminos} /> : pregunta.enunciado}
+          </h3>
+          {prueba.modoAsistido && pregunta.terminos.length > 0 && <p className="pr-nota">Toca los términos subrayados para ver su definición.</p>}
 
-            {actual.tipo === "abierta" ? (
-              <textarea
-                className="textarea focus-textarea"
-                placeholder="Escribe tu respuesta…"
-                value={respuesta?.textoAbierto ?? ""}
-                onChange={(e) => establecerRespuestas((previo) => ({ ...previo, [actual.id]: { textoAbierto: e.target.value } }))}
-              />
-            ) : (
-              <div className="focus-options" role="radiogroup" aria-label="Alternativas">
-                {actual.opciones?.map((opcion, i) => (
-                  <button key={opcion.id} role="radio" aria-checked={respuesta?.idOpcion === opcion.id} className={`focus-option ${respuesta?.idOpcion === opcion.id ? "selected" : ""}`} onClick={() => seleccionarOpcion(opcion.id)}>
-                    <span className="focus-marker">{actual.tipo === "verdadero-falso" ? i + 1 : String.fromCharCode(65 + i)}</span>
-                    <span>{opcion.etiqueta}</span>
+          <ul className="pr-opciones" role="radiogroup" aria-labelledby="pr-enunciado">
+            {pregunta.opciones.map((o, i) => {
+              const seleccionada = respuestas[pregunta.id] === o.id;
+              const descartada = descartadas.includes(o.id);
+              return (
+                <li key={o.id} className="pr-opcion-fila" data-descartada={descartada || undefined}>
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={seleccionada}
+                    className="pr-opcion"
+                    data-seleccionada={seleccionada || undefined}
+                    onClick={() => props.alElegir(pregunta.id, o.id)}
+                  >
+                    <span className="pr-opcion-letra" aria-hidden="true">
+                      {seleccionada ? <Check size={15} /> : LETRAS[i]}
+                    </span>
+                    <span className="pr-opcion-texto">{o.texto}</span>
+                    {descartada && (
+                      <span className="pr-opcion-estado">
+                        <Ban size={13} aria-hidden="true" /> Descartada
+                      </span>
+                    )}
                   </button>
-                ))}
-              </div>
-            )}
-          </div>
+                  <button
+                    type="button"
+                    className="pr-descartar"
+                    aria-pressed={descartada}
+                    aria-label={descartada ? `Restaurar la alternativa ${LETRAS[i]}` : `Descartar la alternativa ${LETRAS[i]}`}
+                    title={descartada ? "Restaurar alternativa" : "Descartar alternativa"}
+                    onClick={() => props.alDescartar(pregunta.id, o.id)}
+                  >
+                    {descartada ? <Undo2 size={16} aria-hidden="true" /> : <Ban size={16} aria-hidden="true" />}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
 
-          <div className="focus-nav">
-            <Boton variante="secondary" disabled={indice === 0} onClick={() => irA(indice - 1)}>
-              <ChevronLeft size={16} />
+          <div className="pr-pie">
+            <Boton variante="ghost" icono={<ArrowLeft size={16} />} disabled={indice === 0} onClick={() => props.alIr(indice - 1)}>
               Anterior
             </Boton>
-            <span className="focus-count hide-mobile">
-              {cantidadRespondidas} de {total} respondidas
-            </span>
+            <button type="button" className="pr-marcar" aria-pressed={marcadas.includes(pregunta.id)} onClick={() => props.alMarcar(pregunta.id)}>
+              <Bookmark size={16} aria-hidden="true" /> {marcadas.includes(pregunta.id) ? "Marcada para revisar" : "Marcar para revisar"}
+            </button>
             {esUltima ? (
-              <Boton onClick={solicitarFinalizar} cargando={enviando} icono={<Flag size={15} />}>
-                Finalizar prueba
+              <Boton onClick={() => establecerConfirmando(true)} icono={<Send size={16} />}>
+                Entregar
               </Boton>
             ) : (
-              <Boton onClick={() => irA(indice + 1)}>
-                Siguiente
-                <ChevronRight size={16} />
+              <Boton variante="secondary" onClick={() => props.alIr(indice + 1)}>
+                Siguiente <ArrowRight size={16} />
               </Boton>
             )}
           </div>
-        </div>
+        </article>
 
-        <aside className="focus-rail" aria-label="Navegación entre preguntas">
-          <p>Tus respuestas</p>
-          <div className="navgrid">
-            {preguntas.map((q, i) => (
-              <button key={q.id} className={`navdot ${i === indice ? "current" : ""} ${estaRespondida(q) ? "done" : ""}`} onClick={() => irA(i)} aria-label={`Ir a la pregunta ${i + 1}${estaRespondida(q) ? " (respondida)" : ""}`} aria-current={i === indice}>
-                {i + 1}
-              </button>
-            ))}
-          </div>
-          <small>
-            {cantidadRespondidas} de {total} respondidas
-          </small>
-          <small className="focus-keys hide-mobile">← → navegar · 1-4 elegir</small>
-        </aside>
-      </main>
+        <nav className="pr-mapa" aria-label="Mapa de preguntas">
+          <h4>
+            {respondidas} de {preguntas.length} respondidas
+          </h4>
+          <ol>
+            {preguntas.map((q, i) => {
+              const estado = respuestas[q.id] ? "respondida" : "vacia";
+              const marcada = marcadas.includes(q.id);
+              return (
+                <li key={q.id}>
+                  <button
+                    type="button"
+                    className="pr-mapa-item"
+                    data-estado={estado}
+                    data-marcada={marcada || undefined}
+                    aria-current={i === indice ? "step" : undefined}
+                    aria-label={`Pregunta ${i + 1}: ${estado === "respondida" ? "respondida" : "sin responder"}${marcada ? ", marcada para revisar" : ""}`}
+                    onClick={() => props.alIr(i)}
+                  >
+                    {i + 1}
+                  </button>
+                </li>
+              );
+            })}
+          </ol>
+          <ul className="pr-leyenda">
+            <li><span data-estado="respondida" /> Respondida</li>
+            <li><span data-estado="vacia" /> Sin responder</li>
+            <li><span data-marcada="true" /> Marcada</li>
+          </ul>
+        </nav>
+      </div>
 
-      <Modal abierto={confirmar === "finish"} alCerrar={() => establecerConfirmar(null)} titulo="¿Finalizar la prueba?">
-        <p className="text-muted" style={{ marginBottom: 18 }}>
-          Tienes {total - cantidadRespondidas} {total - cantidadRespondidas === 1 ? "pregunta sin responder" : "preguntas sin responder"}. Se contarán como omitidas.
-        </p>
-        <div className="row gap-sm" style={{ justifyContent: "flex-end" }}>
-          <Boton variante="secondary" onClick={() => establecerConfirmar(null)}>
-            Seguir revisando
-          </Boton>
-          <Boton
-            onClick={() => {
-              establecerConfirmar(null);
-              enviar(false);
-            }}
-          >
-            Finalizar prueba
-          </Boton>
-        </div>
+      <Modal abierto={confirmando} alCerrar={() => establecerConfirmando(false)} titulo={pendientes.length > 0 ? "Tienes preguntas sin responder" : "¿Entregar la prueba?"}>
+        {pendientes.length > 0 ? (
+          <>
+            <p className="pr-modal-texto">
+              Te {pendientes.length === 1 ? "queda" : "quedan"} <strong>{pendientes.length}</strong> {pendientes.length === 1 ? "pregunta" : "preguntas"} sin responder
+              {pendientes.length <= 8 ? `: ${pendientes.map((q) => preguntas.indexOf(q) + 1).join(", ")}` : ""}. Las preguntas vacías puntúan cero.
+            </p>
+            <div className="pr-modal-acciones">
+              <Boton autoFocus onClick={irAPrimeraPendiente}>
+                Revisar pendientes
+              </Boton>
+              <Boton variante="secondary" onClick={() => { establecerConfirmando(false); props.alEntregar(); }}>
+                Finalizar igualmente
+              </Boton>
+            </div>
+          </>
+        ) : (
+          <>
+            <p className="pr-modal-texto">Respondiste las {preguntas.length} preguntas. Una vez entregada, no podrás modificar tus respuestas.</p>
+            <div className="pr-modal-acciones">
+              <Boton autoFocus onClick={() => { establecerConfirmando(false); props.alEntregar(); }}>
+                Entregar prueba
+              </Boton>
+              <Boton variante="secondary" onClick={() => establecerConfirmando(false)}>
+                Seguir revisando
+              </Boton>
+            </div>
+          </>
+        )}
       </Modal>
-
-      <Modal abierto={confirmar === "exit"} alCerrar={() => establecerConfirmar(null)} titulo="¿Salir de la prueba?">
-        <p className="text-muted" style={{ marginBottom: 18 }}>
-          Si sales ahora no se guardará tu progreso en esta prueba.
-        </p>
-        <div className="row gap-sm" style={{ justifyContent: "flex-end" }}>
-          <Boton variante="secondary" onClick={() => establecerConfirmar(null)}>
-            Continuar prueba
-          </Boton>
-          <Boton variante="danger" onClick={alSalir}>
-            Salir sin guardar
-          </Boton>
-        </div>
-      </Modal>
-    </div>,
-    document.body
+    </div>
   );
 }

@@ -61,7 +61,9 @@ class ServicioOpenAI:
         self._timeout_pdf = timeout_pdf_segundos
         self._cliente = cliente or OpenAI(api_key=api_key, timeout=timeout_segundos, max_retries=max_reintentos)
 
-    def generar_json(self, *, instrucciones: str, entrada: str) -> str:
+    def generar_json(self, *, instrucciones: str, entrada: str, timeout_segundos: float | None = None) -> str:
+        # Solo se pasa `timeout` cuando el llamador lo pide: así las demás llamadas no cambian.
+        opciones = {"timeout": timeout_segundos} if timeout_segundos else {}
         try:
             respuesta = self._cliente.chat.completions.create(
                 model=self.modelo,
@@ -70,6 +72,7 @@ class ServicioOpenAI:
                     {"role": "user", "content": entrada},
                 ],
                 response_format={"type": "json_object"},
+                **opciones,
             )
         except OpenAIError as error:
             raise self._traducir_error(error) from error

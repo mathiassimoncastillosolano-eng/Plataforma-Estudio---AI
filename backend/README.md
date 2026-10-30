@@ -108,6 +108,18 @@ Devuelve `application/pdf` (adjunto). **No llama a la IA.** Un resumen vacío re
 `multipart/form-data` con el campo `archivo`. Devuelve `{ "texto", "paginas", "caracteres" }`.
 El PDF se lee en memoria y no se guarda. El texto extraído se envía después a `/api/resumenes`.
 
+### Módulo Pruebas — `POST /api/pruebas/{crear,iniciar,estado,sincronizar,pausar,reanudar,finalizar}`
+
+Las preguntas se generan con OpenAI **a partir del resumen general** (en lotes de ≤10, con rondas de reposición y validación estricta: 4 alternativas, una correcta, fundamento literal verificado contra el resumen, sin duplicados, términos de ayuda con posiciones validadas). El servidor lleva el reloj, califica y entrega el resultado; el navegador nunca recibe la respuesta correcta antes de finalizar.
+
+- **Sin base de datos:** el estado de la prueba viaja como un *sello* cifrado (Fernet = AES + HMAC) que el cliente devuelve en cada llamada. Poseer el sello equivale a poseer la prueba (no hay identidad verificada en el backend).
+- **Reloj único:** marcas del servidor (`iniciada_en`, pausa acumulada); gracia de entrega de 5 s; caducidad de 12 h.
+- **Pausa blindada:** mientras está pausada el servidor deja de entregar las preguntas y congela el tiempo.
+- **Idempotencia:** `id_solicitud` evita regenerar (y volver a pagar) si la red repite `crear`; la primera calificación de una prueba es la que vale.
+- Ponderación: fácil 0.5 · media 1 · difícil 2. Cantidades 5/10/15/20/25; dificultad fácil/media/difícil/personalizada (la suma debe ser exacta).
+- Variables nuevas: `PRUEBAS_CLAVE_SECRETA` (**obligatoria en producción**; sin ella se usa una clave temporal y las pruebas no sobreviven a un reinicio) y `OPENAI_TIMEOUT_PRUEBAS_SEGUNDOS` (120 por defecto).
+- Límites conocidos: la caché de idempotencia y el registro de pruebas finalizadas viven en memoria de **un** proceso; con varios workers, reenviar una finalización puede recalcularse (de forma determinista desde el sello).
+
 ### `GET /api/salud`
 
 `{ "estado": "ok", "ia_configurada": true }` (no expone la clave). Responde `200` con

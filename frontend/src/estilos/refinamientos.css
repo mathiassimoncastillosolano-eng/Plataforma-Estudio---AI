@@ -1,0 +1,90 @@
+/* ==========================================================================
+   Refinamientos de layout y del flujo «Nuevo tema» (sección 20).
+   Se carga al final para ajustar sin tocar las hojas anteriores.
+   ========================================================================== */
+
+/* ---- 20.1 · Margen lateral según el ancho REAL disponible --------------------------------------
+   El margen se calcula con el ancho que queda a la derecha de la barra lateral (264 px expandida,
+   84 px contraída). Así, al contraer la barra el contenido gana aire proporcional y nunca queda
+   pegado; en monitores grandes el contenido se centra con ancho máximo (ver .page-content). */
+.app-shell { --barra-actual: var(--sidebar-w); }
+.app-shell[data-barra="contraida"] { --barra-actual: var(--sidebar-w-collapsed); }
+
+@media (min-width: 961px) {
+  .app-shell {
+    --gutter: clamp(24px, calc((100vw - var(--barra-actual)) * 0.04), 72px);
+  }
+  .app-header,
+  .page-content,
+  .page-content.wide {
+    padding-left: var(--gutter);
+    padding-right: var(--gutter);
+  }
+}
+@media (min-width: 961px) and (prefers-reduced-motion: no-preference) {
+  .page-content, .app-header { transition: padding var(--motion-standard) var(--ease-out); }
+}
+/* Pantallas muy grandes: el contenido deja de estirarse y queda centrado. */
+@media (min-width: 1900px) {
+  .page-content { max-width: calc(var(--content-max) + 2 * var(--gutter)); }
+  .page-content.wide { max-width: calc(1480px + 2 * var(--gutter)); }
+}
+
+/* ---- 20.2 · Combo de categorías ---------------------------------------------------------------- */
+.combo { position: relative; }
+.combo-boton {
+  width: 100%; min-height: 48px; display: flex; align-items: center; gap: 10px; text-align: left;
+  padding: 0 14px; border-radius: var(--radius-md); border: 1px solid var(--color-border-strong);
+  background: var(--color-surface); color: var(--color-text); font: inherit; cursor: pointer;
+  transition: border-color var(--motion-micro) var(--ease-out), box-shadow var(--motion-micro) var(--ease-out);
+}
+.combo-boton:hover { border-color: var(--color-primary); }
+.combo-boton:focus-visible, .combo-boton[aria-expanded="true"] { outline: none; border-color: var(--color-primary-solid); box-shadow: var(--shadow-focus); }
+.combo-boton > svg:first-child { color: var(--color-primary); flex: none; }
+.combo-valor { flex: 1; }
+.combo-flecha { color: var(--color-text-muted); transition: transform var(--motion-micro) var(--ease-out); }
+.combo-boton[aria-expanded="true"] .combo-flecha { transform: rotate(180deg); }
+.combo-lista {
+  position: absolute; z-index: 30; left: 0; right: 0; top: calc(100% + 6px); margin: 0; padding: 6px; list-style: none;
+  max-height: 320px; overflow-y: auto; border-radius: var(--radius-md); border: 1px solid var(--color-border);
+  background: var(--color-surface-elevated, var(--color-surface)); box-shadow: var(--shadow-lg);
+  animation: combo-entrada var(--motion-micro) var(--ease-out);
+}
+@keyframes combo-entrada { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+.combo-opcion { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 12px; border-radius: var(--radius-sm); cursor: pointer; color: var(--color-text); }
+.combo-opcion svg { color: var(--color-text-muted); flex: none; }
+.combo-opcion span { flex: 1; }
+.combo-opcion[data-activo] { background: var(--color-primary-tint); }
+.combo-opcion[data-activo] svg { color: var(--color-primary); }
+.combo-opcion[aria-selected="true"] { font-weight: 600; }
+.combo-marca { color: var(--color-primary); }
+
+/* ---- 20.3 / 20.4 · Tarjetas PDF y Texto: una fila en escritorio, apiladas en pantallas pequeñas --- */
+.flow-shell-ancha { max-width: 860px; }
+.source-choice-grid { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 16px; align-items: stretch; }
+.source-choice-grid .or-divider { grid-column: auto; flex-direction: column; gap: 8px; min-width: 28px; }
+.source-choice-grid .or-divider::before,
+.source-choice-grid .or-divider::after { content: ""; flex: 1; width: 1px; background: var(--color-border); }
+.source-choice-grid .or-divider span { text-transform: uppercase; letter-spacing: 0.08em; }
+.source-choice-card { min-height: 190px; justify-content: center; font: inherit; }
+.source-choice-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.source-choice-card:active { transform: translateY(0); box-shadow: none; }
+.source-choice-card:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 3px; border-color: var(--color-primary-solid); }
+.source-choice-desc { max-width: 28ch; line-height: 1.4; }
+
+@media (max-width: 720px) {
+  .source-choice-grid { grid-template-columns: 1fr; }
+  .source-choice-grid .or-divider { flex-direction: row; min-width: 0; }
+  .source-choice-grid .or-divider::before,
+  .source-choice-grid .or-divider::after { width: auto; height: 1px; }
+  .source-choice-card { min-height: 0; padding: 22px 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .source-choice-card, .combo-boton, .combo-flecha { transition: none; }
+  .source-choice-card:hover { transform: none; }
+  .combo-lista { animation: none; }
+}
+
+/* Archivo cargado: acciones agrupadas y envolventes en pantallas estrechas. */
+.file-chip { flex-wrap: wrap; }
+.file-chip .btn { flex: none; }

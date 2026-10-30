@@ -1,6 +1,5 @@
-"""Módulo `pruebas`: reservado para una futura etapa.
+"""Módulo `pruebas`: pruebas de selección múltiple generadas con IA a partir del resumen general.
 
-Hoy esta funcionalidad es SIMULADA en el frontend y no usa OpenAI. Cuando se
-implemente, seguirá la misma estructura que `resumenes/`:
-enrutador → servicio → dominio, con el proveedor de IA inyectado.
+enrutador → servicio → (proveedor de IA, sellador). Ver `enrutador.py` para la API y `sello.py`
+para entender por qué el estado de la prueba viaja cifrado en lugar de guardarse en una base de datos.
 """

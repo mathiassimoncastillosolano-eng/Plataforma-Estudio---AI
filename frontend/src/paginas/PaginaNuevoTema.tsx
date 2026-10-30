@@ -1,8 +1,9 @@
 import { useRef, useState, type ChangeEvent, type DragEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { FileText, PenLine, UploadCloud, X, ArrowLeft } from "lucide-react";
+import { FileText, PenLine, RefreshCw, UploadCloud, X, ArrowLeft } from "lucide-react";
 import Boton from "../componentes/Boton";
 import { Entrada } from "../componentes/Entrada";
+import SelectorCategoria, { CATEGORIAS } from "../componentes/SelectorCategoria";
 import * as servicioEstudio from "../servicios/servicioEstudio";
 import { registrarActividad, establecerFuenteTema, establecerArchivoTema } from "../almacen/almacenSesion";
 import { LIMITE_BYTES_PDF, LIMITES_RESUMEN } from "../configuracion";
@@ -11,13 +12,11 @@ import type { BorradorFuente } from "../tipos";
 
 type Paso = "titulo" | "fuente" | "pdf" | "texto";
 
-const OPCIONES_CATEGORIA = ["Biología", "Historia", "Informática", "Matemáticas", "Física", "Química", "Idiomas", "Otra"];
-
 export default function PaginaNuevoTema() {
   const navegar = useNavigate();
   const [paso, establecerPaso] = useState<Paso>("titulo");
   const [titulo, establecerTitulo] = useState("");
-  const [categoria, establecerCategoria] = useState(OPCIONES_CATEGORIA[0]);
+  const [categoria, establecerCategoria] = useState(CATEGORIAS[0].nombre);
   const [errorTitulo, establecerErrorTitulo] = useState("");
 
   const [archivo, establecerArchivo] = useState<File | null>(null);
@@ -102,7 +101,7 @@ export default function PaginaNuevoTema() {
   }
 
   return (
-    <div className="flow-shell">
+    <div className={`flow-shell ${paso === "fuente" ? "flow-shell-ancha" : ""}`}>
       <div className="flow-progress">
         {[0, 1, 2].map((i) => (
           <div key={i} className={`flow-progress-step ${i <= indiceActual ? "done" : ""}`} />
@@ -124,16 +123,7 @@ export default function PaginaNuevoTema() {
               onChange={(e) => establecerTitulo(e.target.value)}
               autoFocus
             />
-            <div className="field">
-              <label>Categoría</label>
-              <select className="select" value={categoria} onChange={(e) => establecerCategoria(e.target.value)}>
-                {OPCIONES_CATEGORIA.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <SelectorCategoria etiqueta="Categoría" valor={categoria} alCambiar={establecerCategoria} />
           </div>
 
           <div className="flow-footer">
@@ -149,21 +139,21 @@ export default function PaginaNuevoTema() {
           <h1 className="flow-title">¿Cómo quieres proporcionar el contenido?</h1>
           <p className="flow-subtitle">Puedes subir un documento PDF o escribir el contenido directamente.</p>
 
-          <div className="source-choice-grid">
-            <button className="source-choice-card" onClick={() => establecerPaso("pdf")}>
+          <div className="source-choice-grid" role="group" aria-label="Origen del contenido">
+            <button type="button" className="source-choice-card" onClick={() => establecerPaso("pdf")}>
               <div className="source-choice-icon">
                 <FileText size={24} />
               </div>
               <span className="source-choice-title">PDF</span>
-              <span className="source-choice-desc">Sube tu documento</span>
+              <span className="source-choice-desc">Sube tu documento (hasta {Math.round(LIMITE_BYTES_PDF / 1024 / 1024)} MB). La IA lee texto, tablas y gráficos.</span>
             </button>
-            <div className="or-divider">O</div>
-            <button className="source-choice-card" onClick={() => establecerPaso("texto")}>
+            <div className="or-divider" aria-hidden="true"><span>o</span></div>
+            <button type="button" className="source-choice-card" onClick={() => establecerPaso("texto")}>
               <div className="source-choice-icon">
                 <PenLine size={24} />
               </div>
               <span className="source-choice-title">Texto</span>
-              <span className="source-choice-desc">Escribe tu contenido</span>
+              <span className="source-choice-desc">Escribe o pega tus apuntes directamente.</span>
             </button>
           </div>
 
@@ -216,10 +206,15 @@ export default function PaginaNuevoTema() {
                 <div className="file-chip-name">{archivo.name}</div>
                 <div className="file-chip-size">{formatearTamanoArchivo(archivo.size)}</div>
               </div>
-              <button className="btn btn-ghost btn-sm" onClick={() => establecerArchivo(null)}>
+              <button type="button" className="btn btn-ghost btn-sm" onClick={() => refEntradaArchivo.current?.click()}>
+                <RefreshCw size={14} />
+                Reemplazar
+              </button>
+              <button type="button" className="btn btn-ghost btn-sm" onClick={() => establecerArchivo(null)}>
                 <X size={14} />
                 Eliminar
               </button>
+              <input ref={refEntradaArchivo} type="file" accept="application/pdf" hidden onChange={(e: ChangeEvent<HTMLInputElement>) => manejarSeleccionArchivo(e.target.files?.[0] ?? null)} />
             </div>
           )}
           {errorArchivo && (

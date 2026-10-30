@@ -4,11 +4,13 @@ import BarraLateral from "../componentes/BarraLateral";
 import Encabezado from "../componentes/Encabezado";
 import NavegacionInferior from "../componentes/NavegacionInferior";
 import { useAutenticacion } from "../hooks/useAutenticacion";
+import { useBarraLateral } from "../hooks/useBarraLateral";
 
 export default function DisposicionApp() {
   const { estaAutenticado } = useAutenticacion();
   const [movilAbierto, establecerMovilAbierto] = useState(false);
   const ubicacion = useLocation();
+  const { contraida } = useBarraLateral();
 
   useEffect(() => {
     establecerMovilAbierto(false);
@@ -27,7 +29,7 @@ export default function DisposicionApp() {
   const claveTransicion = esEstudio ? `estudio-${coincidenciaEstudio![1]}` : ubicacion.pathname;
 
   return (
-    <div className="app-shell">
+    <div className="app-shell" data-barra={contraida ? "contraida" : "expandida"}>
       <BarraLateral movilAbierto={movilAbierto} alCerrarMovil={() => establecerMovilAbierto(false)} />
       <div className="app-main">
         <Encabezado alAbrirMenuMovil={() => establecerMovilAbierto(true)} />
