@@ -114,7 +114,7 @@ function MapaDesdeFuente({ huella, esPdf, texto, archivo }: PropsMapaDesdeFuente
       />
     );
   }
-  return <MapaConceptual mapa={mapa} conceptos={[]} alRegenerar={regenerar} origen="ia" alEditar={(editado) => guardarMapa(tema.id, editado, huella)} />;
+  return <MapaConceptual mapa={mapa} conceptos={[]} alRegenerar={regenerar} origen="ia" titulo={tema.titulo} alEditar={(editado) => guardarMapa(tema.id, editado, huella)} />;
 }
 
 /** Comportamiento anterior, sin cambios: mapa de ejemplo del tema demo o mapa de respaldo. */
@@ -145,5 +145,5 @@ function MapaDeEjemplo() {
   if (estado === "error" || !mapa) return <ErrorState alReintentar={cargar} />;
 
   // Los cambios del usuario viven mientras navega; "Regenerar" restaura el mapa original.
-  return <MapaConceptual mapa={mapa} conceptos={conceptos} alRegenerar={() => establecerMapa({ ...mapa })} origen="ejemplo" />;
+  return <MapaConceptual mapa={mapa} conceptos={conceptos} alRegenerar={() => establecerMapa({ ...mapa })} origen="ejemplo" titulo={tema.titulo} />;
 }

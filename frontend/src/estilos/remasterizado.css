@@ -374,6 +374,20 @@
 .cm-expand:hover { transform: scale(1.12); background: var(--color-primary-solid); color: var(--color-text-on-primary); }
 .cm-toolbar { position: absolute; top: 14px; left: 14px; display: flex; gap: 8px; flex-wrap: wrap; z-index: 5; max-width: calc(100% - 28px); }
 .cm-toolbar .btn { background: var(--color-surface-elevated); box-shadow: var(--shadow-sm); }
+/* Descarga del mapa (PDF, PNG y .mm): reutiliza .dropdown / .dropdown-item; el panel se abre hacia la derecha del botón */
+.cm-download .dropdown-panel { top: calc(100% + 8px); left: 0; right: auto; min-width: 272px; transform-origin: top left; }
+.cm-download-chevron { margin-left: -3px; opacity: 0.65; }
+.cm-download-title { padding: 6px 12px 4px; font-size: var(--fs-micro); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--color-text-muted); }
+.cm-download-item { align-items: flex-start; }
+.cm-download-item svg { margin-top: 2px; }
+.cm-download-item > span { display: flex; flex-direction: column; gap: 1px; }
+.cm-download-name { color: var(--color-text); font-weight: 600; }
+.cm-download-desc { font-size: var(--fs-micro); color: var(--color-text-muted); font-weight: 500; }
+.cm-download-hint { margin-top: 4px; padding: 8px 12px 4px; border-top: 1px solid var(--color-border); font-size: var(--fs-micro); color: var(--color-text-muted); }
+.cm-download-error { position: absolute; top: calc(100% + 8px); left: 0; z-index: 7; display: flex; align-items: flex-start; gap: 8px; width: max-content; max-width: min(340px, calc(100vw - 48px)); padding: 10px 12px; border-radius: var(--radius-sm); background: var(--color-surface-elevated); border: 1px solid var(--color-danger); box-shadow: var(--shadow-md); color: var(--color-text); font-size: var(--fs-caption); line-height: 1.4; }
+.cm-download-error > svg { flex-shrink: 0; margin-top: 1px; color: var(--color-danger); }
+.cm-download-error p { flex: 1; margin: 0; }
+.cm-download-error button { display: grid; place-items: center; padding: 2px; border: none; background: none; color: var(--color-text-muted); cursor: pointer; }
 .cm-hint { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); padding: 7px 14px; border-radius: var(--radius-full); background: var(--color-surface-elevated); border: 1px solid var(--color-border); font-size: var(--fs-micro); color: var(--color-text-muted); z-index: 4; pointer-events: none; white-space: nowrap; max-width: calc(100% - 340px); overflow: hidden; text-overflow: ellipsis; }
 .cm-panel { position: absolute; top: 14px; right: 14px; bottom: 14px; width: 300px; background: var(--color-surface-elevated); border: 1px solid var(--color-border); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); padding: 18px; display: flex; flex-direction: column; gap: 12px; z-index: 6; overflow-y: auto; animation: panel-in 240ms var(--ease-out) both; }
 @keyframes panel-in { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: none; } }
