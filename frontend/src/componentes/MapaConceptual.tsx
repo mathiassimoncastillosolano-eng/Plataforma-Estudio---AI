@@ -29,7 +29,9 @@ import type { ConceptoClave, MapaMental } from "../tipos";
 import { normalizar } from "../utilidades/conceptos";
 import { ALTO_NIVEL, calcularPosiciones } from "../utilidades/distribucionMapa";
 import { idAleatorio } from "../utilidades/retardoSimulado";
+import type { MapaExportable } from "../utilidades/exportacionMapa";
 import Boton from "./Boton";
+import DescargaMapa from "./DescargaMapa";
 import Insignia from "./Insignia";
 
 interface DatosConcepto {
@@ -158,6 +160,31 @@ function aMapaMental(idTema: string, nodos: Node<DatosConcepto>[], aristas: Edge
   };
 }
 
+/** Descripción de un concepto: la propia del nodo o, en los mapas de ejemplo, la del concepto clave que coincide. */
+function definicionDe(nodo: Node<DatosConcepto>, conceptos: ConceptoClave[]): string | undefined {
+  const etiqueta = normalizar(nodo.data.etiqueta);
+  return nodo.data.detalle ?? conceptos.find((c) => normalizar(c.termino).includes(etiqueta) || etiqueta.includes(normalizar(c.termino)))?.definicion;
+}
+
+/** Foto del lienzo para exportar: todos los nodos (también los de ramas contraídas) con su tamaño real y las ediciones. */
+function aMapaExportable(titulo: string, origen: "ia" | "ejemplo", nodos: Node<DatosConcepto>[], aristas: Edge[], conceptos: ConceptoClave[]): MapaExportable {
+  return {
+    titulo,
+    origen,
+    nodos: nodos.map((n) => ({
+      id: n.id,
+      etiqueta: n.data.etiqueta,
+      descripcion: definicionDe(n, conceptos),
+      nivel: n.data.nivel,
+      x: n.position.x,
+      y: n.position.y,
+      ancho: n.width ?? undefined,
+      alto: n.height ?? undefined,
+    })),
+    aristas: aristas.map((e) => ({ id: e.id, origen: e.source, destino: e.target, frase: typeof e.label === "string" ? e.label : undefined, conFlecha: e.type === "enlace" })),
+  };
+}
+
 /**
  * Busca un hueco libre para un nodo nuevo bajo su padre (a la derecha y a la izquierda, y bajando de fila si hace falta)
  * de modo que nunca tape a otro nodo ni a su frase de enlace.
@@ -227,12 +254,14 @@ interface Props {
   origen?: "ia" | "ejemplo";
   /** Si se indica, recibe el mapa con las ediciones del estudiante para guardarlo (nombre, descripción, nodos, posiciones). */
   alEditar?: (mapa: MapaMental) => void;
+  /** Título del tema: encabeza las descargas y da nombre a los archivos. */
+  titulo?: string;
 }
 
 // Tamaño del minimapa. Se pasa al componente (que dimensiona su SVG con él) para que el dibujo coincida con su caja.
 const ESTILO_MINIMAPA = { width: 150, height: 100 };
 
-function Lienzo({ mapa, conceptos, alRegenerar, origen, alEditar }: Props) {
+function Lienzo({ mapa, conceptos, alRegenerar, origen, alEditar, titulo }: Props) {
   const [nodos, establecerNodos] = useState<Node<DatosConcepto>[]>(() => aNodos(mapa));
   const [aristas, establecerAristas] = useState<Edge[]>(() => aAristas(mapa));
   const [contraida, establecerContraida] = useState<Set<string>>(new Set());
@@ -333,9 +362,7 @@ function Lienzo({ mapa, conceptos, alRegenerar, origen, alEditar }: Props) {
   const relacionados = seleccionado ? aristas.filter((e) => e.source === seleccionado.id || e.target === seleccionado.id).map((e) => nodos.find((n) => n.id === (e.source === seleccionado.id ? e.target : e.source))).filter(Boolean) as Node<DatosConcepto>[] : [];
   const cantidadHijos = seleccionado ? (children.get(seleccionado.id) ?? []).length : 0;
   const aristaEntrante = seleccionado ? aristas.find((e) => e.target === seleccionado.id) : undefined;
-  const definicion = seleccionado
-    ? seleccionado.data.detalle ?? conceptos.find((c) => normalizar(c.termino).includes(normalizar(seleccionado.data.etiqueta)) || normalizar(seleccionado.data.etiqueta).includes(normalizar(c.termino)))?.definicion
-    : undefined;
+  const definicion = seleccionado ? definicionDe(seleccionado, conceptos) : undefined;
 
   function agregarNodo() {
     const id = idAleatorio("node");
@@ -470,6 +497,7 @@ function Lienzo({ mapa, conceptos, alRegenerar, origen, alEditar }: Props) {
         <Boton variante="ghost" tamano="sm" icono={<RotateCcw size={14} />} onClick={alRegenerar}>
           <span className="hide-mobile">Regenerar</span>
         </Boton>
+        <DescargaMapa obtenerMapa={() => aMapaExportable(titulo ?? "", origen ?? "ejemplo", nodos, aristas, conceptos)} />
         {origen && <Insignia tono={origen === "ia" ? "blue" : "neutral"}>{origen === "ia" ? "Generado con IA" : "Mapa de ejemplo"}</Insignia>}
       </div>
 

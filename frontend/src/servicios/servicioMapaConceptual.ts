@@ -1,7 +1,8 @@
-import { TIEMPO_ESPERA_IA_MS, TIEMPO_ESPERA_PDF_IA_MS } from "../configuracion";
+import { TIEMPO_ESPERA_DESCARGA_MS, TIEMPO_ESPERA_IA_MS, TIEMPO_ESPERA_PDF_IA_MS } from "../configuracion";
 import type { DatosAristaMapaMental, DatosNodoMapaMental, MapaMental } from "../tipos";
 import { calcularPosiciones } from "../utilidades/distribucionMapa";
-import { ErrorApi, enviarArchivo, enviarJson } from "./clienteApi";
+import { aplanarJerarquia, construirJerarquia, type MapaExportable, type PaletaExportacion } from "../utilidades/exportacionMapa";
+import { ErrorApi, descargarArchivo, enviarArchivo, enviarJson, type ArchivoDescargado } from "./clienteApi";
 
 // -----------------------------------------------------------------------
 // Servicio de mapas conceptuales (MOD-05). Llama al backend real:
@@ -101,4 +102,29 @@ export async function generarMapaConceptualDesdePdf(idTema: string, archivo: Fil
     campos: { titulo },
   });
   return convertirRespuestaMapa(idTema, datos);
+}
+
+/**
+ * Pide al backend el PDF del mapa (POST /api/mapas-conceptuales/descargar-pdf). No llama a la IA:
+ * envía la imagen del mapa ya dibujada (página 1) y los conceptos actuales en orden jerárquico (página 2).
+ */
+export function obtenerPdfMapa(mapa: MapaExportable, paleta: PaletaExportacion, imagenPngBase64: string, senal?: AbortSignal): Promise<ArchivoDescargado> {
+  const conceptos = aplanarJerarquia(construirJerarquia(mapa)).map((c) => ({ etiqueta: c.etiqueta.slice(0, 300), descripcion: c.descripcion.slice(0, 5_000), profundidad: c.profundidad }));
+  const cuerpo = {
+    titulo: mapa.titulo.slice(0, 300),
+    origen: mapa.origen,
+    generado_en: new Date().toISOString(),
+    imagen_png: imagenPngBase64,
+    paleta: {
+      solido: paleta.solido,
+      tinte: paleta.tinte,
+      medio: paleta.medio,
+      tinta: paleta.tinta,
+      texto: paleta.texto,
+      texto_suave: paleta.textoSuave,
+      borde: paleta.borde,
+    },
+    conceptos,
+  };
+  return descargarArchivo(`${RUTA}/descargar-pdf`, cuerpo, { senal, tiempoEsperaMs: TIEMPO_ESPERA_DESCARGA_MS });
 }
