@@ -2,8 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AlertTriangle } from "lucide-react";
 import { useContextoTema } from "../disposiciones/contextoTema";
-import { useSesion, registrarActividad, registrarRespuestas } from "../almacen/almacenSesion";
-import { respuestasDeRevision } from "../utilidades/rendimiento";
+import { useSesion, registrarActividad } from "../almacen/almacenSesion";
 import * as studyService from "../servicios/servicioEstudio";
 import { cargarAjustes, guardarAjustes, obtenerResumenGeneral } from "../servicios/servicioPruebas";
 import { useControlPrueba } from "../hooks/useControlPrueba";
@@ -27,12 +26,9 @@ export default function PaginaPrueba() {
   useEffect(() => establecerAjustes(cargarAjustes(tema.id)), [tema.id]);
 
   async function alFinalizar(datos: ResultadoCompleto) {
-    // Solo el servidor califica; aquí se actualiza el avance del tema con su resultado.
     await studyService.incrementarPruebasCompletadas(tema.id);
-    const mezclado = Math.min(100, Math.round(tema.dominio * 0.35 + datos.resultado.porcentaje * 0.65));
-    const actualizado = await studyService.actualizarDominioTema(tema.id, mezclado);
+    const actualizado = await studyService.obtenerTemaEstudio(tema.id);
     if (actualizado) establecerTema(actualizado);
-    registrarRespuestas(tema.id, respuestasDeRevision(datos.revision));
     registrarActividad({ tipo: "prueba", idTema: tema.id, tituloTema: tema.titulo, descripcion: `Completaste una prueba con ${datos.resultado.porcentaje}% de aciertos.` });
     navegar(`/estudio/${tema.id}/resultados`, { state: datos });
   }
