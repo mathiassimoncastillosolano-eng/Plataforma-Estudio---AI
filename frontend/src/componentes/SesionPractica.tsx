@@ -9,6 +9,7 @@ import { segundosEntre } from "../utilidades/rendimiento";
 import PreguntaPractica from "./PreguntaPractica";
 import MedidorDominio from "./MedidorDominio";
 import Boton from "./Boton";
+import { registrarPractica, type RespuestaPractica } from "../servicios/servicioAdaptacion";
 
 interface Props {
   preguntas: PreguntaEstudio[];
@@ -31,22 +32,24 @@ export default function SesionPractica({ preguntas, alResponder, alSalir }: Prop
   /** MOD-08: instante en que se mostró la pregunta actual (tiempo por pregunta). */
   const inicioPregunta = useRef(Date.now());
 
+  /** H-03/H-05: respuestas de esta práctica, que se envían al motor adaptativo al terminar. */
+  const respuestasTanda = useRef<RespuestaPractica[]>([]);
+
   function manejarRespondida(idPregunta: string, esCorrecta: boolean) {
     if (esCorrecta) establecerCorrecta((c) => c + 1);
     else establecerIncorrecta((c) => c + 1);
     const pregunta = preguntas.find((p) => p.id === idPregunta);
     if (pregunta) registrarRespuestas(tema.id, [{ dificultad: pregunta.dificultad, correcta: esCorrecta, segundos: segundosEntre(inicioPregunta.current, Date.now()), origen: "practica" }]);
+    if (pregunta) respuestasTanda.current.push({ dificultad: pregunta.dificultad, correcta: esCorrecta });
     alResponder(idPregunta, esCorrecta);
   }
 
   async function manejarSiguiente() {
     if (indiceActual + 1 >= preguntas.length) {
       establecerTerminada(true);
-      const respondida = correcta + incorrecta;
-      const puntajeSesion = respondida > 0 ? Math.round((correcta / respondida) * 100) : tema.dominio;
-      // Combina el dominio previo con el resultado de esta práctica para una transición suave.
-      const mezclado = Math.min(100, Math.round(tema.dominio * 0.4 + puntajeSesion * 0.6));
-      const actualizado = await studyService.actualizarDominioTema(tema.id, mezclado);
+      // H-03: el dominio sale del motor adaptativo (períodos de 15, regla 0,75/0,25), no de una mezcla local.
+      const resultado = await registrarPractica(tema.id, respuestasTanda.current.splice(0));
+      const actualizado = resultado?.dominio != null ? await studyService.actualizarDominioTema(tema.id, resultado.dominio) : null;
       await studyService.incrementarPreguntasRespondidas(tema.id, preguntas.length);
       if (actualizado) establecerTema(actualizado);
     } else {
@@ -60,8 +63,9 @@ export default function SesionPractica({ preguntas, alResponder, alSalir }: Prop
     establecerCorrecta(0);
     establecerIncorrecta(0);
     establecerTerminada(false);
+    respuestasTanda.current = [];
     inicioPregunta.current = Date.now();
-    establecerRonda((r) => r + 1);
+    establecerRonda((r) => r + 1);    
   }
 
   if (terminada) {
