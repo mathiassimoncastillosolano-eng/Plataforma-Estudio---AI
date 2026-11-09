@@ -28,6 +28,8 @@ class Ajustes:
     openai_timeout_pruebas_segundos: float = 120.0
     # Clave que cifra el estado de las pruebas (el backend no tiene base de datos). Debe ser fija en producción.
     pruebas_clave_secreta: str = field(default="", repr=False)
+    # MOD-06: ruta del .pkl del modelo de nivel. Vacía = ml/modelo_nivel_conocimiento_A_estimacion_en_corte.pkl del repo.
+    modelo_nivel_ruta: str = ""
 
     @property
     def ia_configurada(self) -> bool:
@@ -70,6 +72,7 @@ def cargar_ajustes() -> Ajustes:
         openai_timeout_pdf_segundos=_leer_numero("OPENAI_TIMEOUT_PDF_SEGUNDOS", 180.0, float),
         openai_timeout_pruebas_segundos=_leer_numero("OPENAI_TIMEOUT_PRUEBAS_SEGUNDOS", 120.0, float),
         pruebas_clave_secreta=os.environ.get("PRUEBAS_CLAVE_SECRETA", "").strip(),
+        modelo_nivel_ruta=os.environ.get("MODELO_NIVEL_RUTA", "").strip(),
     )
 
 
