@@ -1,5 +1,7 @@
 // MOD-03 · H-03/H-05: la práctica registra sus respuestas en el motor adaptativo (MOD-07) y toma de él el dominio.
 import { enviarJson } from "./clienteApi";
+import { guardarEstadoAdaptacion, obtenerEstadoAdaptacion } from "../almacen/almacenSesion";
+import type { EstadoAdaptacion } from "../utilidades/adaptacion";
 
 export type DificultadPractica = "facil" | "media" | "dificil";
 
@@ -8,16 +10,9 @@ export interface RespuestaPractica {
   correcta: boolean;
 }
 
-interface EstadoAdaptativo {
-  nivel: number;
-  numero_periodo: number;
-  ultimo_porcentaje: number | null;
-  pendientes: RespuestaPractica[];
-}
-
 interface RespuestaApi {
   id_tema: string;
-  estado: EstadoAdaptativo;
+  estado: EstadoAdaptacion;
   periodos_cerrados: unknown[];
   dificultad_objetivo: DificultadPractica;
 }
@@ -31,8 +26,8 @@ export interface ResultadoRegistro {
 
 const MAXIMO_POR_ENVIO = 100; // límite de SolicitudRegistrar.respuestas en el backend
 
-// Sin base de datos: el cliente guarda el estado y lo reenvía (contrato de /api/adaptacion).
-const estados = new Map<string, EstadoAdaptativo>();
+// El estado del motor vive en el almacén de sesión (MOD-08), que lo persiste entre recargas.
+// Las respuestas que no se pudieron enviar se conservan solo en memoria.
 const porEnviar = new Map<string, RespuestaPractica[]>();
 
 /** PROVISIONAL (H-07): conversión motor 0-1 -> interfaz 0-100. Único punto a cambiar cuando se defina la escala. */
@@ -48,14 +43,14 @@ export async function registrarPractica(idTema: string, respuestas: RespuestaPra
   const lote = [...(porEnviar.get(idTema) ?? []), ...respuestas].slice(-MAXIMO_POR_ENVIO);
   porEnviar.set(idTema, lote);
   if (lote.length === 0) return null;
-  const estado = estados.get(idTema);
+  const estado = obtenerEstadoAdaptacion(idTema);
   try {
     const datos = await enviarJson<RespuestaApi>("/api/adaptacion/registrar", {
       id_tema: idTema,
       ...(estado ? { estado } : {}),
       respuestas: lote,
     });
-    estados.set(idTema, datos.estado);
+    guardarEstadoAdaptacion(idTema, datos.estado);
     porEnviar.delete(idTema);
     const cerrados = datos.periodos_cerrados.length;
     return {
@@ -68,7 +63,7 @@ export async function registrarPractica(idTema: string, respuestas: RespuestaPra
   }
 }
 
+/** Vacía solo las respuestas sin enviar; el estado del motor se borra con el almacén (tema o cierre de sesión). */
 export function reiniciarAdaptacion(): void {
-  estados.clear();
   porEnviar.clear();
 }

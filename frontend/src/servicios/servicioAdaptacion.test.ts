@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const enviar = vi.hoisted(() => vi.fn());
 vi.mock("./clienteApi", () => ({ enviarJson: enviar }));
 
+import { obtenerEstadoAdaptacion, reiniciarSesionEstudio } from "../almacen/almacenSesion";
 import { nivelADominio, registrarPractica, reiniciarAdaptacion } from "./servicioAdaptacion";
 
 const respuestas = (n: number) => Array.from({ length: n }, () => ({ dificultad: "media" as const, correcta: true }));
@@ -10,6 +11,7 @@ const estado = (nivel: number) => ({ nivel, numero_periodo: 2, ultimo_porcentaje
 
 beforeEach(() => {
   enviar.mockReset();
+  reiniciarSesionEstudio();
   reiniciarAdaptacion();
 });
 
@@ -20,18 +22,20 @@ describe("servicioAdaptacion", () => {
     expect(r).toMatchObject({ dominio: null, periodosCerrados: 0 });
   });
 
-  it("con período cerrado convierte el nivel a 0-100 y reenvía el estado después", async () => {
+  it("con período cerrado convierte el nivel a 0-100, guarda el estado y lo reenvía después", async () => {
     enviar.mockResolvedValue({ id_tema: "t1", estado: estado(0.6775), periodos_cerrados: [{}], dificultad_objetivo: "media" });
     const r = await registrarPractica("t1", respuestas(15));
     expect(r).toMatchObject({ dominio: 68, periodosCerrados: 1 });
     expect(enviar.mock.calls[0]?.[1]).not.toHaveProperty("estado");
+    expect(obtenerEstadoAdaptacion("t1")).toEqual(estado(0.6775));
     await registrarPractica("t1", respuestas(3));
     expect(enviar.mock.calls[1]?.[1]).toMatchObject({ estado: estado(0.6775) });
   });
 
-  it("si el backend falla devuelve null y reintenta con las respuestas acumuladas", async () => {
+  it("si el backend falla devuelve null, no guarda estado y reintenta con las respuestas acumuladas", async () => {
     enviar.mockRejectedValueOnce(new Error("falla"));
     expect(await registrarPractica("t1", respuestas(10))).toBeNull();
+    expect(obtenerEstadoAdaptacion("t1")).toBeUndefined();
     enviar.mockResolvedValue({ id_tema: "t1", estado: estado(0.6), periodos_cerrados: [{}], dificultad_objetivo: "media" });
     await registrarPractica("t1", respuestas(5));
     expect((enviar.mock.calls[1]?.[1] as { respuestas: unknown[] }).respuestas).toHaveLength(15);
