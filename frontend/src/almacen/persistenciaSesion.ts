@@ -1,6 +1,7 @@
 import type { MapaMental, ResumenesGenerados, Usuario } from "../tipos";
 import type { TipoActividad } from "../datos/actividades";
 import { NIVELES, type RespuestaRegistrada } from "../utilidades/rendimiento";
+import { copiarEstadoAdaptacion, esEstadoAdaptacion, type EstadoAdaptacion } from "../utilidades/adaptacion";
 
 // -----------------------------------------------------------------------
 // Persistencia TEMPORAL de la sesión, exclusivamente en sessionStorage.
@@ -123,6 +124,8 @@ export interface EstudioPersistido {
   actividad: ActividadPersistida[];
   /** MOD-08: respuestas registradas por tema (de ellas se derivan contadores, rachas y tiempos). */
   rendimiento: Record<string, RespuestaRegistrada[]>;
+  /** MOD-08: estado del motor adaptativo por tema (nivel, período y respuestas pendientes). */
+  adaptacion: Record<string, EstadoAdaptacion>;
 }
 
 function filtrarRegistro<T>(bruto: unknown, valido: (valor: unknown) => valor is T): Record<string, T> {
@@ -148,6 +151,10 @@ const esRespuestaRegistrada = (v: unknown): v is RespuestaRegistrada =>
 const sanearRendimiento = (bruto: unknown): Record<string, RespuestaRegistrada[]> =>
   Object.fromEntries(Object.entries(filtrarRegistro(bruto, Array.isArray)).map(([idTema, lista]) => [idTema, (lista as unknown[]).filter(esRespuestaRegistrada)]));
 
+/** Conserva solo los estados íntegros (un tema dañado arranca sin historial); si falta el campo queda vacío. */
+const sanearAdaptacion = (bruto: unknown): Record<string, EstadoAdaptacion> =>
+  Object.fromEntries(Object.entries(filtrarRegistro(bruto, esEstadoAdaptacion)).map(([idTema, estado]) => [idTema, copiarEstadoAdaptacion(estado)]));
+
 /** Devuelve el estudio guardado solo si es íntegro y pertenece a `usuarioId`; las entradas dañadas se descartan una a una. */
 export function leerEstudioPersistido(usuarioId: string): EstudioPersistido | null {
   const bruto = leerSobre(CLAVES_SESION.estudio);
@@ -160,10 +167,13 @@ export function leerEstudioPersistido(usuarioId: string): EstudioPersistido | nu
     mapas: filtrarRegistro(bruto.mapas, esMapa),
     actividad: Array.isArray(bruto.actividad) ? bruto.actividad.filter(esActividad) : [],
     rendimiento: sanearRendimiento(bruto.rendimiento),
+    adaptacion: sanearAdaptacion(bruto.adaptacion),
   };
 }
 
-export const guardarEstudioPersistido = (estudio: Omit<EstudioPersistido, "rendimiento"> & { rendimiento?: EstudioPersistido["rendimiento"] }) => escribirSobre(CLAVES_SESION.estudio, estudio);
+export const guardarEstudioPersistido = (
+  estudio: Omit<EstudioPersistido, "rendimiento" | "adaptacion"> & { rendimiento?: EstudioPersistido["rendimiento"]; adaptacion?: EstudioPersistido["adaptacion"] }
+) => escribirSobre(CLAVES_SESION.estudio, estudio);
 
 // --- Última ruta visitada ----------------------------------------------------------------
 
