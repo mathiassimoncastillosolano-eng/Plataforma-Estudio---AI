@@ -20,9 +20,12 @@ import "./estilos/acceso.css";
 import "./estilos/pruebas.css";
 import "./estilos/refinamientos.css";
 import "./estilos/estudio.css";
+import "./estilos/estetica.css";
+import { activarLuzPuntero } from "./utilidades/luzPuntero";
 
 // La comprobación del backend empieza ya, antes de que React termine de montar la interfaz.
 almacenBackend.iniciar();
+activarLuzPuntero();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

@@ -5,7 +5,7 @@ import type { NivelPregunta } from "../tipos/prueba";
 //
 // Es la misma forma que `EstadoAdaptativo` de backend/app/adaptacion/esquemas.py, con los mismos
 // nombres (snake_case) y la escala 0–1 del motor, para guardar y reenviar el estado de /registrar
-// SIN conversiones. La conversión a la escala de la interfaz (0–100) no se hace aquí (H-07).
+// SIN conversiones. La conversión a la escala de la interfaz (0–100) no se hace aquí.
 // -----------------------------------------------------------------------
 
 /** Respuestas que aún no completan un período; el motor cierra el período al llegar a 15. */
@@ -18,6 +18,7 @@ const DIFICULTADES: readonly NivelPregunta[] = ["facil", "media", "dificil"];
 export interface RespuestaPendiente {
   dificultad: NivelPregunta;
   correcta: boolean;
+  segundos: number;
 }
 
 export interface EstadoAdaptacion {
@@ -27,13 +28,16 @@ export interface EstadoAdaptacion {
   numero_periodo: number;
   /** Porcentaje (0–1) del último período cerrado; null si aún no se cerró ninguno. */
   ultimo_porcentaje: number | null;
+  correctas_total: number;
   pendientes: RespuestaPendiente[];
 }
 
 const esFraccion = (v: unknown): v is number => typeof v === "number" && Number.isFinite(v) && v >= 0 && v <= 1;
 
 const esRespuestaPendiente = (v: unknown): v is RespuestaPendiente =>
-  typeof v === "object" && v !== null && (DIFICULTADES as readonly unknown[]).includes((v as RespuestaPendiente).dificultad) && typeof (v as RespuestaPendiente).correcta === "boolean";
+  typeof v === "object" && v !== null && (DIFICULTADES as readonly unknown[]).includes((v as RespuestaPendiente).dificultad) && typeof (v as RespuestaPendiente).correcta === "boolean" &&
+  typeof (v as RespuestaPendiente).segundos === "number" &&
+  Number.isFinite((v as RespuestaPendiente).segundos);
 
 /** Comprueba que `v` es un estado que el backend aceptaría; se usa al restaurar datos guardados. */
 export function esEstadoAdaptacion(v: unknown): v is EstadoAdaptacion {
@@ -46,6 +50,9 @@ export function esEstadoAdaptacion(v: unknown): v is EstadoAdaptacion {
     e.numero_periodo >= 1 &&
     e.numero_periodo <= MAX_NUMERO_PERIODO &&
     (e.ultimo_porcentaje === null || esFraccion(e.ultimo_porcentaje)) &&
+    typeof e.correctas_total === "number" &&
+    Number.isInteger(e.correctas_total) &&
+    e.correctas_total >= 0 &&
     Array.isArray(e.pendientes) &&
     e.pendientes.length <= MAX_PENDIENTES_ADAPTACION &&
     e.pendientes.every(esRespuestaPendiente)

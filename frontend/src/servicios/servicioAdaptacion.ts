@@ -1,13 +1,16 @@
-// MOD-03 · H-03/H-05: la práctica registra sus respuestas en el motor adaptativo (MOD-07) y toma de él el dominio.
+// La práctica registra sus respuestas en el backend y el dominio mostrado es el nivel que estima el modelo de ML.
 import { enviarJson } from "./clienteApi";
 import { guardarEstadoAdaptacion, obtenerEstadoAdaptacion } from "../almacen/almacenSesion";
 import type { EstadoAdaptacion } from "../utilidades/adaptacion";
+import type { TemaEstudio } from "../tipos";
+import { actualizarDominioTema, incrementarPreguntasRespondidas } from "./servicioEstudio";
 
 export type DificultadPractica = "facil" | "media" | "dificil";
 
 export interface RespuestaPractica {
   dificultad: DificultadPractica;
   correcta: boolean;
+  segundos: number;
 }
 
 interface RespuestaApi {
@@ -30,7 +33,7 @@ const MAXIMO_POR_ENVIO = 100; // límite de SolicitudRegistrar.respuestas en el 
 // Las respuestas que no se pudieron enviar se conservan solo en memoria.
 const porEnviar = new Map<string, RespuestaPractica[]>();
 
-/** PROVISIONAL (H-07): conversión motor 0-1 -> interfaz 0-100. Único punto a cambiar cuando se defina la escala. */
+/** Conversión del nivel estimado por el modelo (0-1) a la interfaz (0-100). */
 export function nivelADominio(nivel: number): number {
   return Math.round(Math.min(1, Math.max(0, nivel)) * 100);
 }
@@ -61,6 +64,13 @@ export async function registrarPractica(idTema: string, respuestas: RespuestaPra
   } catch {
     return null;
   }
+}
+
+export async function consolidarPractica(idTema: string, respuestas: RespuestaPractica[], preguntasRespondidas: number): Promise<TemaEstudio | null> {
+  const resultado = await registrarPractica(idTema, respuestas);
+  await incrementarPreguntasRespondidas(idTema, preguntasRespondidas);
+  const actualizado = resultado?.dominio != null ? await actualizarDominioTema(idTema, resultado.dominio) : null;
+  return actualizado ?? null;
 }
 
 /** Vacía solo las respuestas sin enviar; el estado del motor se borra con el almacén (tema o cierre de sesión). */

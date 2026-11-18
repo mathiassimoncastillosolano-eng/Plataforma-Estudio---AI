@@ -1,7 +1,3 @@
-"""API del motor adaptativo (MOD-07). Sin base de datos: el cliente guarda el estado y lo reenvía.
-
-    POST /api/adaptacion/registrar   Suma respuestas, cierra periodos de 15 y devuelve nivel y dificultad objetivo
-"""
 from fastapi import APIRouter
 
 from app.adaptacion import motor

@@ -37,6 +37,10 @@ X = datos[artefacto["features"]]
 nivel = artefacto["pipeline"].predict(X).clip(*artefacto["rango_salida"])
 ```
 
+**Uso en producción:** el backend (`backend/app/adaptacion/modelo.py`) carga el modelo A y
+estima el nivel de conocimiento al cerrar cada período de 15 respuestas. Ese valor es el
+dominio que ve el estudiante.
+
 Solo se deben cargar `.pkl` de este repositorio: `joblib.load` ejecuta código al abrir el archivo.
 
 ## Versionado

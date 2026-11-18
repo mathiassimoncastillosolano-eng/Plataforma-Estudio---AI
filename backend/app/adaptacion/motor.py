@@ -1,20 +1,14 @@
-"""Motor adaptativo (MOD-07): nivel del estudiante por tema y dificultad objetivo. Lógica pura, sin FastAPI ni OpenAI.
-
-Regla de actualización observada en el dataset del modelo (notebook §8, IAML-028):
-    nivel_t = 0,75 · nivel_(t−1) + 0,25 · porcentaje_correctas_t
-"""
+from app.adaptacion.modelo import estimar_nivel
 from app.pruebas.distribucion import DIFICULTADES
 
 PREGUNTAS_POR_PERIODO = 15
-PESO_NIVEL_PREVIO = 0.75
-NIVEL_INICIAL = 0.57  # media de nivel_conocimiento en el periodo 1 del dataset
-# Umbrales target → dificultad (TASK-0076). El límite inferior es inclusivo.
+NIVEL_INICIAL = 0.57
 UMBRAL_MEDIA = 0.50
 UMBRAL_DIFICIL = 0.80
 
 
 def estado_inicial() -> dict:
-    return {"nivel": NIVEL_INICIAL, "numero_periodo": 1, "ultimo_porcentaje": None, "pendientes": []}
+    return {"nivel": NIVEL_INICIAL, "numero_periodo": 1, "ultimo_porcentaje": None, "correctas_total": 0, "pendientes": []}
 
 
 def dificultad_objetivo(nivel: float) -> str:
@@ -25,34 +19,30 @@ def dificultad_objetivo(nivel: float) -> str:
     return "facil"
 
 
-def actualizar_nivel(nivel_previo: float, porcentaje_correctas: float) -> float:
-    nuevo = PESO_NIVEL_PREVIO * nivel_previo + (1 - PESO_NIVEL_PREVIO) * porcentaje_correctas
-    return round(min(1.0, max(0.0, nuevo)), 4)
-
-
 def registrar(estado: dict, respuestas: list[dict]) -> tuple[dict, list[dict]]:
-    """Suma respuestas `{dificultad, correcta}` y cierra un periodo cada 15. Devuelve (estado nuevo, periodos cerrados)."""
     nivel = float(estado["nivel"])
     periodo = int(estado["numero_periodo"])
     ultimo = estado.get("ultimo_porcentaje")
+    acumuladas = int(estado.get("correctas_total", 0))
     pendientes = list(estado["pendientes"]) + list(respuestas)
     cerrados = []
     while len(pendientes) >= PREGUNTAS_POR_PERIODO:
         bloque, pendientes = pendientes[:PREGUNTAS_POR_PERIODO], pendientes[PREGUNTAS_POR_PERIODO:]
-        porcentaje = round(sum(1 for r in bloque if r["correcta"]) / PREGUNTAS_POR_PERIODO, 4)
-        nuevo = actualizar_nivel(nivel, porcentaje)
-        cerrados.append(
-            {
-                "numero_periodo": periodo,
-                "porcentaje_correctas": porcentaje,
-                "variacion_porcentaje": None if ultimo is None else round(porcentaje - ultimo, 4),
-                "por_dificultad": _contar(bloque),
-                "nivel_previo": nivel,
-                "nivel": nuevo,
-            }
-        )
-        nivel, ultimo, periodo = nuevo, porcentaje, periodo + 1
-    return {"nivel": nivel, "numero_periodo": periodo, "ultimo_porcentaje": ultimo, "pendientes": pendientes}, cerrados
+        correctas = sum(1 for r in bloque if r["correcta"])
+        porcentaje = round(correctas / PREGUNTAS_POR_PERIODO, 4)
+        variacion = None if ultimo is None else round(porcentaje - ultimo, 4)
+        cierre = {
+            "numero_periodo": periodo,
+            "preguntas": PREGUNTAS_POR_PERIODO,
+            "correctas": correctas,
+            "porcentaje_correctas": porcentaje,
+            "tiempo_promedio": round(sum(r["segundos"] for r in bloque) / PREGUNTAS_POR_PERIODO, 2),
+            "por_dificultad": _contar(bloque),
+        }
+        nuevo = round(estimar_nivel(cierre, None if ultimo is None else nivel, acumuladas, variacion), 4)
+        cerrados.append({**cierre, "variacion_porcentaje": variacion, "nivel_previo": None if ultimo is None else nivel, "nivel": nuevo})
+        nivel, ultimo, periodo, acumuladas = nuevo, porcentaje, periodo + 1, acumuladas + correctas
+    return {"nivel": nivel, "numero_periodo": periodo, "ultimo_porcentaje": ultimo, "correctas_total": acumuladas, "pendientes": pendientes}, cerrados
 
 
 def _contar(bloque: list[dict]) -> dict:

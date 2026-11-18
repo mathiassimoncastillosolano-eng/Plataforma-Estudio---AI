@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { MAX_NUMERO_PERIODO, MAX_PENDIENTES_ADAPTACION, copiarEstadoAdaptacion, esEstadoAdaptacion, type EstadoAdaptacion } from "./adaptacion";
 
-const pendiente = { dificultad: "media" as const, correcta: true };
-const valido = (): EstadoAdaptacion => ({ nivel: 0.57, numero_periodo: 1, ultimo_porcentaje: null, pendientes: [] });
+const pendiente = { dificultad: "media" as const, correcta: true, segundos: 8 };
+const valido = (): EstadoAdaptacion => ({ nivel: 0.57, numero_periodo: 1, ultimo_porcentaje: null, correctas_total: 0, pendientes: [] });
 
 describe("esEstadoAdaptacion", () => {
   it("acepta el estado inicial del motor y uno con período cerrado y pendientes", () => {
     expect(esEstadoAdaptacion(valido())).toBe(true);
-    expect(esEstadoAdaptacion({ nivel: 0.6775, numero_periodo: 2, ultimo_porcentaje: 0.8, pendientes: [pendiente, { dificultad: "dificil", correcta: false }] })).toBe(true);
+    expect(esEstadoAdaptacion({ nivel: 0.6775, numero_periodo: 2, ultimo_porcentaje: 0.8, correctas_total: 12, pendientes: [pendiente, { dificultad: "dificil", correcta: false, segundos: 12 }] })).toBe(true);
   });
 
   it("acepta los extremos válidos", () => {
@@ -27,8 +27,8 @@ describe("esEstadoAdaptacion", () => {
 
   it("rechaza pendientes de más (15 completan un período) o con datos inválidos", () => {
     expect(esEstadoAdaptacion({ ...valido(), pendientes: Array.from({ length: MAX_PENDIENTES_ADAPTACION + 1 }, () => pendiente) })).toBe(false);
-    expect(esEstadoAdaptacion({ ...valido(), pendientes: [{ dificultad: "imposible", correcta: true }] })).toBe(false);
-    expect(esEstadoAdaptacion({ ...valido(), pendientes: [{ dificultad: "media", correcta: "si" }] })).toBe(false);
+    expect(esEstadoAdaptacion({ ...valido(), pendientes: [{ dificultad: "imposible", correcta: true, segundos: 8 }] })).toBe(false);
+    expect(esEstadoAdaptacion({ ...valido(), pendientes: [{ dificultad: "media", correcta: "si", segundos: 8 }] })).toBe(false);
     expect(esEstadoAdaptacion({ ...valido(), pendientes: [7] })).toBe(false);
     expect(esEstadoAdaptacion({ ...valido(), pendientes: "no" })).toBe(false);
   });

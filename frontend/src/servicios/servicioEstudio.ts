@@ -6,7 +6,7 @@ import { retardoSimulado, idAleatorio } from "../utilidades/retardoSimulado";
 // Servicio de temas de estudio.
 // Reemplazará llamadas como GET /api/topics, POST /api/topics,
 // GET /api/temas/:id si el backend llega a gestionar temas (hoy no hay BD).
-// Mientras tanto, persiste los temas creados en memoria + localStorage
+// Mientras tanto, persiste los temas creados en memoria + sessionStorage
 // para que la sesión se sienta real al navegar entre pantallas.
 // -----------------------------------------------------------------------
 
@@ -14,7 +14,7 @@ const CLAVE_TEMAS = "estudioai.temas";
 
 function cargarTemas(): TemaEstudio[] {
   try {
-    const bruto = localStorage.getItem(CLAVE_TEMAS);
+    const bruto = sessionStorage.getItem(CLAVE_TEMAS);
     if (bruto) return JSON.parse(bruto) as TemaEstudio[];
   } catch {
     /* ignore corrupted storage */
@@ -23,7 +23,7 @@ function cargarTemas(): TemaEstudio[] {
 }
 
 function guardarTemas(temas: TemaEstudio[]) {
-  localStorage.setItem(CLAVE_TEMAS, JSON.stringify(temas));
+  sessionStorage.setItem(CLAVE_TEMAS, JSON.stringify(temas));
 }
 
 export async function obtenerTemasEstudio(): Promise<TemaEstudio[]> {
@@ -58,7 +58,7 @@ export async function crearTemaEstudio(borrador: BorradorFuente): Promise<TemaEs
 /**
  * Elimina únicamente el tema indicado (por su id) y persiste el cambio.
  * Devuelve false si el tema no existe (p. ej. ya fue eliminado desde otra pestaña).
- * Hoy los temas viven en localStorage; si pasan a una API, solo cambia este método.
+ * Hoy los temas viven en sessionStorage; si pasan a una API, solo cambia este método.
  */
 export async function eliminarTemaEstudio(id: string): Promise<boolean> {
   const temas = cargarTemas();

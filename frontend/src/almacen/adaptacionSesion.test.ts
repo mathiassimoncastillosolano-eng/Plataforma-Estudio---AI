@@ -3,8 +3,8 @@ import { CLAVES_SESION, VERSION_PERSISTENCIA, guardarEstudioPersistido, leerEstu
 import { activarPersistenciaEstudio, eliminarDatosTema, guardarEstadoAdaptacion, obtenerEstadoAdaptacion, obtenerSesion, registrarRespuestas, reiniciarSesionEstudio, restaurarEstudio } from "./almacenSesion";
 import type { EstadoAdaptacion } from "../utilidades/adaptacion";
 
-const estado = (nivel: number, periodo = 1, pendientes: EstadoAdaptacion["pendientes"] = []): EstadoAdaptacion => ({ nivel, numero_periodo: periodo, ultimo_porcentaje: periodo > 1 ? 0.8 : null, pendientes });
-const pendiente = { dificultad: "media" as const, correcta: true };
+const estado = (nivel: number, periodo = 1, pendientes: EstadoAdaptacion["pendientes"] = []): EstadoAdaptacion => ({ nivel, numero_periodo: periodo, ultimo_porcentaje: periodo > 1 ? 0.8 : null, correctas_total: 0, pendientes });
+const pendiente = { dificultad: "media" as const, correcta: true, segundos: 8 };
 const resp = { dificultad: "media" as const, correcta: true, segundos: 3, origen: "practica" as const };
 const base = { usuarioId: "g-1", iniciadoEn: 1, fuentes: {}, resumenes: {}, mapas: {}, actividad: [] };
 const esperar = (ms: number) => new Promise((resolver) => setTimeout(resolver, ms));
