@@ -32,7 +32,7 @@ export default function MedidorDominio({
       role="img"
       aria-label={`${etiqueta}: ${acotado}%`}
     >
-      <svg width={tamano} height={tamano} aria-hidden="true">
+      <svg width={tamano} height={tamano} viewBox={`0 0 ${tamano} ${tamano}`} aria-hidden="true">
         <circle
           className="mastery-gauge-track"
           cx={tamano / 2}
@@ -41,18 +41,20 @@ export default function MedidorDominio({
           fill="none"
           strokeWidth={strokeWidth}
         />
-        <circle
-          className={`mastery-gauge-arc tone-${tonoPara(acotado)}`}
-          cx={tamano / 2}
-          cy={tamano / 2}
-          r={radius}
-          fill="none"
-          strokeWidth={strokeWidth}
-          strokeDasharray={circunferencia}
-          strokeDashoffset={offset}
-          strokeLinecap="round"
-          style={{ ["--gauge-from" as string]: circunferencia }}
-        />
+        {acotado > 0 && (
+          <circle
+            className={`mastery-gauge-arc tone-${tonoPara(acotado)}`}
+            cx={tamano / 2}
+            cy={tamano / 2}
+            r={radius}
+            fill="none"
+            strokeWidth={strokeWidth}
+            strokeDasharray={circunferencia}
+            strokeDashoffset={offset}
+            strokeLinecap="round"
+            style={{ ["--gauge-from" as string]: circunferencia }}
+          />
+        )}
       </svg>
       <div className="mastery-gauge-value">
         <strong style={{ fontSize: tamano * 0.26 }}>{acotado}%</strong>

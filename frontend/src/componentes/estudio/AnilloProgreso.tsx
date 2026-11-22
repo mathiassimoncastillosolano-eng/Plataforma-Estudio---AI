@@ -19,18 +19,20 @@ export default function AnilloProgreso({ valor, tamano = 112 }: Props) {
           </linearGradient>
         </defs>
         <circle className="ring-pista" cx={tamano / 2} cy={tamano / 2} r={radio} strokeWidth={grosor} fill="none" />
-        <circle
-          className="ring-valor"
-          cx={tamano / 2}
-          cy={tamano / 2}
-          r={radio}
-          strokeWidth={grosor}
-          fill="none"
-          strokeLinecap="round"
-          strokeDasharray={circunferencia}
-          strokeDashoffset={circunferencia * (1 - v / 100)}
-          transform={`rotate(-90 ${tamano / 2} ${tamano / 2})`}
-        />
+        {v > 0 && (
+          <circle
+            className="ring-valor"
+            cx={tamano / 2}
+            cy={tamano / 2}
+            r={radio}
+            strokeWidth={grosor}
+            fill="none"
+            strokeLinecap="round"
+            strokeDasharray={circunferencia}
+            strokeDashoffset={circunferencia * (1 - v / 100)}
+            transform={`rotate(-90 ${tamano / 2} ${tamano / 2})`}
+          />
+        )}
       </svg>
       <span className="ring-cifra mono">{v}%</span>
     </div>

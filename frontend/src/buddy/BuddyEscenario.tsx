@@ -6,20 +6,6 @@ import BuddyAvatar from "./BuddyAvatar";
 import { useBuddy } from "./BuddyProvider";
 import type { AccionBuddy, EventoBuddy } from "./tipos";
 
-function useHabla(texto: string, duracionMs: number | null): boolean {
-  const [hablando, establecerHablando] = useState(false);
-  useEffect(() => {
-    const total = Math.max(1400, Math.min(texto.length * 52, (duracionMs ?? 7000) - 900));
-    const inicio = window.setTimeout(() => establecerHablando(true), 420);
-    const fin = window.setTimeout(() => establecerHablando(false), 420 + total);
-    return () => {
-      window.clearTimeout(inicio);
-      window.clearTimeout(fin);
-    };
-  }, [texto, duracionMs]);
-  return hablando;
-}
-
 function useEjecutarAccion(alCerrar: () => void) {
   const navegar = useNavigate();
   return (accion: AccionBuddy) => {
@@ -47,7 +33,6 @@ function Detalles({ detalles }: { detalles?: string[] }) {
 }
 
 function Burbuja({ evento, saliendo, alCerrar }: PropsEscena) {
-  const hablando = useHabla(evento.mensaje, evento.duracionMs);
   const ejecutar = useEjecutarAccion(alCerrar);
   return (
     <div className={`buddy-escena buddy-burbuja ${saliendo ? "saliendo" : ""}`} role="status" aria-live="polite">
@@ -67,7 +52,7 @@ function Burbuja({ evento, saliendo, alCerrar }: PropsEscena) {
         )}
         {evento.duracionMs !== null && <span className="buddy-tiempo" aria-hidden="true" style={{ ["--dur" as string]: `${evento.duracionMs}ms` } as CSSProperties} />}
       </div>
-      <BuddyAvatar className="buddy-escena-avatar" expresion={evento.expresion} gesto={evento.gesto} hablando={hablando} tamano={112} />
+      <BuddyAvatar className="buddy-escena-avatar" expresion={evento.expresion} gesto={evento.gesto} mensaje={evento.mensaje} tamano={112} />
     </div>
   );
 }
@@ -93,7 +78,6 @@ function Chispas({ tipo }: { tipo: "suaves" | "intensas" }) {
 
 function Tarjeta({ evento, saliendo, alCerrar }: PropsEscena) {
   const [omitida, establecerOmitida] = useState(false);
-  const hablando = useHabla(evento.mensaje, evento.duracionMs);
   const ejecutar = useEjecutarAccion(alCerrar);
   const refContinuar = useRef<HTMLButtonElement>(null);
 
@@ -114,7 +98,7 @@ function Tarjeta({ evento, saliendo, alCerrar }: PropsEscena) {
         <button type="button" className="buddy-cerrar" aria-label="Cerrar" onClick={alCerrar}>
           <X size={16} />
         </button>
-        <BuddyAvatar className="buddy-tarjeta-avatar" expresion={evento.expresion} gesto={evento.gesto} hablando={hablando} tamano={150} animado={!omitida} />
+        <BuddyAvatar className="buddy-tarjeta-avatar" expresion={evento.expresion} gesto={evento.gesto} mensaje={evento.mensaje} tamano={150} animado={!omitida} />
         {evento.titulo && <strong className="buddy-titulo">{evento.titulo}</strong>}
         <p className="buddy-texto">{evento.mensaje}</p>
         <Detalles detalles={evento.detalles} />
@@ -139,11 +123,10 @@ function Tarjeta({ evento, saliendo, alCerrar }: PropsEscena) {
 }
 
 function Invitacion({ evento, saliendo, alCerrar }: PropsEscena) {
-  const hablando = useHabla(evento.mensaje, 5200);
   const ejecutar = useEjecutarAccion(alCerrar);
   return (
     <div className={`buddy-escena buddy-invitacion ${saliendo ? "saliendo" : ""}`} role="dialog" aria-label={evento.titulo}>
-      <BuddyAvatar className="buddy-escena-avatar" expresion={evento.expresion} gesto={evento.gesto} hablando={hablando} tamano={112} />
+      <BuddyAvatar className="buddy-escena-avatar" expresion={evento.expresion} gesto={evento.gesto} mensaje={evento.mensaje} tamano={112} />
       <div className="buddy-globo">
         {evento.titulo && <strong className="buddy-titulo">{evento.titulo}</strong>}
         <p className="buddy-texto">{evento.mensaje}</p>

@@ -1,4 +1,6 @@
-export type Expresion = "neutral" | "feliz" | "entusiasmo" | "sorpresa" | "curiosidad" | "concentracion" | "duda" | "tristeza" | "orgullo" | "motivacion";
+import { planificarHabla } from "./habla";
+
+export type Expresion = "neutral" | "feliz" | "entusiasmo" | "sorpresa" | "curiosidad" | "concentracion" | "duda" | "tristeza" | "orgullo" | "motivacion" | "satisfaccion" | "entrecerrado";
 
 export type Gesto =
   | "ninguno"
@@ -14,7 +16,17 @@ export type Gesto =
   | "aprobar"
   | "celebrar"
   | "reflexionar"
-  | "animar";
+  | "animar"
+  | "girar"
+  | "girar-rapido"
+  | "rebotar"
+  | "salto-alto"
+  | "saltos"
+  | "curioso"
+  | "lateral"
+  | "sobresalto"
+  | "confundido"
+  | "decaido";
 
 export type EstadoBuddy =
   | "idle"
@@ -27,7 +39,11 @@ export type EstadoBuddy =
   | "celebrating"
   | "congratulating"
   | "concerned"
-  | "success";
+  | "success"
+  | "talking"
+  | "surprised"
+  | "confused"
+  | "sad";
 
 export type ModoBuddy = "burbuja" | "tarjeta" | "invitacion" | "tutorial";
 
@@ -46,7 +62,11 @@ export const PRESENCIA_ESTADO: Record<EstadoBuddy, { expresion: Expresion; gesto
   celebrating: { expresion: "entusiasmo", gesto: "celebrar" },
   congratulating: { expresion: "orgullo", gesto: "brazos-arriba" },
   concerned: { expresion: "tristeza", gesto: "inclinar" },
-  success: { expresion: "entusiasmo", gesto: "saltar" },
+  success: { expresion: "entusiasmo", gesto: "saltos" },
+  talking: { expresion: "feliz", gesto: "curioso" },
+  surprised: { expresion: "sorpresa", gesto: "sobresalto" },
+  confused: { expresion: "duda", gesto: "confundido" },
+  sad: { expresion: "tristeza", gesto: "decaido" },
 };
 
 export interface AccionBuddy {
@@ -87,7 +107,7 @@ export function crearEvento(parcial: EventoParcial, ruta?: string): EventoBuddy 
     estado,
     expresion: presencia.expresion,
     gesto: presencia.gesto,
-    duracionMs: 4500,
+    duracionMs: Math.max(4500, planificarHabla(parcial.mensaje).duracionMs + 2400),
     cerrable: true,
     retener: false,
     cancelarAlNavegar: true,

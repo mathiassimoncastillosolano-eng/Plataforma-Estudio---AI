@@ -1,12 +1,13 @@
-import { useEffect, useId, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { useMediaQuery } from "../hooks/useMediaQuery";
+import { planificarHabla } from "./habla";
 import { PRESENCIA_ESTADO, type EstadoBuddy, type Expresion, type Gesto } from "./tipos";
 
 interface PropsAvatar {
   estado?: EstadoBuddy;
   expresion?: Expresion;
   gesto?: Gesto;
-  hablando?: boolean;
+  mensaje?: string;
   anguloSenal?: number | null;
   tamano?: number;
   animado?: boolean;
@@ -14,6 +15,7 @@ interface PropsAvatar {
 }
 
 const CIAN = "#8be9ff";
+const MICROGESTOS: Gesto[] = ["curioso", "lateral", "rebotar", "girar", "inclinar"];
 
 function ojoRedondo(cx: number, rx: number, ry: number, cy = 94): ReactNode {
   return (
@@ -54,6 +56,10 @@ function Ojos({ expresion }: { expresion: Expresion }) {
       return <>{ojoRedondo(78, 8, 10, 97)}{ojoRedondo(122, 8, 10, 97)}{ceja(68, 87, 87, 80)}{ceja(113, 80, 132, 87)}</>;
     case "motivacion":
       return <>{ojoRedondo(78, 8.5, 11)}{ojoRedondo(122, 8.5, 11)}{ceja(68, 79, 87, 84)}{ceja(113, 84, 132, 79)}</>;
+    case "satisfaccion":
+      return <>{ojoArco(78, 9, 99, 11)}{ojoArco(122, 9, 99, 11)}</>;
+    case "entrecerrado":
+      return <>{ojoMedio(78)}{ojoMedio(122)}{ceja(68, 84, 88, 86)}{ceja(112, 86, 132, 84)}</>;
     case "feliz":
       return <>{ojoRedondo(78, 8.5, 10.5)}{ojoRedondo(122, 8.5, 10.5)}</>;
     default:
@@ -81,6 +87,8 @@ function Boca({ expresion }: { expresion: Expresion }) {
           <ellipse cx="100" cy="118.5" rx="5.5" ry="3" fill="#f5b3ff" opacity="0.85" />
         </>
       );
+    case "satisfaccion":
+      return <path d="M87 110 q13 13 26 0" {...TRAZO} />;
     case "sorpresa":
       return <ellipse cx="100" cy="116" rx="5" ry="6.5" fill="#a78bfa" />;
     case "curiosidad":
@@ -145,15 +153,18 @@ function Brazo({ lado, senalando, cuerpo, morado }: { lado: "izq" | "der"; senal
   );
 }
 
-export default function BuddyAvatar({ estado = "idle", expresion, gesto, hablando = false, anguloSenal = null, tamano = 120, animado = true, className = "" }: PropsAvatar) {
+export default function BuddyAvatar({ estado = "idle", expresion, gesto, mensaje = "", anguloSenal = null, tamano = 120, animado = true, className = "" }: PropsAvatar) {
   const base = PRESENCIA_ESTADO[estado];
   const exp = expresion ?? base.expresion;
-  const ges = gesto ?? base.gesto;
+  const gestoBase = gesto ?? base.gesto;
   const reducido = useMediaQuery("(prefers-reduced-motion: reduce)");
   const vivo = animado && !reducido;
   const u = useId().replace(/[^a-zA-Z0-9]/g, "");
   const [parpadeo, establecerParpadeo] = useState(false);
   const [mirada, establecerMirada] = useState({ x: 0, y: 0 });
+  const [micro, establecerMicro] = useState<Gesto | null>(null);
+  const refSvg = useRef<SVGSVGElement>(null);
+  const ges = gestoBase === "ninguno" && micro ? micro : gestoBase;
 
   useEffect(() => {
     if (!vivo) return;
@@ -202,6 +213,76 @@ export default function BuddyAvatar({ estado = "idle", expresion, gesto, habland
     };
   }, [vivo]);
 
+  useEffect(() => {
+    const svg = refSvg.current;
+    if (!svg) return;
+    const habla = svg.querySelector<SVGGElement>(".buddy-boca-habla");
+    const reposo = svg.querySelector<SVGGElement>(".buddy-boca-reposo");
+    if (!habla || !reposo) return;
+    const aplicar = (apertura: number) => {
+      const abierta = apertura > 0.12;
+      habla.style.opacity = abierta ? "1" : "0";
+      reposo.style.opacity = abierta ? "0" : "1";
+      habla.style.transform = `scale(${0.9 + apertura * 0.16}, ${Math.max(apertura, 0.05)})`;
+    };
+    const terminar = () => {
+      aplicar(0);
+      delete svg.dataset.habla;
+    };
+    if (!vivo || !mensaje.trim()) {
+      terminar();
+      return;
+    }
+    const plan = planificarHabla(mensaje);
+    let indice = 0;
+    let temporizador = 0;
+    const avanzar = () => {
+      if (indice >= plan.pasos.length) {
+        terminar();
+        return;
+      }
+      const paso = plan.pasos[indice++];
+      aplicar(paso.apertura);
+      temporizador = window.setTimeout(avanzar, paso.duracionMs);
+    };
+    const inicio = window.setTimeout(() => {
+      svg.dataset.habla = "1";
+      avanzar();
+    }, 380);
+    return () => {
+      window.clearTimeout(inicio);
+      window.clearTimeout(temporizador);
+      terminar();
+    };
+  }, [mensaje, vivo]);
+
+  useEffect(() => {
+    if (!vivo || gestoBase !== "ninguno") {
+      establecerMicro(null);
+      return;
+    }
+    let activo = true;
+    const temporizadores: number[] = [];
+    const programar = () => {
+      temporizadores.push(
+        window.setTimeout(() => {
+          if (!activo) return;
+          const hablando = refSvg.current?.dataset.habla === "1";
+          if (!hablando) {
+            establecerMicro(MICROGESTOS[Math.floor(Math.random() * MICROGESTOS.length)]);
+            temporizadores.push(window.setTimeout(() => activo && establecerMicro(null), 1900));
+          }
+          programar();
+        }, 7000 + Math.random() * 7000)
+      );
+    };
+    programar();
+    return () => {
+      activo = false;
+      temporizadores.forEach((t) => window.clearTimeout(t));
+    };
+  }, [vivo, gestoBase]);
+
   const cuerpo = `url(#${u}-cuerpo)`;
   const morado = `url(#${u}-morado)`;
   const angulo = anguloSenal ?? 0;
@@ -210,7 +291,8 @@ export default function BuddyAvatar({ estado = "idle", expresion, gesto, habland
 
   return (
     <svg
-      className={`buddy ${vivo ? "buddy-vivo" : ""} ${hablando ? "hablando" : ""} ${parpadeo ? "parpadeo" : ""} ${className}`}
+      ref={refSvg}
+      className={`buddy ${vivo ? "buddy-vivo" : ""} ${parpadeo ? "parpadeo" : ""} ${className}`}
       data-gesto={ges}
       data-expresion={exp}
       viewBox="0 0 200 250"
@@ -242,70 +324,74 @@ export default function BuddyAvatar({ estado = "idle", expresion, gesto, habland
 
       <ellipse className="buddy-sombra" cx="100" cy="246" rx="46" ry="6" fill="#6d5de6" opacity="0.2" />
 
-      <g className="buddy-cuerpo-todo">
-        <g className="buddy-flota">
-          <g className="buddy-piernas">
-            <rect x="70" y="198" width="20" height="22" rx="9" fill={morado} />
-            <rect x="110" y="198" width="20" height="22" rx="9" fill={morado} />
-            <rect x="67" y="208" width="26" height="24" rx="11" fill={cuerpo} stroke="#d8d4f0" strokeWidth="1" />
-            <rect x="107" y="208" width="26" height="24" rx="11" fill={cuerpo} stroke="#d8d4f0" strokeWidth="1" />
-            <rect x="62" y="228" width="36" height="16" rx="8" fill={cuerpo} stroke="#d8d4f0" strokeWidth="1" />
-            <rect x="102" y="228" width="36" height="16" rx="8" fill={cuerpo} stroke="#d8d4f0" strokeWidth="1" />
-            <rect x="61" y="240" width="38" height="7" rx="3.5" fill={morado} />
-            <rect x="101" y="240" width="38" height="7" rx="3.5" fill={morado} />
-            <path className="buddy-luz" d="M68 235 h24" stroke="#7dd3fc" strokeWidth="2.6" strokeLinecap="round" />
-            <path className="buddy-luz" d="M108 235 h24" stroke="#7dd3fc" strokeWidth="2.6" strokeLinecap="round" />
-          </g>
-
-          <g className="buddy-torso">
-            <rect x="86" y="140" width="28" height="16" rx="7" fill="#4f41cf" />
-            <rect x="64" y="148" width="72" height="62" rx="28" fill={cuerpo} stroke="#d8d4f0" strokeWidth="1.2" />
-            <path d="M72 200 q28 10 56 0 v8 q-28 10-56 0z" fill={morado} />
-            <g className="buddy-emblema">
-              <rect x="86" y="162" width="28" height="30" rx="8" fill={morado} />
-              <path className="buddy-luz" d="M100 164.5 l1.5 3 3 1.5 -3 1.5 -1.5 3 -1.5 -3 -3 -1.5 3 -1.5z" fill="#8be9ff" />
-              <path d="M100 176 c-3.5-2.4-8.5-2.8-11.5-1.4 v12 c3-1.4 8-1 11.5 1.4 c3.5-2.4 8.5-2.8 11.5-1.4 v-12 c-3-1.4-8-1-11.5 1.4z" fill="#fff" opacity="0.95" />
-              <path d="M100 176 v12.4" stroke="#6d5de6" strokeWidth="1.5" />
+      <g className="buddy-aparicion">
+        <g className="buddy-cuerpo-todo">
+          <g className="buddy-flota">
+            <g className="buddy-piernas">
+              <rect x="70" y="198" width="20" height="22" rx="9" fill={morado} />
+              <rect x="110" y="198" width="20" height="22" rx="9" fill={morado} />
+              <rect x="67" y="208" width="26" height="24" rx="11" fill={cuerpo} stroke="#d8d4f0" strokeWidth="1" />
+              <rect x="107" y="208" width="26" height="24" rx="11" fill={cuerpo} stroke="#d8d4f0" strokeWidth="1" />
+              <rect x="62" y="228" width="36" height="16" rx="8" fill={cuerpo} stroke="#d8d4f0" strokeWidth="1" />
+              <rect x="102" y="228" width="36" height="16" rx="8" fill={cuerpo} stroke="#d8d4f0" strokeWidth="1" />
+              <rect x="61" y="240" width="38" height="7" rx="3.5" fill={morado} />
+              <rect x="101" y="240" width="38" height="7" rx="3.5" fill={morado} />
+              <path className="buddy-luz" d="M68 235 h24" stroke="#7dd3fc" strokeWidth="2.6" strokeLinecap="round" />
+              <path className="buddy-luz" d="M108 235 h24" stroke="#7dd3fc" strokeWidth="2.6" strokeLinecap="round" />
             </g>
-            <circle cx="62" cy="162" r="9" fill={morado} />
-            <circle cx="138" cy="162" r="9" fill={morado} />
-          </g>
 
-          <g className="buddy-cabeza">
-            <ellipse cx="38" cy="98" rx="13" ry="22" fill={morado} />
-            <ellipse cx="162" cy="98" rx="13" ry="22" fill={morado} />
-            <path className="buddy-luz" d="M30 80 q-6 18 0 36" stroke="#67e8f9" strokeWidth="3" strokeLinecap="round" fill="none" />
-            <path className="buddy-luz" d="M170 80 q6 18 0 36" stroke="#67e8f9" strokeWidth="3" strokeLinecap="round" fill="none" />
-            <rect x="40" y="44" width="120" height="104" rx="46" fill={`url(#${u}-casco)`} stroke="#d8d4f0" strokeWidth="1.2" />
-            <ellipse cx="70" cy="58" rx="20" ry="7" fill="#fff" opacity="0.7" transform="rotate(-20 70 58)" />
-            <path d="M74 47 q26-9 52 0 q-3 9-9 9 h-34 q-6 0-9-9z" fill={morado} />
-            <g className="buddy-antena">
-              <path d="M101 47 q2-12 5-22" stroke="#6d5de6" strokeWidth="3.4" strokeLinecap="round" fill="none" />
-              <g className="buddy-estrella">
-                <path d="M108 8 l2.8 6 6 2.8 -6 2.8 -2.8 6 -2.8 -6 -6 -2.8 6 -2.8z" fill="#8be9ff" stroke="#38bdf8" strokeWidth="1.2" strokeLinejoin="round" />
+            <g className="buddy-torso">
+              <rect x="86" y="140" width="28" height="16" rx="7" fill="#4f41cf" />
+              <rect x="64" y="148" width="72" height="62" rx="28" fill={cuerpo} stroke="#d8d4f0" strokeWidth="1.2" />
+              <path d="M72 200 q28 10 56 0 v8 q-28 10-56 0z" fill={morado} />
+              <g className="buddy-emblema">
+                <rect x="86" y="162" width="28" height="30" rx="8" fill={morado} />
+                <path className="buddy-luz" d="M100 164.5 l1.5 3 3 1.5 -3 1.5 -1.5 3 -1.5 -3 -3 -1.5 3 -1.5z" fill="#8be9ff" />
+                <path d="M100 176 c-3.5-2.4-8.5-2.8-11.5-1.4 v12 c3-1.4 8-1 11.5 1.4 c3.5-2.4 8.5-2.8 11.5-1.4 v-12 c-3-1.4-8-1-11.5 1.4z" fill="#fff" opacity="0.95" />
+                <path d="M100 176 v12.4" stroke="#6d5de6" strokeWidth="1.5" />
               </g>
+              <circle cx="62" cy="162" r="9" fill={morado} />
+              <circle cx="138" cy="162" r="9" fill={morado} />
             </g>
-            <rect x="50" y="56" width="100" height="82" rx="34" fill={`url(#${u}-pantalla)`} stroke="#2c2790" strokeWidth="2" />
-            <path d="M64 72 q16-12 40-13" stroke="#fff" strokeOpacity="0.22" strokeWidth="4" strokeLinecap="round" fill="none" />
-            <ellipse cx="68" cy="112" rx="7" ry="4.2" fill="#a78bfa" opacity="0.5" />
-            <ellipse cx="132" cy="112" rx="7" ry="4.2" fill="#a78bfa" opacity="0.5" />
-            <g className="buddy-ojos">
-              <g className="buddy-mirada" style={{ transform: `translate(${mirada.x}px, ${mirada.y}px)` }}>
-                <Ojos expresion={exp} />
-              </g>
-            </g>
-            <g className="buddy-boca-reposo">
-              <Boca expresion={exp} />
-            </g>
-            <g className="buddy-boca-habla">
-              <path d="M89 109 h22 q0 14-11 14 q-11 0-11-14z" fill="#a78bfa" />
-              <ellipse cx="100" cy="118.5" rx="5.5" ry="3" fill="#f5b3ff" opacity="0.85" />
-            </g>
-            <Extras expresion={exp} />
-          </g>
 
-          <Brazo lado="izq" senalando={senalando && ladoSenal === "izq"} cuerpo={cuerpo} morado={morado} />
-          <Brazo lado="der" senalando={senalando && ladoSenal === "der"} cuerpo={cuerpo} morado={morado} />
+            <g className="buddy-cabeza">
+              <ellipse cx="38" cy="98" rx="13" ry="22" fill={morado} />
+              <ellipse cx="162" cy="98" rx="13" ry="22" fill={morado} />
+              <path className="buddy-luz" d="M30 80 q-6 18 0 36" stroke="#67e8f9" strokeWidth="3" strokeLinecap="round" fill="none" />
+              <path className="buddy-luz" d="M170 80 q6 18 0 36" stroke="#67e8f9" strokeWidth="3" strokeLinecap="round" fill="none" />
+              <rect x="40" y="44" width="120" height="104" rx="46" fill={`url(#${u}-casco)`} stroke="#d8d4f0" strokeWidth="1.2" />
+              <ellipse cx="70" cy="58" rx="20" ry="7" fill="#fff" opacity="0.7" transform="rotate(-20 70 58)" />
+              <path d="M74 47 q26-9 52 0 q-3 9-9 9 h-34 q-6 0-9-9z" fill={morado} />
+              <g className="buddy-antena">
+                <path d="M101 47 q2-12 5-22" stroke="#6d5de6" strokeWidth="3.4" strokeLinecap="round" fill="none" />
+                <g className="buddy-estrella">
+                  <path d="M108 8 l2.8 6 6 2.8 -6 2.8 -2.8 6 -2.8 -6 -6 -2.8 6 -2.8z" fill="#8be9ff" stroke="#38bdf8" strokeWidth="1.2" strokeLinejoin="round" />
+                </g>
+              </g>
+              <rect x="50" y="56" width="100" height="82" rx="34" fill={`url(#${u}-pantalla)`} stroke="#2c2790" strokeWidth="2" />
+              <path d="M64 72 q16-12 40-13" stroke="#fff" strokeOpacity="0.22" strokeWidth="4" strokeLinecap="round" fill="none" />
+              <ellipse cx="68" cy="112" rx="7" ry="4.2" fill="#a78bfa" opacity="0.5" />
+              <ellipse cx="132" cy="112" rx="7" ry="4.2" fill="#a78bfa" opacity="0.5" />
+              <g className="buddy-ojos">
+                <g className="buddy-mirada" style={{ transform: `translate(${mirada.x}px, ${mirada.y}px)` }}>
+                  <g key={exp} className="buddy-ojos-exp">
+                    <Ojos expresion={exp} />
+                  </g>
+                </g>
+              </g>
+              <g className="buddy-boca-reposo">
+                <Boca expresion={exp} />
+              </g>
+              <g className="buddy-boca-habla">
+                <path d="M89 109 h22 q0 14-11 14 q-11 0-11-14z" fill="#a78bfa" />
+                <ellipse cx="100" cy="118.5" rx="5.5" ry="3" fill="#f5b3ff" opacity="0.85" />
+              </g>
+              <Extras expresion={exp} />
+            </g>
+
+            <Brazo lado="izq" senalando={senalando && ladoSenal === "izq"} cuerpo={cuerpo} morado={morado} />
+            <Brazo lado="der" senalando={senalando && ladoSenal === "der"} cuerpo={cuerpo} morado={morado} />
+          </g>
         </g>
       </g>
     </svg>

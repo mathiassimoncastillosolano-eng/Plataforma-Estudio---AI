@@ -34,7 +34,7 @@ export default function CentroAyuda() {
     <div className="buddy-ayuda-velo" onClick={cerrarAyuda}>
       <div className="buddy-ayuda" role="dialog" aria-modal="true" aria-labelledby="buddy-ayuda-titulo" onClick={(e) => e.stopPropagation()}>
         <header className="buddy-ayuda-cabecera">
-          <BuddyAvatar estado="greeting" tamano={96} hablando />
+          <BuddyAvatar estado="greeting" tamano={96} mensaje="¿Qué quieres aprender hoy?" />
           <div>
             <p className="eyebrow">Centro de ayuda</p>
             <h2 id="buddy-ayuda-titulo">¿Qué quieres aprender hoy?</h2>

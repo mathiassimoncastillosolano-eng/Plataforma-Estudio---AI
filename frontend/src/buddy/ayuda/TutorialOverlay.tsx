@@ -263,7 +263,7 @@ export default function TutorialOverlay() {
 
       <div className={`buddy-tut-caja ${movil ? `movil ${abajoMovil ? "abajo" : "arriba"}` : ""} ${reducido ? "sin-movimiento" : ""}`} style={estiloContenedor}>
         <div className="buddy-tut-avatar" ref={refAvatar}>
-          <BuddyAvatar expresion={expresion} gesto={gesto} anguloSenal={apuntando ? angulo : null} tamano={tamanoAvatar} hablando={!enPausa && !sinTema} />
+          <BuddyAvatar expresion={expresion} gesto={gesto} anguloSenal={apuntando ? angulo : null} tamano={tamanoAvatar} mensaje={mensaje} />
         </div>
         <div className="buddy-tut-tarjeta" ref={refTarjeta} role="dialog" aria-live="polite" aria-label={titulo}>
           <button type="button" className="buddy-cerrar" aria-label="Cerrar recorrido" onClick={cerrar}>
