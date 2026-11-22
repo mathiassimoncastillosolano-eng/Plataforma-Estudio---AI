@@ -42,9 +42,11 @@ export function construirRecomendaciones(resultado: ResultadoPrueba): Recomendac
   return salida.slice(0, 5);
 }
 
+export const UMBRALES_RESULTADO = { excelente: 85, bueno: 70, intermedio: 50 } as const;
+
 export function titularResultado(porcentaje: number): { titulo: string; tono: "good" | "mid" | "low" } {
-  if (porcentaje >= 85) return { titulo: "¡Excelente resultado!", tono: "good" };
-  if (porcentaje >= 70) return { titulo: "Muy buen trabajo", tono: "good" };
-  if (porcentaje >= 50) return { titulo: "Vas por buen camino", tono: "mid" };
+  if (porcentaje >= UMBRALES_RESULTADO.excelente) return { titulo: "¡Excelente resultado!", tono: "good" };
+  if (porcentaje >= UMBRALES_RESULTADO.bueno) return { titulo: "Muy buen trabajo", tono: "good" };
+  if (porcentaje >= UMBRALES_RESULTADO.intermedio) return { titulo: "Vas por buen camino", tono: "mid" };
   return { titulo: "Todavía hay conceptos por reforzar", tono: "low" };
 }

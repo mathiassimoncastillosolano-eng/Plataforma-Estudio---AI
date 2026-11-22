@@ -13,6 +13,7 @@ import ConfiguradorPrueba from "../componentes/prueba/ConfiguradorPrueba";
 import EjecutorPrueba from "../componentes/prueba/EjecutorPrueba";
 import { EntregandoPrueba, GenerandoPrueba, PausaPrueba, PruebaLista } from "../componentes/prueba/PantallasPrueba";
 import { describirTiempo } from "../utilidades/tiempoPrueba";
+import { useBloqueoBuddy, usePresentacionModulo } from "../buddy/BuddyProvider";
 
 export default function PaginaPrueba() {
   const { tema, establecerTema } = useContextoTema();
@@ -34,6 +35,8 @@ export default function PaginaPrueba() {
   }
 
   const c = useControlPrueba({ idTema: tema.id, tituloTema: tema.titulo, resumen, alFinalizar });
+  usePresentacionModulo("prueba");
+  useBloqueoBuddy(["generando", "lista", "ejecutando", "pausada", "entregando"].includes(c.fase));
 
   function cambiarAjustes(siguiente: AjustesPrueba) {
     establecerAjustes(siguiente);

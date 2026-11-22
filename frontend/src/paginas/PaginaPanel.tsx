@@ -1,7 +1,9 @@
+import { usePresentacionModulo } from "../buddy/BuddyProvider";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Plus, BookMarked, Clock, HelpCircle, Target, BookOpen, ClipboardCheck, Share2, ArrowRight, Play } from "lucide-react";
 import { useAutenticacion } from "../hooks/useAutenticacion";
+import { usePresentacionModulo } from "../buddy/BuddyProvider";
 import * as studyService from "../servicios/servicioEstudio";
 import * as progressService from "../servicios/servicioProgreso";
 import type { EstadisticasPanel, TemaEstudio } from "../tipos";
@@ -19,6 +21,8 @@ import { ErrorState, EmptyState } from "../componentes/Estados";
 import { EsqueletoCuadricula, EsqueletoTexto } from "../componentes/Esqueleto";
 
 export default function PaginaPanel() {
+  usePresentacionModulo("panel");
+  usePresentacionModulo("panel");
   const { usuario } = useAutenticacion();
   const [temas, establecerTemas] = useState<TemaEstudio[] | null>(null);
   const [estadisticas, establecerEstadisticas] = useState<EstadisticasPanel | null>(null);

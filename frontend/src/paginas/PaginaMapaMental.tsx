@@ -1,3 +1,5 @@
+import { useBuddy, usePresentacionModulo } from "../buddy/BuddyProvider";
+import { celebracionHito } from "../buddy/mensajes";
 import { useEffect, useRef, useState } from "react";
 import { Loader2, Network, Sparkles } from "lucide-react";
 import { useContextoTema } from "../disposiciones/contextoTema";
@@ -25,6 +27,7 @@ function huellaFuente(esPdf: boolean, texto: string | undefined, archivo: File |
  * genera con IA a partir de ella; si no, se conserva el comportamiento anterior (mapas de ejemplo y de respaldo).
  */
 export default function PaginaMapaMental() {
+  usePresentacionModulo("mapa");
   const { tema } = useContextoTema();
   // Igual que en el resumen: en los temas con PDF la fuente es el documento; el texto guardado son solo indicaciones.
   const esPdf = tema.tipoFuente === "pdf";
@@ -46,6 +49,8 @@ function MapaDesdeFuente({ huella, esPdf, texto, archivo }: PropsMapaDesdeFuente
   const { tema } = useContextoTema();
   const { mostrarAviso } = useAviso();
   const guardado = useSesion((s) => s.mapas[tema.id]);
+  const totalMapas = useSesion((s) => Object.keys(s.mapas).length);
+  const { anunciar } = useBuddy();
   const [generando, establecerGenerando] = useState(false);
   const [error, establecerError] = useState<string | null>(null);
   const refAborto = useRef<AbortController | null>(null);
@@ -66,6 +71,7 @@ function MapaDesdeFuente({ huella, esPdf, texto, archivo }: PropsMapaDesdeFuente
           ? await generarMapaConceptualDesdePdf(tema.id, archivo, tema.titulo, controlador.signal)
           : await generarMapaConceptual(tema.id, texto, tema.titulo, controlador.signal);
       guardarMapa(tema.id, resultado, huella);
+      if (totalMapas === 0) anunciar(celebracionHito("primer-mapa"));
       mostrarAviso("Mapa conceptual listo.");
     } catch (fallo) {
       if (controlador.signal.aborted) return;
@@ -107,7 +113,7 @@ function MapaDesdeFuente({ huella, esPdf, texto, archivo }: PropsMapaDesdeFuente
         titulo="Genera el mapa conceptual de tu material"
         descripcion={`La IA analizará ${esPdf ? "tu PDF" : "tu texto"} y construirá un mapa con los conceptos, su definición y las relaciones entre ellos. Pulsa un concepto para ver su definición.`}
         accion={
-          <Boton icono={<Sparkles size={16} />} onClick={generar}>
+          <Boton icono={<Sparkles size={16} />} onClick={generar} data-tour="mapa-generar">
             Generar mapa conceptual
           </Boton>
         }

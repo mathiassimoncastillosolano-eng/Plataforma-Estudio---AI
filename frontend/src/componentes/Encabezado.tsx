@@ -2,6 +2,7 @@ import { Menu } from "lucide-react";
 import MenuUsuario from "./MenuUsuario";
 import MenuNotificaciones from "./MenuNotificaciones";
 import MenuApariencia from "./MenuApariencia";
+import BotonAyuda from "../buddy/ayuda/BotonAyuda";
 import BuscadorEncabezado from "./BuscadorEncabezado";
 
 export default function Encabezado({ alAbrirMenuMovil }: { alAbrirMenuMovil: () => void }) {
@@ -15,6 +16,7 @@ export default function Encabezado({ alAbrirMenuMovil }: { alAbrirMenuMovil: () 
       </div>
 
       <div className="header-actions">
+        <BotonAyuda />
         <MenuApariencia />
         <MenuNotificaciones />
         <MenuUsuario />

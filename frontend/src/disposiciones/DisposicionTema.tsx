@@ -6,12 +6,15 @@ import { moduloDesdeSegmento } from "../datos/modulosEstudio";
 import { EstadoCarga, ErrorState, EmptyState } from "../componentes/Estados";
 import EncabezadoModulo from "../componentes/estudio/EncabezadoModulo";
 import { ContextoTema } from "./contextoTema";
+import { useLogroDominio } from "../buddy/useLogros";
 
 export default function DisposicionTema() {
   const { id } = useParams<{ id: string }>();
   const { pathname } = useLocation();
   const [tema, establecerTema] = useState<TemaEstudio | null>(null);
   const [estado, establecerEstado] = useState<"cargando" | "exito" | "error" | "vacio">("cargando");
+
+  useLogroDominio(tema);
 
   async function cargar() {
     if (!id) return;

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AlertTriangle, ArrowRight, BookOpen, Check, Lightbulb, Minus, X } from "lucide-react";
 import type { ItemRevision, NivelPregunta, ResultadoCompleto } from "../../tipos/prueba";
@@ -8,6 +8,9 @@ import { etiquetaDificultad, formatearSegundos } from "../../utilidades/formato"
 import MedidorDominio from "../MedidorDominio";
 import Boton from "../Boton";
 import Insignia from "../Insignia";
+import { useBuddy } from "../../buddy/BuddyProvider";
+import { felicitacionResultado } from "../../buddy/mensajes";
+import { useContextoTema } from "../../disposiciones/contextoTema";
 
 interface Props {
   datos: ResultadoCompleto;
@@ -31,11 +34,29 @@ export default function VistaResultadoPrueba({ datos, idTema }: Props) {
   const visibles = revision.filter((i) => (filtro === "todas" ? true : filtro === "fallos" ? i.estado !== "correcta" : i.estado === "correcta"));
   const totalBarra = resultado.totalPreguntas || 1;
   const c = resultado.configuracion;
+  const { anunciar } = useBuddy();
+  const { tema } = useContextoTema();
+
+  useEffect(() => {
+    anunciar(
+      felicitacionResultado({
+        idEvento: `resultado:${resultado.idPrueba}`,
+        porcentaje: resultado.porcentaje,
+        correctas: resultado.correctas,
+        total: resultado.totalPreguntas,
+        primera: tema.pruebasCompletadas === 1,
+        tituloPrimera: "¡Tu primera prueba!",
+        rutaRepaso: `/estudio/${idTema}/resumen`,
+      })
+    );
+  }, [resultado.idPrueba]);
 
   return (
     <div className="results stagger">
       <section className="result-hero">
-        <MedidorDominio valor={resultado.porcentaje} etiqueta="Puntaje" tamano={176} strokeWidth={12} />
+        <div data-tour="resultado-puntaje">
+          <MedidorDominio valor={resultado.porcentaje} etiqueta="Puntaje" tamano={176} strokeWidth={12} />
+        </div>
         <div className="result-hero-body">
           <p className="eyebrow">Prueba completada</p>
           <h2 className="result-headline">{titular.titulo}</h2>
@@ -66,7 +87,7 @@ export default function VistaResultadoPrueba({ datos, idTema }: Props) {
       </section>
 
       <section className="result-split">
-        <div>
+        <div data-tour="resultado-dificultad">
           <h3 className="result-h">Rendimiento por dificultad</h3>
           <ul className="perf-list">
             {DIFICULTADES.map((l) => {
@@ -105,7 +126,7 @@ export default function VistaResultadoPrueba({ datos, idTema }: Props) {
         </div>
       </section>
 
-      <section className="next-steps">
+      <section className="next-steps" data-tour="resultado-siguientes">
         <h3 className="result-h">
           <Lightbulb size={18} /> ¿Qué estudiar ahora?
         </h3>
@@ -143,7 +164,7 @@ export default function VistaResultadoPrueba({ datos, idTema }: Props) {
         </div>
       </section>
 
-      <section id="revision">
+      <section id="revision" data-tour="resultado-revision">
         <div className="review-head">
           <h3 className="result-h">Revisión de respuestas</h3>
           <div className="seg seg-sm" role="tablist" aria-label="Filtrar revisión">

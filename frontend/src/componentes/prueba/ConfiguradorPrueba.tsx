@@ -109,7 +109,7 @@ export default function ConfiguradorPrueba({ tituloTema, resumen, ajustes, alCam
       <div className="pr-config-rejilla">
         <div className="pr-config-columna">
           {/* ---------------------------------------------------------------- Cantidad */}
-          <section className="pr-bloque" aria-labelledby="pr-h-cantidad">
+          <section className="pr-bloque" aria-labelledby="pr-h-cantidad" data-tour="prueba-cantidad">
             <h3 id="pr-h-cantidad">Número de preguntas</h3>
             <div className="pr-segmentos" role="radiogroup" aria-labelledby="pr-h-cantidad">
               {CANTIDADES_PREGUNTAS.map((n) => {
@@ -134,7 +134,7 @@ export default function ConfiguradorPrueba({ tituloTema, resumen, ajustes, alCam
           </section>
 
           {/* ---------------------------------------------------------------- Dificultad */}
-          <section className="pr-bloque" aria-labelledby="pr-h-dificultad">
+          <section className="pr-bloque" aria-labelledby="pr-h-dificultad" data-tour="prueba-dificultad">
             <h3 id="pr-h-dificultad">Dificultad</h3>
             <div className="pr-dificultades" role="radiogroup" aria-labelledby="pr-h-dificultad">
               {(["facil", "media", "dificil", "personalizada"] as DificultadElegida[]).map((d) => {
@@ -185,7 +185,7 @@ export default function ConfiguradorPrueba({ tituloTema, resumen, ajustes, alCam
           </section>
 
           {/* ---------------------------------------------------------------- Tiempo */}
-          <section className="pr-bloque" aria-labelledby="pr-h-tiempo">
+          <section className="pr-bloque" aria-labelledby="pr-h-tiempo" data-tour="prueba-tiempo">
             <h3 id="pr-h-tiempo">
               <Clock size={16} aria-hidden="true" /> Tiempo
             </h3>
@@ -267,7 +267,7 @@ export default function ConfiguradorPrueba({ tituloTema, resumen, ajustes, alCam
           <p className="pr-nota">
             Puntaje máximo: <strong>{personalizadaOk ? formatearPuntos(puntajeMaximoPara(distribucion)) : "—"}</strong> puntos. Cada pregunta vale {formatearPuntos(PESO_PREGUNTA.facil)} (fácil), {formatearPuntos(PESO_PREGUNTA.media)} (media) o {formatearPuntos(PESO_PREGUNTA.dificil)} (difícil).
           </p>
-          <Boton tamano="lg" anchoCompleto disabled={!puedeIniciar} onClick={alIniciar} icono={<ArrowRight size={18} />}>
+          <Boton tamano="lg" anchoCompleto disabled={!puedeIniciar} onClick={alIniciar} icono={<ArrowRight size={18} />} data-tour="prueba-iniciar">
             Generar prueba
           </Boton>
           {!puedeIniciar && !sinContenido && <p className="pr-nota pr-nota-aviso">{!personalizadaOk ? "Ajusta el reparto personalizado para continuar." : "Elige una cantidad menor."}</p>}

@@ -26,7 +26,7 @@ export default function MenuUsuario() {
   }
 
   return (
-    <div className="dropdown" ref={ref}>
+    <div className="dropdown" ref={ref} data-tour="menu-usuario">
       <button
         className="header-user-trigger"
         onClick={() => establecerAbierto((o) => !o)}

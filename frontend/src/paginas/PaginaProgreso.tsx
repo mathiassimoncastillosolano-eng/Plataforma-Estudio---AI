@@ -1,3 +1,4 @@
+import { usePresentacionModulo } from "../buddy/BuddyProvider";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, BookMarked, ClipboardCheck, HelpCircle, Target } from "lucide-react";
@@ -23,6 +24,7 @@ interface DatosProgreso {
 }
 
 export default function PaginaProgreso() {
+  usePresentacionModulo("progreso");
   const [datos, establecerDatos] = useState<DatosProgreso | null>(null);
   const [estado, establecerEstado] = useState<"cargando" | "exito" | "error">("cargando");
 
@@ -97,13 +99,15 @@ export default function PaginaProgreso() {
     <div>
       {encabezado}
 
-      <section className="progress-hero reveal" style={{ ["--i" as string]: 1 }} aria-label="Tu nivel de dominio">
+      <section className="progress-hero reveal" style={{ ["--i" as string]: 1 }} aria-label="Tu nivel de dominio" data-tour="progreso-nivel">
         <MedidorDominio valor={promedio} etiqueta="Dominio promedio" tamano={164} strokeWidth={12} />
         <div className="progress-hero-body">
           <span className="eyebrow">Nivel actual</span>
           <h2>{etiquetasNivelDominio[nivel]}</h2>
           <p className="progress-hero-copy">{textosNivelDominio[nivel]}</p>
-          <RutaNiveles valor={promedio} />
+          <div data-tour="ruta-niveles">
+            <RutaNiveles valor={promedio} />
+          </div>
           <p className="progress-hero-next">
             {hito ? (
               <>
@@ -167,7 +171,9 @@ export default function PaginaProgreso() {
                 {temas.length} {temas.length === 1 ? "tema" : "temas"}
               </span>
             </div>
-            <ListaDominioTemas temas={temas} />
+            <div data-tour="progreso-temas">
+              <ListaDominioTemas temas={temas} />
+            </div>
           </section>
 
           <section className="reveal" style={{ ["--i" as string]: 4 }}>

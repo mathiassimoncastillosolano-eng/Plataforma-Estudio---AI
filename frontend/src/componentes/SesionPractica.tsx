@@ -8,6 +8,8 @@ import { segundosEntre } from "../utilidades/rendimiento";
 import PreguntaPractica from "./PreguntaPractica";
 import MedidorDominio from "./MedidorDominio";
 import Boton from "./Boton";
+import { useBuddy } from "../buddy/BuddyProvider";
+import { felicitacionResultado } from "../buddy/mensajes";
 import { consolidarPractica, type RespuestaPractica } from "../servicios/servicioAdaptacion";
 
 interface Props {
@@ -34,6 +36,8 @@ export default function SesionPractica({ preguntas, alResponder, alSalir }: Prop
   /** Respuestas de esta práctica, que se envían al backend al terminar. */
   const respuestasTanda = useRef<RespuestaPractica[]>([]);
   const idTema = tema.id;
+  const { anunciar } = useBuddy();
+  const primeraPractica = useRef(tema.preguntasRespondidas === 0);
 
   useEffect(
     () => () => {
@@ -79,9 +83,28 @@ export default function SesionPractica({ preguntas, alResponder, alSalir }: Prop
     establecerRonda((r) => r + 1);    
   }
 
+  const totalRonda = correcta + incorrecta;
+  const porcentajeRonda = totalRonda > 0 ? Math.round((correcta / totalRonda) * 100) : 0;
+
+  useEffect(() => {
+    if (!terminada || totalRonda === 0) return;
+    anunciar(
+      felicitacionResultado({
+        idEvento: `practica:${idTema}:${Date.now()}`,
+        porcentaje: porcentajeRonda,
+        correctas: correcta,
+        total: totalRonda,
+        primera: primeraPractica.current,
+        tituloPrimera: "¡Tu primera práctica!",
+        rutaRepaso: `/estudio/${idTema}/resumen`,
+      })
+    );
+    primeraPractica.current = false;
+  }, [terminada]);
+
   if (terminada) {
-    const total = correcta + incorrecta;
-    const porcentaje = total > 0 ? Math.round((correcta / total) * 100) : 0;
+    const total = totalRonda;
+    const porcentaje = porcentajeRonda;
     return (
       <div className="practice-done">
         <MedidorDominio valor={porcentaje} etiqueta="Aciertos" tamano={150} />
