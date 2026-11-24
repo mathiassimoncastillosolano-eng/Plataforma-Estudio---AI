@@ -149,6 +149,7 @@
 }
 .continue-hero .mastery-gauge-arc {
   stroke: #fff;
+  color: #fff;
 }
 .continue-hero .mastery-gauge-value strong {
   color: #fff;

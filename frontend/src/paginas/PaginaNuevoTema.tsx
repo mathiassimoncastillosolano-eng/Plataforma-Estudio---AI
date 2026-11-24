@@ -1,3 +1,4 @@
+import { usePresentacionModulo } from "../buddy/BuddyProvider";
 import { useRef, useState, type ChangeEvent, type DragEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { FileText, PenLine, RefreshCw, UploadCloud, X, ArrowLeft } from "lucide-react";
@@ -13,6 +14,7 @@ import type { BorradorFuente } from "../tipos";
 type Paso = "titulo" | "fuente" | "pdf" | "texto";
 
 export default function PaginaNuevoTema() {
+  usePresentacionModulo("nuevo-tema");
   const navegar = useNavigate();
   const [paso, establecerPaso] = useState<Paso>("titulo");
   const [titulo, establecerTitulo] = useState("");
@@ -116,6 +118,7 @@ export default function PaginaNuevoTema() {
 
           <div className="stack gap-md">
             <Entrada
+              data-tour="tema-titulo"
               etiqueta="Nombre del tema"
               placeholder="Ej. Sistema circulatorio humano"
               value={titulo}
@@ -123,12 +126,14 @@ export default function PaginaNuevoTema() {
               onChange={(e) => establecerTitulo(e.target.value)}
               autoFocus
             />
-            <SelectorCategoria etiqueta="Categoría" valor={categoria} alCambiar={establecerCategoria} />
+            <div data-tour="tema-categoria">
+              <SelectorCategoria etiqueta="Categoría" valor={categoria} alCambiar={establecerCategoria} />
+            </div>
           </div>
 
           <div className="flow-footer">
             <span />
-            <Boton onClick={irAFuente}>Continuar</Boton>
+            <Boton onClick={irAFuente} data-tour="tema-continuar">Continuar</Boton>
           </div>
         </>
       )}

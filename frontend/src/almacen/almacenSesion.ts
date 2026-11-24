@@ -3,10 +3,11 @@ import type { MapaMental, ResumenesGenerados } from "../tipos";
 import type { TipoActividad } from "../datos/actividades";
 import { guardarEstudioPersistido, leerEstudioPersistido } from "./persistenciaSesion";
 import { anadirRespuestas, type RespuestaRegistrada } from "../utilidades/rendimiento";
+import { copiarEstadoAdaptacion, type EstadoAdaptacion } from "../utilidades/adaptacion";
 
 // -----------------------------------------------------------------------
 // Estado de la sesión de estudio.
-// Contenido introducido, resúmenes generados, mapas, actividad y rendimiento (MOD-08) viven en memoria y,
+// Contenido introducido, resúmenes generados, mapas, actividad, rendimiento y estado adaptativo (MOD-08) viven en memoria y,
 // mientras haya una cuenta activa, se reflejan en sessionStorage (ver
 // persistenciaSesion.ts) para sobrevivir a F5 / Ctrl+R. Al cerrar sesión o cerrar la
 // pestaña desaparecen. Los PDF (File) nunca se guardan: no son serializables.
@@ -39,9 +40,11 @@ interface EstadoSesion {
   actividad: ActividadSesion[];
   /** MOD-08: respuestas de práctica y pruebas por tema; el rendimiento se deriva con `calcularRendimiento`. */
   rendimiento: Record<string, RespuestaRegistrada[]>;
+  /** MOD-08: estado del motor adaptativo por tema (nivel, período y respuestas pendientes), en la forma del backend. */
+  adaptacion: Record<string, EstadoAdaptacion>;
 }
 
-let estadoGlobal: EstadoSesion = { iniciadoEn: Date.now(), fuentes: {}, archivos: {}, resumenes: {}, mapas: {}, actividad: [], rendimiento: {} };
+let estadoGlobal: EstadoSesion = { iniciadoEn: Date.now(), fuentes: {}, archivos: {}, resumenes: {}, mapas: {}, actividad: [], rendimiento: {}, adaptacion: {} };
 const oyentes = new Set<() => void>();
 let siguienteId = 1;
 
@@ -53,8 +56,8 @@ let temporizadorGuardado: number | undefined;
 function volcarAlmacenamiento() {
   temporizadorGuardado = undefined;
   if (!usuarioPersistidoId) return;
-  const { iniciadoEn, fuentes, resumenes, mapas, actividad, rendimiento } = estadoGlobal;
-  guardarEstudioPersistido({ usuarioId: usuarioPersistidoId, iniciadoEn, fuentes, resumenes, mapas, actividad, rendimiento });
+  const { iniciadoEn, fuentes, resumenes, mapas, actividad, rendimiento, adaptacion } = estadoGlobal;
+  guardarEstudioPersistido({ usuarioId: usuarioPersistidoId, iniciadoEn, fuentes, resumenes, mapas, actividad, rendimiento, adaptacion });
 }
 
 function programarGuardado() {
@@ -85,7 +88,7 @@ export function restaurarEstudio(idUsuario: string) {
   if (guardado) {
     const numeros = guardado.actividad.map((a) => Number(a.id.replace(/^act-/, ""))).filter(Number.isFinite);
     siguienteId = Math.max(siguienteId, ...numeros, 0) + 1;
-    estadoGlobal = { ...estadoGlobal, iniciadoEn: guardado.iniciadoEn, fuentes: guardado.fuentes, resumenes: guardado.resumenes, mapas: guardado.mapas, actividad: guardado.actividad, rendimiento: guardado.rendimiento };
+    estadoGlobal = { ...estadoGlobal, iniciadoEn: guardado.iniciadoEn, fuentes: guardado.fuentes, resumenes: guardado.resumenes, mapas: guardado.mapas, actividad: guardado.actividad, rendimiento: guardado.rendimiento, adaptacion: guardado.adaptacion };
     oyentes.forEach((oyente) => oyente());
   }
   usuarioPersistidoId = idUsuario;
@@ -116,7 +119,7 @@ export function reiniciarSesionEstudio() {
   if (typeof window !== "undefined") window.clearTimeout(temporizadorGuardado);
   temporizadorGuardado = undefined;
   usuarioPersistidoId = null;
-  actualizar({ iniciadoEn: Date.now(), fuentes: {}, archivos: {}, resumenes: {}, mapas: {}, actividad: [], rendimiento: {} });
+  actualizar({ iniciadoEn: Date.now(), fuentes: {}, archivos: {}, resumenes: {}, mapas: {}, actividad: [], rendimiento: {}, adaptacion: {} });
 }
 
 export function establecerFuenteTema(idTema: string, contenido: string) {
@@ -137,6 +140,7 @@ export function eliminarDatosTema(idTema: string) {
     resumenes: sinClave(estadoGlobal.resumenes),
     mapas: sinClave(estadoGlobal.mapas),
     rendimiento: sinClave(estadoGlobal.rendimiento),
+    adaptacion: sinClave(estadoGlobal.adaptacion),
   });
 }
 
@@ -151,6 +155,16 @@ export function registrarRespuestas(idTema: string, respuestas: Omit<RespuestaRe
   const at = Date.now();
   const previas = estadoGlobal.rendimiento[idTema] ?? [];
   actualizar({ rendimiento: { ...estadoGlobal.rendimiento, [idTema]: anadirRespuestas(previas, respuestas.map((r) => ({ ...r, at }))) } });
+}
+
+/** MOD-08: guarda el estado del motor adaptativo de un tema, REEMPLAZANDO el anterior (es el que devuelve /registrar). */
+export function guardarEstadoAdaptacion(idTema: string, estado: EstadoAdaptacion) {
+  actualizar({ adaptacion: { ...estadoGlobal.adaptacion, [idTema]: copiarEstadoAdaptacion(estado) } });
+}
+
+/** MOD-08: estado del motor adaptativo del tema; `undefined` = tema sin historial (el motor parte de su estado inicial). */
+export function obtenerEstadoAdaptacion(idTema: string): EstadoAdaptacion | undefined {
+  return estadoGlobal.adaptacion[idTema];
 }
 
 export function guardarResumenes(idTema: string, tituloTema: string, resultado: ResumenesGenerados) {

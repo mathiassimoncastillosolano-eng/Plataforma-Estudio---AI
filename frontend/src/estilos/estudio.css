@@ -45,6 +45,7 @@
 .topic-facts strong { color: var(--color-text); }
 
 .ring { position: relative; flex-shrink: 0; display: grid; place-items: center; filter: drop-shadow(0 8px 18px color-mix(in srgb, var(--color-primary) 28%, transparent)); }
+.ring svg { overflow: visible; }
 .ring-pista { stroke: var(--color-surface-sunken); }
 .ring-valor { stroke: url(#cursa-anillo); transition: stroke-dashoffset var(--motion-page) var(--ease-out); }
 .ring-cifra { position: absolute; font-size: 1.9rem; font-weight: 700; letter-spacing: -0.02em; color: var(--color-text); }

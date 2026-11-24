@@ -5,6 +5,10 @@ import Encabezado from "../componentes/Encabezado";
 import NavegacionInferior from "../componentes/NavegacionInferior";
 import { useAutenticacion } from "../hooks/useAutenticacion";
 import { useBarraLateral } from "../hooks/useBarraLateral";
+import BuddyEscenario from "../buddy/BuddyEscenario";
+import CentroAyuda from "../buddy/ayuda/CentroAyuda";
+import GestorInvitacion from "../buddy/ayuda/GestorInvitacion";
+import TutorialOverlay from "../buddy/ayuda/TutorialOverlay";
 import { guardarRutaPersistida } from "../almacen/persistenciaSesion";
 
 export default function DisposicionApp() {
@@ -44,6 +48,10 @@ export default function DisposicionApp() {
         </div>
       </div>
       <NavegacionInferior />
+      <BuddyEscenario />
+      <CentroAyuda />
+      <TutorialOverlay />
+      <GestorInvitacion />
     </div>
   );
 }

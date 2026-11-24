@@ -1,3 +1,4 @@
+import { usePresentacionModulo } from "../buddy/BuddyProvider";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Dumbbell, ListChecks, Search, X } from "lucide-react";
@@ -23,6 +24,7 @@ const FILTROS: { id: IdFiltro; etiqueta: string }[] = [
 ];
 
 export default function PaginaPreguntas() {
+  usePresentacionModulo("preguntas");
   const { tema } = useContextoTema();
   const [parametros, establecerParametros] = useSearchParams();
   const [preguntas, establecerPreguntas] = useState<PreguntaEstudio[] | null>(null);
@@ -138,13 +140,13 @@ export default function PaginaPreguntas() {
             <div className="progress-fill" style={{ width: `${porcentajeRespondidas}%` }} />
           </div>
         </div>
-        <Boton variante="secondary" tamano="sm" icono={<Dumbbell size={15} />} disabled={visibles.length === 0} onClick={() => establecerPractica(visibles)}>
+        <Boton variante="secondary" tamano="sm" icono={<Dumbbell size={15} />} disabled={visibles.length === 0} onClick={() => establecerPractica(visibles)} data-tour="preguntas-practicar">
           Practicar {filtro === "todas" && !consulta ? "todas" : `estas (${visibles.length})`}
         </Boton>
       </div>
 
       <div className="filter-bar">
-        <div className="chip-filters" role="tablist" aria-label="Filtrar preguntas">
+        <div className="chip-filters" role="tablist" aria-label="Filtrar preguntas" data-tour="preguntas-filtros">
           {FILTROS.map((f) => (
             <button key={f.id} role="tab" aria-selected={filtro === f.id} className={`fchip ${filtro === f.id ? "active" : ""}`} onClick={() => cambiarFiltro(f.id)}>
               {f.etiqueta}

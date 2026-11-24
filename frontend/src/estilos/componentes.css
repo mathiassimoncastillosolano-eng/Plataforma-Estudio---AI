@@ -386,6 +386,7 @@ a:hover > .icon-nudge,
 }
 .mastery-gauge svg {
   transform: rotate(-90deg);
+  overflow: visible;
 }
 .mastery-gauge-track {
   stroke: var(--color-surface-sunken);
@@ -396,15 +397,19 @@ a:hover > .icon-nudge,
 }
 .mastery-gauge-arc.tone-green {
   stroke: var(--color-success);
+  color: var(--color-success);
 }
 .mastery-gauge-arc.tone-blue {
   stroke: var(--color-primary-solid);
+  color: var(--color-primary-solid);
 }
 .mastery-gauge-arc.tone-amber {
   stroke: var(--color-warning);
+  color: var(--color-warning);
 }
 .mastery-gauge-arc.tone-red {
   stroke: var(--color-danger);
+  color: var(--color-danger);
 }
 .mastery-gauge-value {
   position: absolute;

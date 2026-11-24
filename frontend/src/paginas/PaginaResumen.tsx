@@ -1,3 +1,5 @@
+import { useBuddy, usePresentacionModulo } from "../buddy/BuddyProvider";
+import { celebracionHito } from "../buddy/mensajes";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { PenLine } from "lucide-react";
 import { useContextoTema } from "../disposiciones/contextoTema";
@@ -23,9 +25,12 @@ const TIPOS: TipoResumen[] = ["esencial", "general"];
  * ejemplo hasta que el estudiante genere uno propio.
  */
 export default function PaginaResumen() {
+  usePresentacionModulo("resumen");
+  const { anunciar } = useBuddy();
   const { tema } = useContextoTema();
   const { mostrarAviso } = useAviso();
   const generados = useSesion((s) => s.resumenes[tema.id]);
+  const totalResumenes = useSesion((s) => Object.keys(s.resumenes).length);
   const fuenteGuardada = useSesion((s) => s.fuentes[tema.id]);
   const archivoPdf = useSesion((s) => s.archivos[tema.id]) ?? null;
   // Temas creados con PDF: se envía el documento original a la IA; el texto del compositor son solo indicaciones.
@@ -73,6 +78,7 @@ export default function PaginaResumen() {
           : await servicioResumen.generarResumenes(contenido, tema.titulo, controlador.signal);
       establecerFuenteTema(tema.id, contenido);
       guardarResumenes(tema.id, tema.titulo, resultado);
+      if (totalResumenes === 0) anunciar(celebracionHito("primer-resumen"));
       establecerTipoVisible("esencial");
       establecerVista("lectura");
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -128,7 +134,7 @@ export default function PaginaResumen() {
   return (
     <div className="reader">
       <aside className="reader-rail">
-        <div className="seg seg-stack" role="tablist" aria-label="Tipo de resumen">
+        <div className="seg seg-stack" role="tablist" aria-label="Tipo de resumen" data-tour="resumen-tipos">
           {TIPOS.map((tipo) => (
             <button key={tipo} role="tab" aria-selected={tipoVisible === tipo} className={`seg-btn ${tipoVisible === tipo ? "active" : ""}`} onClick={() => establecerTipoVisible(tipo)}>
               {TEXTOS_TIPO_RESUMEN[tipo].etiqueta}
@@ -136,7 +142,7 @@ export default function PaginaResumen() {
           ))}
         </div>
         {indice.length > 0 && (
-          <nav className="toc" aria-label="En este resumen">
+          <nav className="toc" aria-label="En este resumen" data-tour="resumen-indice">
             <p>En este resumen</p>
             {indice.map((t) => (
               <button key={t.id} className={idActivo === t.id ? "active" : ""} onClick={() => saltar(t.id)}>
@@ -145,7 +151,7 @@ export default function PaginaResumen() {
             ))}
           </nav>
         )}
-        <Boton variante="secondary" tamano="sm" icono={<PenLine size={15} />} onClick={abrirCompositor}>
+        <Boton variante="secondary" tamano="sm" icono={<PenLine size={15} />} onClick={abrirCompositor} data-tour="resumen-nuevo">
           Nuevo resumen
         </Boton>
       </aside>

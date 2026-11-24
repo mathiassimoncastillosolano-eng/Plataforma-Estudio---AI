@@ -39,7 +39,7 @@ export default function BarraLateral({ movilAbierto, alCerrarMovil }: PropsBarra
         </div>
 
         <span className="sidebar-section-label">Plataforma</span>
-        <nav className="sidebar-nav" aria-label="Principal">
+        <nav className="sidebar-nav" aria-label="Principal" data-tour="nav-principal">
           {elementosNavegacion.map(({ to, etiqueta, icono: Icono }) => (
             <NavLink
               key={to}
@@ -57,7 +57,7 @@ export default function BarraLateral({ movilAbierto, alCerrarMovil }: PropsBarra
 
         <div className="sidebar-spacer" />
 
-        <Link to="/estudio/nuevo" className="sidebar-help-card" onClick={alCerrarMovil}>
+        <Link to="/estudio/nuevo" className="sidebar-help-card" onClick={alCerrarMovil} data-tour="nuevo-tema">
           <span className="sidebar-help-icon">
             <Sparkles size={16} />
           </span>

@@ -181,7 +181,7 @@ export default function CompositorResumen({
             Volver al resumen
           </Boton>
         )}
-        <Boton type="submit" tamano="lg" icono={<Sparkles size={17} />} disabled={!puedeEnviar}>
+        <Boton type="submit" tamano="lg" icono={<Sparkles size={17} />} disabled={!puedeEnviar} data-tour="resumen-generar">
           Generar resumen
         </Boton>
       </div>

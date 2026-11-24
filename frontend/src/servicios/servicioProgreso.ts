@@ -6,6 +6,7 @@ import {
   preguntasPorSemana,
 } from "../datos/progreso";
 import { retardoSimulado } from "../utilidades/retardoSimulado";
+import { obtenerTemasEstudio } from "./servicioEstudio";
 
 // -----------------------------------------------------------------------
 // Servicio de progreso y estadísticas.
@@ -13,7 +14,14 @@ import { retardoSimulado } from "../utilidades/retardoSimulado";
 // -----------------------------------------------------------------------
 
 export async function obtenerEstadisticasPanel(): Promise<EstadisticasPanel> {
-  return retardoSimulado(estadisticasPanel, 400);
+  const temas = await obtenerTemasEstudio();
+  const suma = (valor: (t: (typeof temas)[number]) => number) => temas.reduce((total, t) => total + valor(t), 0);
+  return {
+    ...estadisticasPanel,
+    temasEstudiados: temas.length,
+    preguntasRespondidas: suma((t) => t.preguntasRespondidas),
+    dominioPromedio: temas.length > 0 ? Math.round(suma((t) => t.dominio) / temas.length) : 0,
+  };
 }
 
 export async function obtenerEvolucionDominio(): Promise<InstantaneaProgreso[]> {

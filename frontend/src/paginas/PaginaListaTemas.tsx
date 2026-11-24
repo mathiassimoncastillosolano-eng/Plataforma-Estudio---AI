@@ -66,7 +66,7 @@ export default function PaginaListaTemas() {
         titulo="Mis estudios"
         descripcion="Todos los temas que has creado, en un solo lugar."
         acciones={
-          <Link to="/estudio/nuevo" className="btn btn-primary">
+          <Link to="/estudio/nuevo" className="btn btn-primary" data-tour="crear-tema">
             <Plus size={16} />
             Nuevo tema
           </Link>
@@ -74,7 +74,7 @@ export default function PaginaListaTemas() {
       />
 
       <div className="toolbar">
-        <div className="summary-tabs" role="tablist" aria-label="Filtrar por estado">
+        <div className="summary-tabs" role="tablist" aria-label="Filtrar por estado" data-tour="filtros-estado">
           {filtros.map((f) => (
             <button
               key={f.clave}
@@ -87,14 +87,14 @@ export default function PaginaListaTemas() {
             </button>
           ))}
         </div>
-        <div className="header-search">
+        <div className="header-search" data-tour="busqueda-temas">
           <Search size={15} />
           <input placeholder="Buscar por tema o categoría..." value={consulta} onChange={(e) => establecerConsulta(e.target.value)} />
         </div>
       </div>
 
       {filtrados.length > 0 ? (
-        <div className="topic-grid stagger">
+        <div className="topic-grid stagger" data-tour="lista-temas">
           {filtrados.map((tema) => (
             <TarjetaTemaEstudio key={tema.id} tema={tema} alEliminar={pedirEliminar} />
           ))}

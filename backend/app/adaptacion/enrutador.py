@@ -8,6 +8,7 @@ si el modelo no está disponible se usa la regla 0,75/0,25 (`fuente: "regla"`).
 from collections.abc import Callable
 
 from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 
 from app.adaptacion import motor
 from app.adaptacion.dependencias import obtener_predictor

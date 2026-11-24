@@ -68,7 +68,7 @@ export default function BuscadorEncabezado() {
   }
 
   return (
-    <div className="header-search-wrap" ref={refEnvoltura}>
+    <div className="header-search-wrap" ref={refEnvoltura} data-tour="buscador">
       <div className="header-search">
         <Search size={15} />
         <input

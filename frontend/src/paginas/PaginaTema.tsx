@@ -39,7 +39,7 @@ export default function PaginaTema() {
             <span className="topic-level">{etiquetasNivelDominio[tema.nivelDominio]}</span>
           </div>
           <h1>{tema.titulo}</h1>
-          <p className="topic-home-progress">
+          <p className="topic-home-progress" data-tour="progreso-tema">
             Progreso: <strong className="mono">{tema.dominio} %</strong>
           </p>
           <ul className="topic-facts" aria-label="Actividad en este tema">
@@ -64,7 +64,7 @@ export default function PaginaTema() {
         <h2>¿Qué quieres hacer hoy?</h2>
         <span aria-hidden="true" />
       </div>
-      <nav className="mod-grid stagger" aria-label="Módulos de estudio">
+      <nav className="mod-grid stagger" aria-label="Módulos de estudio" data-tour="modulos-tema">
         {MODULOS_ESTUDIO.map((modulo, i) => (
           <TarjetaModulo key={modulo.id} modulo={modulo} idTema={tema.id} numero={i + 1} estado={estados[modulo.id]} />
         ))}

@@ -7,18 +7,18 @@ se le pasa `predecir`. Sin modelo se usa la regla observada en el dataset (noteb
 from collections.abc import Callable
 
 from app.adaptacion.modelo_ml import variables_modelo_a
+from app.adaptacion.modelo import estimar_nivel
 from app.pruebas.distribucion import DIFICULTADES
 
 PREGUNTAS_POR_PERIODO = 15
-PESO_NIVEL_PREVIO = 0.75
-NIVEL_INICIAL = 0.57  # media de nivel_conocimiento en el periodo 1 del dataset
-# Umbrales target → dificultad (TASK-0076). El límite inferior es inclusivo.
+NIVEL_INICIAL = 0.57
 UMBRAL_MEDIA = 0.50
 UMBRAL_DIFICIL = 0.80
 
 
 def estado_inicial() -> dict:
     return {"nivel": NIVEL_INICIAL, "numero_periodo": 1, "ultimo_porcentaje": None, "correctas_acumuladas": 0, "pendientes": []}
+    return {"nivel": NIVEL_INICIAL, "numero_periodo": 1, "ultimo_porcentaje": None, "correctas_total": 0, "pendientes": []}
 
 
 def dificultad_objetivo(nivel: float) -> str:
@@ -46,6 +46,11 @@ def registrar(
     periodo = int(estado["numero_periodo"])
     ultimo = estado.get("ultimo_porcentaje")
     acumuladas = int(estado.get("correctas_acumuladas", 0))
+def registrar(estado: dict, respuestas: list[dict]) -> tuple[dict, list[dict]]:
+    nivel = float(estado["nivel"])
+    periodo = int(estado["numero_periodo"])
+    ultimo = estado.get("ultimo_porcentaje")
+    acumuladas = int(estado.get("correctas_total", 0))
     pendientes = list(estado["pendientes"]) + list(respuestas)
     cerrados = []
     while len(pendientes) >= PREGUNTAS_POR_PERIODO:
@@ -95,6 +100,19 @@ def _tiempo_promedio(bloque: list[dict]) -> float | None:
     if any(t is None for t in tiempos):
         return None
     return sum(tiempos) / len(tiempos)
+        variacion = None if ultimo is None else round(porcentaje - ultimo, 4)
+        cierre = {
+            "numero_periodo": periodo,
+            "preguntas": PREGUNTAS_POR_PERIODO,
+            "correctas": correctas,
+            "porcentaje_correctas": porcentaje,
+            "tiempo_promedio": round(sum(r["segundos"] for r in bloque) / PREGUNTAS_POR_PERIODO, 2),
+            "por_dificultad": _contar(bloque),
+        }
+        nuevo = round(estimar_nivel(cierre, None if ultimo is None else nivel, acumuladas, variacion), 4)
+        cerrados.append({**cierre, "variacion_porcentaje": variacion, "nivel_previo": None if ultimo is None else nivel, "nivel": nuevo})
+        nivel, ultimo, periodo, acumuladas = nuevo, porcentaje, periodo + 1, acumuladas + correctas
+    return {"nivel": nivel, "numero_periodo": periodo, "ultimo_porcentaje": ultimo, "correctas_total": acumuladas, "pendientes": pendientes}, cerrados
 
 
 def _contar(bloque: list[dict]) -> dict:

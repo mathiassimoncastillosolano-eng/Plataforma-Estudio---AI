@@ -1,15 +1,16 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { RotateCcw } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { PreguntaEstudio } from "../tipos";
 import { useContextoTema } from "../disposiciones/contextoTema";
-import * as studyService from "../servicios/servicioEstudio";
 import { registrarRespuestas } from "../almacen/almacenSesion";
 import { segundosEntre } from "../utilidades/rendimiento";
 import PreguntaPractica from "./PreguntaPractica";
 import MedidorDominio from "./MedidorDominio";
 import Boton from "./Boton";
-import { registrarPractica, type RespuestaPractica } from "../servicios/servicioAdaptacion";
+import { useBuddy } from "../buddy/BuddyProvider";
+import { felicitacionResultado } from "../buddy/mensajes";
+import { consolidarPractica, type RespuestaPractica } from "../servicios/servicioAdaptacion";
 
 interface Props {
   preguntas: PreguntaEstudio[];
@@ -32,25 +33,39 @@ export default function SesionPractica({ preguntas, alResponder, alSalir }: Prop
   /** MOD-08: instante en que se mostró la pregunta actual (tiempo por pregunta). */
   const inicioPregunta = useRef(Date.now());
 
-  /** H-03/H-05: respuestas de esta práctica, que se envían al motor adaptativo al terminar. */
+  /** Respuestas de esta práctica, que se envían al backend al terminar. */
   const respuestasTanda = useRef<RespuestaPractica[]>([]);
+  const idTema = tema.id;
+  const { anunciar } = useBuddy();
+  const primeraPractica = useRef(tema.preguntasRespondidas === 0);
+
+  useEffect(
+    () => () => {
+      const restantes = respuestasTanda.current.splice(0);
+      if (restantes.length === 0) return;
+      void consolidarPractica(idTema, restantes, restantes.length).then((actualizado) => {
+        if (actualizado) establecerTema(actualizado);
+      });
+    },
+    [idTema]
+  );
 
   function manejarRespondida(idPregunta: string, esCorrecta: boolean) {
     if (esCorrecta) establecerCorrecta((c) => c + 1);
     else establecerIncorrecta((c) => c + 1);
     const pregunta = preguntas.find((p) => p.id === idPregunta);
-    if (pregunta) registrarRespuestas(tema.id, [{ dificultad: pregunta.dificultad, correcta: esCorrecta, segundos: segundosEntre(inicioPregunta.current, Date.now()), origen: "practica" }]);
-    if (pregunta) respuestasTanda.current.push({ dificultad: pregunta.dificultad, correcta: esCorrecta });
+    if (pregunta) {
+      const segundos = segundosEntre(inicioPregunta.current, Date.now());
+      registrarRespuestas(tema.id, [{ dificultad: pregunta.dificultad, correcta: esCorrecta, segundos, origen: "practica" }]);
+      respuestasTanda.current.push({ dificultad: pregunta.dificultad, correcta: esCorrecta, segundos });
+    }
     alResponder(idPregunta, esCorrecta);
   }
 
   async function manejarSiguiente() {
     if (indiceActual + 1 >= preguntas.length) {
       establecerTerminada(true);
-      // H-03: el dominio sale del motor adaptativo (períodos de 15, regla 0,75/0,25), no de una mezcla local.
-      const resultado = await registrarPractica(tema.id, respuestasTanda.current.splice(0));
-      const actualizado = resultado?.dominio != null ? await studyService.actualizarDominioTema(tema.id, resultado.dominio) : null;
-      await studyService.incrementarPreguntasRespondidas(tema.id, preguntas.length);
+      const actualizado = await consolidarPractica(tema.id, respuestasTanda.current.splice(0), preguntas.length);
       if (actualizado) establecerTema(actualizado);
     } else {
       inicioPregunta.current = Date.now();
@@ -68,9 +83,28 @@ export default function SesionPractica({ preguntas, alResponder, alSalir }: Prop
     establecerRonda((r) => r + 1);    
   }
 
+  const totalRonda = correcta + incorrecta;
+  const porcentajeRonda = totalRonda > 0 ? Math.round((correcta / totalRonda) * 100) : 0;
+
+  useEffect(() => {
+    if (!terminada || totalRonda === 0) return;
+    anunciar(
+      felicitacionResultado({
+        idEvento: `practica:${idTema}:${Date.now()}`,
+        porcentaje: porcentajeRonda,
+        correctas: correcta,
+        total: totalRonda,
+        primera: primeraPractica.current,
+        tituloPrimera: "¡Tu primera práctica!",
+        rutaRepaso: `/estudio/${idTema}/resumen`,
+      })
+    );
+    primeraPractica.current = false;
+  }, [terminada]);
+
   if (terminada) {
-    const total = correcta + incorrecta;
-    const porcentaje = total > 0 ? Math.round((correcta / total) * 100) : 0;
+    const total = totalRonda;
+    const porcentaje = porcentajeRonda;
     return (
       <div className="practice-done">
         <MedidorDominio valor={porcentaje} etiqueta="Aciertos" tamano={150} />
