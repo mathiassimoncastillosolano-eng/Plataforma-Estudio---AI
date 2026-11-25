@@ -173,7 +173,7 @@ function escaparXml(texto: string): string {
 export function generarFreeMind(mapa: MapaExportable, paleta: PaletaExportacion): string {
   const arbol = construirJerarquia(mapa);
   const frasePorHijo = new Map(mapa.aristas.filter((a) => a.frase?.trim()).map((a) => [a.destino, a.frase!.trim()]));
-  const lineas: string[] = ['<map version="1.0.1">', "<!-- Mapa conceptual exportado desde Cursa. Ábrelo con FreeMind, Freeplane o XMind. -->"];
+  const lineas: string[] = ['<map version="1.0.1">', "<!-- Mapa conceptual exportado desde Cursa AI. Ábrelo con FreeMind, Freeplane o XMind. -->"];
   let lado = 0;
 
   function nodoXml(concepto: ConceptoJerarquico, sangria: string, esRaiz: boolean) {

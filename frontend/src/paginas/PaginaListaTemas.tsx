@@ -4,7 +4,7 @@ import { Plus, Search } from "lucide-react";
 import * as studyService from "../servicios/servicioEstudio";
 import type { TemaEstudio } from "../tipos";
 import TarjetaTemaEstudio from "../componentes/TarjetaTemaEstudio";
-import { EstadoCarga, ErrorState, EmptyState } from "../componentes/Estados";
+import { ErrorState, EmptyState } from "../componentes/Estados";
 import { EsqueletoCuadricula } from "../componentes/Esqueleto";
 import EncabezadoPagina from "../componentes/EncabezadoPagina";
 import { useEliminarTema } from "../hooks/useEliminarTema";

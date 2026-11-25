@@ -241,6 +241,7 @@
 .sidebar.collapsed .sidebar-link {
   justify-content: center;
   padding: 12px;
+  overflow: visible;
 }
 .sidebar.collapsed .sidebar-nav {
   align-items: center;

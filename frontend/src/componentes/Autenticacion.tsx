@@ -6,10 +6,10 @@ import { useTemaVisual } from "../hooks/useTemaVisual";
 /** Panel de marca (lado izquierdo en escritorio). */
 export function VisualAutenticacion({ mensaje, descripcion }: { mensaje: ReactNode; descripcion: string }) {
   return (
-    <aside className="auth-visual" aria-label="Presentación de Cursa">
+    <aside className="auth-visual" aria-label="Presentación de Cursa AI">
       <div className="auth-visual-top reveal" style={{ ["--i" as string]: 0 }}>
         <MarcaLogo tamano={40} />
-        <span className="auth-visual-brand">Cursa</span>
+        <span className="auth-visual-brand">Cursa AI</span>
       </div>
 
       <div className="auth-visual-copy">
@@ -53,7 +53,7 @@ export function VisualAutenticacion({ mensaje, descripcion }: { mensaje: ReactNo
         </div>
       </div>
 
-      <p className="auth-visual-foot">Cursa — estudio asistido por IA</p>
+      <p className="auth-visual-foot">Cursa AI — estudio asistido por IA</p>
     </aside>
   );
 }
@@ -64,7 +64,7 @@ export function PortadaMovilAutenticacion({ mensaje }: { mensaje: string }) {
     <div className="auth-mobile-hero">
       <div className="auth-visual-top">
         <MarcaLogo tamano={36} />
-        <span className="auth-visual-brand">Cursa</span>
+        <span className="auth-visual-brand">Cursa AI</span>
       </div>
       <p>{mensaje}</p>
     </div>

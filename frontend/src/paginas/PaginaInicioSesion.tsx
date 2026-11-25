@@ -10,7 +10,7 @@ type EstadoScript = "cargando" | "listo" | "fallo";
 
 const PUNTOS_CONFIANZA = [
   { icono: UserCheck, texto: "Tu primer acceso crea tu espacio al instante, sin formularios de registro." },
-  { icono: ShieldCheck, texto: "Google verifica tu identidad. Cursa nunca ve ni guarda tu contraseña." },
+  { icono: ShieldCheck, texto: "Google verifica tu identidad. Cursa AI nunca ve ni guarda tu contraseña." },
   { icono: TimerReset, texto: "Tu perfil solo vive durante esta sesión; no lo guardamos en ninguna base de datos." },
 ] as const;
 
@@ -80,7 +80,7 @@ export default function PaginaInicioSesion() {
             <span className="auth-estado-sistema">
               <i aria-hidden="true" /> Servicios conectados
             </span>
-            <h1 className="auth-heading">Bienvenido a Cursa</h1>
+            <h1 className="auth-heading">Bienvenido a Cursa AI</h1>
             <p className="auth-subheading auth-subheading-compacto">Entra con tu cuenta de Google y empieza a estudiar con IA. No necesitas crear una contraseña.</p>
           </div>
 
@@ -117,7 +117,7 @@ export default function PaginaInicioSesion() {
             ))}
           </ul>
 
-          <p className="auth-legal">Al continuar, Cursa lee tu nombre, correo y foto de perfil de Google solo para personalizar tu espacio durante esta sesión.</p>
+          <p className="auth-legal">Al continuar, Cursa AI lee tu nombre, correo y foto de perfil de Google solo para personalizar tu espacio durante esta sesión.</p>
         </div>
       </main>
     </div>

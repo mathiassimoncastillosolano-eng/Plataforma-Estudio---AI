@@ -28,6 +28,7 @@ import "./estilos/cargas.css";
 import "./estilos/tarjetas.css";
 import "./estilos/preguntas.css";
 import "./estilos/dashboard.css";
+import "./estilos/animaciones.css";
 import { activarLuzPuntero } from "./utilidades/luzPuntero";
 
 // La comprobación del backend empieza ya, antes de que React termine de montar la interfaz.

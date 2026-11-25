@@ -3,7 +3,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { leerRutaPersistida } from "./almacen/persistenciaSesion";
 import DisposicionApp from "./disposiciones/DisposicionApp";
 import DisposicionTema from "./disposiciones/DisposicionTema";
-import { EstadoCarga } from "./componentes/Estados";
+import CargaRuta from "./componentes/CargaRuta";
 
 import PaginaInicioSesion from "./paginas/PaginaInicioSesion";
 import PaginaPanel from "./paginas/PaginaPanel";
@@ -22,7 +22,7 @@ const PaginaProgreso = lazy(() => import("./paginas/PaginaProgreso"));
 const PaginaPerfil = lazy(() => import("./paginas/PaginaPerfil"));
 const PaginaConfiguracion = lazy(() => import("./paginas/PaginaConfiguracion"));
 
-const pagina = (elemento: JSX.Element) => <Suspense fallback={<EstadoCarga mensaje="Cargando…" />}>{elemento}</Suspense>;
+const pagina = (elemento: JSX.Element) => <Suspense fallback={<CargaRuta />}>{elemento}</Suspense>;
 
 export default function Aplicacion() {
   return (

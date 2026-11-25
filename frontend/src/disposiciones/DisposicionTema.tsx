@@ -3,7 +3,8 @@ import { Outlet, useParams, Link, useLocation } from "react-router-dom";
 import type { TemaEstudio } from "../tipos";
 import * as studyService from "../servicios/servicioEstudio";
 import { moduloDesdeSegmento } from "../datos/modulosEstudio";
-import { EstadoCarga, ErrorState, EmptyState } from "../componentes/Estados";
+import { ErrorState, EmptyState } from "../componentes/Estados";
+import CargaRuta from "../componentes/CargaRuta";
 import EncabezadoModulo from "../componentes/estudio/EncabezadoModulo";
 import { ContextoTema } from "./contextoTema";
 import { useLogroDominio } from "../buddy/useLogros";
@@ -40,7 +41,7 @@ export default function DisposicionTema() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  if (estado === "cargando") return <EstadoCarga mensaje="Cargando tema de estudio..." />;
+  if (estado === "cargando") return <CargaRuta />;
   if (estado === "error") return <ErrorState alReintentar={cargar} />;
   if (estado === "vacio" || !tema) {
     return (

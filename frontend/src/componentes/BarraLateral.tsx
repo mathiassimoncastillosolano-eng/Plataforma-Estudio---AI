@@ -27,7 +27,7 @@ export default function BarraLateral({ movilAbierto, alCerrarMovil }: PropsBarra
 
         <div className="sidebar-brand">
           <MarcaLogo tamano={36} />
-          <span className="sidebar-brand-name">Cursa</span>
+          <span className="sidebar-brand-name">Cursa AI</span>
           <button
             className="sidebar-collapse-btn hide-mobile"
             onClick={alternarContraido}

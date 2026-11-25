@@ -117,7 +117,7 @@ export default function PantallaInicializacion({ estado, alReintentar }: Props) 
           </div>
         )}
       </div>
-      <p className="init-pie">Cursa — estudio asistido por IA</p>
+      <p className="init-pie">Cursa AI — estudio asistido por IA</p>
     </main>
   );
 }

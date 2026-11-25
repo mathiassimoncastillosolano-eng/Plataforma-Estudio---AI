@@ -29,7 +29,7 @@ export default function EvolucionPeriodos({ periodos }: Props) {
             </text>
           </g>
         ))}
-        {periodos.length > 1 && <path d={linea} className="dash-linea" fill="none" />}
+        {periodos.length > 1 && <path d={linea} className="dash-linea" fill="none" pathLength={1} />}
         {periodos.map((p, i) => (
           <g key={p.numero}>
             <circle cx={x(i)} cy={y(p.porcentaje)} r={5} className={p.completo ? "dash-punto" : "dash-punto is-parcial"} />

@@ -1,6 +1,6 @@
 .tema-card {
-  --nivel: var(--color-warning);
-  --nivel-tint: var(--color-warning-tint);
+  --nivel: var(--color-primary);
+  --nivel-tint: var(--color-primary-tint);
   position: relative;
   isolation: isolate;
   height: 100%;
@@ -12,21 +12,6 @@
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-sm);
   transition: transform 220ms var(--ease-out), box-shadow 220ms var(--ease-out), border-color 220ms var(--ease-out);
-}
-.tema-card[data-nivel="medio"] {
-  --nivel: var(--color-warning);
-}
-.tema-card[data-nivel="alto"] {
-  --nivel: var(--color-primary);
-  --nivel-tint: var(--color-primary-tint);
-}
-.tema-card[data-nivel="maestria"] {
-  --nivel: var(--color-success);
-  --nivel-tint: var(--color-success-tint);
-}
-.tema-card[data-nivel="inicial"] {
-  --nivel: var(--color-neutral);
-  --nivel-tint: var(--color-surface-sunken);
 }
 .tema-card::before {
   content: "";

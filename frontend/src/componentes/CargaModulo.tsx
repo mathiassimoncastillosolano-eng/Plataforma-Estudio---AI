@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { FileText, ListChecks, MessageCircleQuestion, Network, type LucideIcon } from "lucide-react";
+import { BookOpen, FileText, ListChecks, MessageCircleQuestion, Network, Sparkles, type LucideIcon } from "lucide-react";
 import { etapaActual, progresoPercibido } from "../utilidades/progresoPercibido";
 import Boton from "./Boton";
 
-export type ModuloCarga = "resumen" | "preguntas" | "prueba" | "mapa";
+export type ModuloCarga = "resumen" | "preguntas" | "prueba" | "mapa" | "tema" | "pagina";
 
 interface ConfiguracionCarga {
   icono: LucideIcon;
@@ -36,6 +36,18 @@ const CONFIGURACION: Record<ModuloCarga, ConfiguracionCarga> = {
     tono: "morado",
     titulo: "Construyendo tu mapa conceptual",
     etapas: ["Identificando los conceptos clave…", "Conectando las relaciones…", "Distribuyendo el mapa…", "Ajustando los detalles…"],
+  },
+  tema: {
+    icono: BookOpen,
+    tono: "azul",
+    titulo: "Abriendo tu tema de estudio",
+    etapas: ["Recuperando tu tema…", "Revisando tu avance…", "Preparando tus módulos…"],
+  },
+  pagina: {
+    icono: Sparkles,
+    tono: "morado",
+    titulo: "Preparando tu espacio",
+    etapas: ["Cargando la pantalla…", "Ordenando tu información…", "Casi listo…"],
   },
 };
 

@@ -32,7 +32,7 @@ export const GUIAS: Guia[] = [
   {
     id: "conoce-cursa",
     categoria: "Primeros pasos",
-    titulo: "Conoce Cursa IA",
+    titulo: "Conoce Cursa AI",
     descripcion: "Un paseo rápido por lo esencial.",
     icono: Sparkles,
     tono: "morado",

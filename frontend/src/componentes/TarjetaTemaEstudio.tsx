@@ -3,7 +3,6 @@ import { ArrowRight, Clock, HelpCircle, Trash2 } from "lucide-react";
 import type { TemaEstudio } from "../tipos";
 import Insignia from "./Insignia";
 import { obtenerEstadoTema, etiquetasEstadoTema } from "../datos/temasEstudio";
-import { nivelBarra } from "../utilidades/nivelBarra";
 
 interface PropsTarjetaTemaEstudio {
   tema: TemaEstudio;
@@ -15,7 +14,7 @@ export default function TarjetaTemaEstudio({ tema, alEliminar }: PropsTarjetaTem
   const dominio = Math.max(0, Math.min(100, tema.dominio));
 
   const tarjeta = (
-    <Link to={`/estudio/${tema.id}`} className="topic-card tema-card" data-nivel={nivelBarra(dominio)} data-estado={estado} style={{ textDecoration: "none" }}>
+    <Link to={`/estudio/${tema.id}`} className="topic-card tema-card" style={{ textDecoration: "none" }}>
       <span className="tema-card-brillo" aria-hidden="true" />
       <div className="topic-card-top-row">
         <Insignia tono="blue">{tema.categoria}</Insignia>

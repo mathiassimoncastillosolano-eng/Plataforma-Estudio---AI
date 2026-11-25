@@ -18,7 +18,7 @@ export default function GestorInvitacion() {
         modo: "invitacion",
         prioridad: PRIORIDAD.tutorial,
         estado: "greeting",
-        titulo: "¡Hola! ¿Conocemos Cursa IA?",
+        titulo: "¡Hola! ¿Conocemos Cursa AI?",
         mensaje: "Te puedo mostrar cómo aprovechar todas las herramientas de estudio.",
         duracionMs: null,
         cerrable: false,

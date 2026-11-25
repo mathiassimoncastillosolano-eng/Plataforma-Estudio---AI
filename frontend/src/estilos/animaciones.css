@@ -1,0 +1,99 @@
+@keyframes anim-entrada {
+  from { opacity: 0; transform: translateY(14px) scale(0.985); filter: blur(6px); }
+  to { opacity: 1; transform: none; filter: blur(0); }
+}
+@keyframes anim-barra {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@keyframes anim-linea {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+@keyframes anim-punto {
+  0% { opacity: 0; transform: scale(0); }
+  70% { opacity: 1; transform: scale(1.25); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes anim-brillo {
+  from { transform: translateX(-120%) skewX(-18deg); }
+  to { transform: translateX(260%) skewX(-18deg); }
+}
+@keyframes anim-surgir {
+  from { opacity: 0; transform: translateY(8px) scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+
+.tab-enter { animation: anim-entrada 480ms var(--ease-out) both; }
+.page-transition { animation: anim-entrada 520ms var(--ease-out) both; }
+
+.reveal,
+.stagger > * {
+  animation: anim-entrada 640ms var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 70ms);
+}
+
+.dash-kpi,
+.topic-grid > *,
+.mod-card,
+.preg-pagina .qitem {
+  animation: anim-surgir 520ms var(--ease-out) backwards;
+}
+.dash-kpis > :nth-child(1), .topic-grid > :nth-child(1) { animation-delay: 40ms; }
+.dash-kpis > :nth-child(2), .topic-grid > :nth-child(2) { animation-delay: 110ms; }
+.dash-kpis > :nth-child(3), .topic-grid > :nth-child(3) { animation-delay: 180ms; }
+.dash-kpis > :nth-child(4), .topic-grid > :nth-child(4) { animation-delay: 250ms; }
+.topic-grid > :nth-child(n+5) { animation-delay: 320ms; }
+
+.dash-mini-barra span,
+.tema-barra > span {
+  transform-origin: left center;
+  animation: anim-barra 900ms var(--ease-out) 200ms both;
+}
+.dash-linea {
+  stroke-dasharray: 1;
+  animation: anim-linea 1100ms var(--ease-out) 250ms both;
+}
+.dash-punto {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: anim-punto 480ms var(--ease-spring) 900ms both;
+}
+
+.btn {
+  transition: transform var(--motion-standard) var(--ease-spring), box-shadow var(--motion-standard) var(--ease-out), background-color var(--motion-standard) var(--ease-out), border-color var(--motion-standard) var(--ease-out), color var(--motion-standard) var(--ease-out);
+}
+.btn:hover:not(:disabled) { transform: translateY(-2px); }
+.btn:active:not(:disabled) { transform: translateY(0) scale(0.97); transition-duration: 90ms; }
+.btn-primary { position: relative; overflow: hidden; isolation: isolate; }
+.btn-primary::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  transform: translateX(-120%) skewX(-18deg);
+  pointer-events: none;
+  z-index: -1;
+}
+.btn-primary:hover:not(:disabled)::after { animation: anim-brillo 750ms var(--ease-out); }
+
+.card,
+.dash-panel,
+.tema-card {
+  transition: transform var(--motion-standard) var(--ease-out), box-shadow var(--motion-standard) var(--ease-out), border-color var(--motion-standard) var(--ease-out);
+}
+
+.sidebar-link { transition: transform var(--motion-standard) var(--ease-spring), background-color var(--motion-standard) var(--ease-out), color var(--motion-standard) var(--ease-out); }
+.sidebar-link:hover { transform: translateX(3px); }
+
+.modal, .dropdown, .toast { animation-timing-function: var(--ease-spring); }
+
+@media (prefers-reduced-motion: reduce) {
+  .tab-enter, .page-transition, .reveal, .stagger > *, .dash-kpi, .topic-grid > *, .mod-card, .preg-pagina .qitem,
+  .dash-mini-barra span, .tema-barra > span, .dash-linea, .dash-punto, .btn-primary:hover:not(:disabled)::after {
+    animation: none;
+  }
+  .dash-linea { stroke-dasharray: none; }
+  .btn:hover:not(:disabled), .btn:active:not(:disabled), .sidebar-link:hover { transform: none; }
+}
