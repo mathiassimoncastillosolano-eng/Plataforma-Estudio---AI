@@ -1,26 +1,21 @@
 import { useBuddy, usePresentacionModulo } from "../buddy/BuddyProvider";
 import { celebracionHito } from "../buddy/mensajes";
 import { useEffect, useRef, useState } from "react";
-import { Loader2, Network, Sparkles } from "lucide-react";
+import { Network, Sparkles } from "lucide-react";
 import { useContextoTema } from "../disposiciones/contextoTema";
 import * as aiService from "../servicios/servicioIa";
-import { generarMapaConceptual, generarMapaConceptualDesdePdf } from "../servicios/servicioMapaConceptual";
+import { fueRevelado, huellaFuente, marcarRevelado, solicitarMapa } from "../servicios/generacionSegundoPlano";
+import { TIEMPO_CARGA_PRECARGADA_MS, esperarMinimo } from "../utilidades/tiempoMinimo";
 import { ErrorApi } from "../servicios/clienteApi";
 import { guardarMapa, useSesion } from "../almacen/almacenSesion";
 import { useAviso } from "../hooks/useAviso";
 import type { ConceptoClave, MapaMental } from "../tipos";
-import { EmptyState, EstadoCarga, ErrorState } from "../componentes/Estados";
+import { EmptyState, ErrorState } from "../componentes/Estados";
+import CargaModulo from "../componentes/CargaModulo";
 import Boton from "../componentes/Boton";
 import MapaConceptual from "../componentes/MapaConceptual";
 
 const MENSAJE_ERROR = "No pudimos generar el mapa conceptual. Inténtalo de nuevo.";
-
-/** Identifica la fuente con la que se generó un mapa: si el estudiante la cambia, el mapa guardado deja de valer. */
-function huellaFuente(esPdf: boolean, texto: string | undefined, archivo: File | null): string | null {
-  if (esPdf) return archivo ? `pdf:${archivo.name}:${archivo.size}:${archivo.lastModified}` : null;
-  const limpio = texto?.trim();
-  return limpio ? `texto:${limpio}` : null;
-}
 
 /**
  * Mapa conceptual del tema. Si el estudiante aportó su fuente en esta sesión (texto o PDF) el mapa se
@@ -53,67 +48,54 @@ function MapaDesdeFuente({ huella, esPdf, texto, archivo }: PropsMapaDesdeFuente
   const { anunciar } = useBuddy();
   const [generando, establecerGenerando] = useState(false);
   const [error, establecerError] = useState<string | null>(null);
-  const refAborto = useRef<AbortController | null>(null);
-
-  useEffect(() => () => refAborto.current?.abort(), []);
+  const turno = useRef(0);
 
   const mapa = guardado && guardado.huella === huella ? guardado.mapa : null;
+  const claveRevelado = `mapa:${tema.id}`;
+  const [revelado, establecerRevelado] = useState(() => fueRevelado(claveRevelado));
 
-  async function generar() {
-    refAborto.current?.abort();
-    const controlador = new AbortController();
-    refAborto.current = controlador;
+  async function generar(forzar = false) {
+    const inicio = Date.now();
+    const mio = ++turno.current;
+    const yaListo = Boolean(mapa) && !forzar;
     establecerError(null);
     establecerGenerando(true);
     try {
-      const resultado =
-        esPdf && archivo
-          ? await generarMapaConceptualDesdePdf(tema.id, archivo, tema.titulo, controlador.signal)
-          : await generarMapaConceptual(tema.id, texto, tema.titulo, controlador.signal);
-      guardarMapa(tema.id, resultado, huella);
-      if (totalMapas === 0) anunciar(celebracionHito("primer-mapa"));
-      mostrarAviso("Mapa conceptual listo.");
+      await solicitarMapa({ idTema: tema.id, titulo: tema.titulo, esPdf }, huella, texto, archivo, forzar);
+      await esperarMinimo(inicio, TIEMPO_CARGA_PRECARGADA_MS);
+      if (turno.current !== mio) return;
+      if (totalMapas <= 1 && !revelado) anunciar(celebracionHito("primer-mapa"));
+      marcarRevelado(claveRevelado);
+      establecerRevelado(true);
+      if (!yaListo) mostrarAviso("Mapa conceptual listo.");
     } catch (fallo) {
-      if (controlador.signal.aborted) return;
+      if (turno.current !== mio) return;
       establecerError(fallo instanceof ErrorApi ? fallo.message : MENSAJE_ERROR);
     } finally {
-      if (!controlador.signal.aborted) establecerGenerando(false);
+      if (turno.current === mio) establecerGenerando(false);
     }
   }
 
   function cancelar() {
-    refAborto.current?.abort();
+    turno.current += 1;
     establecerGenerando(false);
   }
 
   function regenerar() {
     // Los cambios del estudiante viven solo en el lienzo: regenerar los reemplaza por un mapa nuevo.
-    if (window.confirm("Se generará un mapa nuevo con la IA y se perderán los cambios que hiciste en este. ¿Quieres continuar?")) generar();
+    if (window.confirm("Se generará un mapa nuevo con la IA y se perderán los cambios que hiciste en este. ¿Quieres continuar?")) generar(true);
   }
 
-  if (generando) {
-    return (
-      <EmptyState
-        icono={<Loader2 size={24} className="spin" />}
-        titulo="Construyendo tu mapa conceptual…"
-        descripcion="La IA está identificando los conceptos y las relaciones de tu material. Puede tardar un momento."
-        accion={
-          <Boton variante="ghost" tamano="sm" onClick={cancelar}>
-            Cancelar
-          </Boton>
-        }
-      />
-    );
-  }
-  if (error) return <ErrorState titulo="No pudimos generar el mapa conceptual." descripcion={error} alReintentar={generar} />;
-  if (!mapa) {
+  if (generando) return <CargaModulo modulo="mapa" alCancelar={cancelar} />;
+  if (error) return <ErrorState titulo="No pudimos generar el mapa conceptual." descripcion={error} alReintentar={() => generar()} />;
+  if (!mapa || !revelado) {
     return (
       <EmptyState
         icono={<Network size={24} />}
         titulo="Genera el mapa conceptual de tu material"
         descripcion={`La IA analizará ${esPdf ? "tu PDF" : "tu texto"} y construirá un mapa con los conceptos, su definición y las relaciones entre ellos. Pulsa un concepto para ver su definición.`}
         accion={
-          <Boton icono={<Sparkles size={16} />} onClick={generar} data-tour="mapa-generar">
+          <Boton icono={<Sparkles size={16} />} onClick={() => generar()} data-tour="mapa-generar">
             Generar mapa conceptual
           </Boton>
         }
@@ -147,7 +129,7 @@ function MapaDeEjemplo() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tema.id]);
 
-  if (estado === "cargando") return <EstadoCarga mensaje="Generando mapa conceptual..." />;
+  if (estado === "cargando") return <CargaModulo modulo="mapa" />;
   if (estado === "error" || !mapa) return <ErrorState alReintentar={cargar} />;
 
   // Los cambios del usuario viven mientras navega; "Regenerar" restaura el mapa original.

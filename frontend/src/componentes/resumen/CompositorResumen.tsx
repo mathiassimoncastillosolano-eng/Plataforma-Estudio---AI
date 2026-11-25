@@ -152,7 +152,9 @@ export default function CompositorResumen({
               ? demasiadoLargo
                 ? "El mensaje supera el máximo permitido."
                 : archivo
-                  ? "Listo para analizar el documento."
+                  ? longitud === 0
+                    ? "Sin indicaciones: usaremos las instrucciones por defecto."
+                    : "Listo para analizar el documento."
                   : "Adjunta el PDF para continuar."
               : demasiadoCorto
                 ? `Escribe al menos ${formatearCantidad(LIMITES_RESUMEN.min)} caracteres (faltan ${formatearCantidad(LIMITES_RESUMEN.min - longitud)}).`

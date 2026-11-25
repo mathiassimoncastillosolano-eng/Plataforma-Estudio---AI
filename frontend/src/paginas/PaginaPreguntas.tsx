@@ -1,15 +1,23 @@
 import { usePresentacionModulo } from "../buddy/BuddyProvider";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Dumbbell, ListChecks, Search, X } from "lucide-react";
+import { ListChecks, Search, X } from "lucide-react";
 import { useContextoTema } from "../disposiciones/contextoTema";
 import * as aiService from "../servicios/servicioIa";
+import { generarSiguienteRonda, registrarResultadoPregunta } from "../servicios/servicioPreguntas";
+import { fueRevelado, marcarRevelado } from "../servicios/generacionSegundoPlano";
+import { obtenerEstadoAdaptacion } from "../almacen/almacenSesion";
 import type { ConceptoClave, PreguntaEstudio } from "../tipos";
 import { normalizar, conceptosRelacionados } from "../utilidades/conceptos";
 import { cargarEstados, guardarEstados, type EstadoPregunta, type MapaEstados } from "../utilidades/estadoPregunta";
-import { EstadoCarga, ErrorState, EmptyState } from "../componentes/Estados";
+import { rondaCompleta } from "../utilidades/rondaPreguntas";
+import { TIEMPO_CARGA_PRECARGADA_MS, esperarMinimo } from "../utilidades/tiempoMinimo";
+import { ErrorState, EmptyState } from "../componentes/Estados";
+import CargaModulo from "../componentes/CargaModulo";
 import TarjetaPregunta from "../componentes/TarjetaPregunta";
 import SesionPractica from "../componentes/SesionPractica";
+import EncabezadoPreguntas from "../componentes/preguntas/EncabezadoPreguntas";
+import RondaCompletada from "../componentes/preguntas/RondaCompletada";
 import Boton from "../componentes/Boton";
 
 type IdFiltro = "todas" | "facil" | "media" | "dificil" | "respondidas" | "pendientes" | "repasar";
@@ -34,14 +42,23 @@ export default function PaginaPreguntas() {
   const [idsAbiertos, establecerIdsAbiertos] = useState<Set<string>>(new Set());
   const [consulta, establecerConsulta] = useState("");
   const [practica, establecerPractica] = useState<PreguntaEstudio[] | null>(null);
+  const [ronda, establecerRonda] = useState(1);
+  const [siguiente, establecerSiguiente] = useState<PreguntaEstudio[] | null>(null);
+  const [preparando, establecerPreparando] = useState(false);
+  const huboRespuestas = useRef(false);
+  const rondaCerrada = useRef("");
+  const claveRevelado = `preguntas:${tema.id}`;
 
   const valorInicial = parametros.get("f") as IdFiltro | null;
   const [filtro, establecerFiltro] = useState<IdFiltro>(FILTROS.some((f) => f.id === valorInicial) ? (valorInicial as IdFiltro) : "todas");
 
   async function cargar() {
+    const inicio = Date.now();
     establecerEstado("cargando");
     try {
       const [resultado, informacion] = await Promise.all([aiService.generarPreguntas(tema.id, tema.titulo), aiService.obtenerConceptosTema(tema.id, tema.titulo)]);
+      if (!fueRevelado(claveRevelado)) await esperarMinimo(inicio, TIEMPO_CARGA_PRECARGADA_MS);
+      marcarRevelado(claveRevelado);
       establecerPreguntas(resultado);
       establecerConceptos(informacion.conceptos);
       establecerEstados(cargarEstados(tema.id));
@@ -56,18 +73,53 @@ export default function PaginaPreguntas() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tema.id]);
 
-  function actualizarEstado(id: string, siguiente: EstadoPregunta | null) {
+  function actualizarEstado(id: string, siguienteEstado: EstadoPregunta | null) {
+    if (siguienteEstado && estados[id] !== siguienteEstado) {
+      huboRespuestas.current = true;
+      registrarResultadoPregunta(tema.id, id, siguienteEstado === "conocida");
+    }
     establecerEstados((previo) => {
       const textos = { ...previo };
-      if (siguiente) textos[id] = siguiente;
+      if (siguienteEstado) textos[id] = siguienteEstado;
       else delete textos[id];
       guardarEstados(tema.id, textos);
       return textos;
     });
   }
 
-  function cambiarFiltro(siguiente: IdFiltro) {
-    establecerFiltro(siguiente);
+  useEffect(() => {
+    if (!preguntas || siguiente || preparando || !huboRespuestas.current) return;
+    if (!rondaCompleta(preguntas, (id) => Boolean(estados[id]))) return;
+    const firma = preguntas.map((p) => p.id).join("|");
+    if (rondaCerrada.current === firma) return;
+    rondaCerrada.current = firma;
+    establecerPreparando(true);
+    generarSiguienteRonda(tema.id, tema.titulo, preguntas, { nivelEstudiante: obtenerEstadoAdaptacion(tema.id)?.nivel })
+      .then(establecerSiguiente)
+      .catch(() => establecerSiguiente(null))
+      .finally(() => establecerPreparando(false));
+  }, [preguntas, estados, siguiente, preparando, tema.id, tema.titulo]);
+
+  function empezarSiguienteRonda() {
+    if (!siguiente) return;
+    const nuevos = new Set(siguiente.map((p) => p.id));
+    establecerEstados((previo) => {
+      const limpio = { ...previo };
+      nuevos.forEach((id) => delete limpio[id]);
+      guardarEstados(tema.id, limpio);
+      return limpio;
+    });
+    establecerPreguntas(siguiente);
+    establecerSiguiente(null);
+    establecerRonda((r) => r + 1);
+    establecerIdsAbiertos(new Set());
+    establecerConsulta("");
+    establecerFiltro("todas");
+    huboRespuestas.current = false;
+  }
+
+  function cambiarFiltro(siguienteFiltro: IdFiltro) {
+    establecerFiltro(siguienteFiltro);
     if (parametros.has("f")) establecerParametros({}, { replace: true });
   }
 
@@ -82,6 +134,8 @@ export default function PaginaPreguntas() {
     }
     return c;
   }, [preguntas, estados]);
+
+  const conocidas = useMemo(() => (preguntas ?? []).filter((q) => estados[q.id] === "conocida").length, [preguntas, estados]);
 
   const visibles = useMemo(() => {
     const q = normalizar(consulta).trim();
@@ -98,14 +152,14 @@ export default function PaginaPreguntas() {
 
   function alternar(id: string) {
     establecerIdsAbiertos((previo) => {
-      const siguiente = new Set(previo);
-      if (siguiente.has(id)) siguiente.delete(id);
-      else siguiente.add(id);
-      return siguiente;
+      const nuevo = new Set(previo);
+      if (nuevo.has(id)) nuevo.delete(id);
+      else nuevo.add(id);
+      return nuevo;
     });
   }
 
-  if (estado === "cargando") return <EstadoCarga mensaje="Cargando preguntas..." />;
+  if (estado === "cargando") return <CargaModulo modulo="preguntas" />;
   if (estado === "error") return <ErrorState alReintentar={cargar} />;
   if (!preguntas || preguntas.length === 0) {
     return <EmptyState titulo="No hay preguntas disponibles" descripcion="Todavía no se generaron preguntas para este tema." />;
@@ -126,24 +180,25 @@ export default function PaginaPreguntas() {
     );
   }
 
-  const porcentajeRespondidas = Math.round((conteos.respondidas / conteos.todas) * 100);
   const todosAbiertos = visibles.length > 0 && visibles.every((q) => idsAbiertos.has(q.id));
+  const rondaTerminada = rondaCompleta(preguntas, (id) => Boolean(estados[id])) && huboRespuestas.current;
 
   return (
-    <div className="questions-wrap">
-      <div className="questions-toolbar">
-        <div className="questions-progress">
-          <strong>
-            {conteos.respondidas} <span>de {conteos.todas} respondidas</span>
-          </strong>
-          <div className="progress-track" role="progressbar" aria-valuenow={porcentajeRespondidas} aria-valuemin={0} aria-valuemax={100} aria-label="Preguntas respondidas">
-            <div className="progress-fill" style={{ width: `${porcentajeRespondidas}%` }} />
-          </div>
-        </div>
-        <Boton variante="secondary" tamano="sm" icono={<Dumbbell size={15} />} disabled={visibles.length === 0} onClick={() => establecerPractica(visibles)} data-tour="preguntas-practicar">
-          Practicar {filtro === "todas" && !consulta ? "todas" : `estas (${visibles.length})`}
-        </Boton>
-      </div>
+    <div className="questions-wrap preg-pagina">
+      <EncabezadoPreguntas
+        ronda={ronda}
+        respondidas={conteos.respondidas}
+        total={conteos.todas}
+        conocidas={conocidas}
+        repasar={conteos.repasar}
+        textoPracticar={`Practicar ${filtro === "todas" && !consulta ? "todas" : `estas (${visibles.length})`}`}
+        practicarDeshabilitado={visibles.length === 0}
+        alPracticar={() => establecerPractica(visibles)}
+      />
+
+      {(preparando || siguiente || rondaTerminada) && (
+        <RondaCompletada ronda={ronda} conocidas={conocidas} total={conteos.todas} preparando={preparando} lista={Boolean(siguiente)} alEmpezar={empezarSiguienteRonda} />
+      )}
 
       <div className="filter-bar">
         <div className="chip-filters" role="tablist" aria-label="Filtrar preguntas" data-tour="preguntas-filtros">
@@ -191,7 +246,7 @@ export default function PaginaPreguntas() {
           </div>
           <div className="qlist stagger">
             {visibles.map((q, i) => (
-              <TarjetaPregunta key={q.id} pregunta={q} numero={(preguntas.indexOf(q) + 1) || i + 1} abierto={idsAbiertos.has(q.id)} estado={estados[q.id]} relacionados={conceptosRelacionados(q, conceptos)} alAlternar={() => alternar(q.id)} alEstado={(s) => actualizarEstado(q.id, s)} />
+              <TarjetaPregunta key={q.id} pregunta={q} numero={preguntas.indexOf(q) + 1 || i + 1} abierto={idsAbiertos.has(q.id)} estado={estados[q.id]} relacionados={conceptosRelacionados(q, conceptos)} alAlternar={() => alternar(q.id)} alEstado={(s) => actualizarEstado(q.id, s)} />
             ))}
           </div>
         </>

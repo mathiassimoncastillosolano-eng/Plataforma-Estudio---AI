@@ -1,0 +1,246 @@
+.preg-pagina {
+  display: grid;
+  gap: 18px;
+}
+.preg-pagina > * {
+  margin: 0;
+}
+.preg-cabecera {
+  --acento: var(--color-warning);
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 22px;
+  padding: 22px 24px;
+  overflow: hidden;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--acento) 10%, var(--color-surface)) 0%, var(--color-surface) 60%);
+  border: var(--border-width) solid color-mix(in srgb, var(--acento) 26%, var(--color-border));
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+}
+.preg-cabecera::before {
+  content: "";
+  position: absolute;
+  top: -80px;
+  left: -60px;
+  width: 220px;
+  height: 220px;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--acento) 20%, transparent), transparent);
+}
+.preg-cabecera-principal {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.preg-cabecera-titulo {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+}
+.preg-ronda {
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  font-size: var(--fs-micro);
+  font-weight: 700;
+  color: var(--color-warning-ink);
+  background: var(--color-warning-tint);
+}
+.preg-cabecera-titulo strong {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+}
+.preg-cabecera-titulo strong span {
+  font-size: var(--fs-body-sm);
+  font-weight: 500;
+  font-family: var(--font-body);
+  color: var(--color-text-muted);
+}
+.preg-barra {
+  height: 10px;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-sunken);
+  overflow: hidden;
+}
+.preg-barra > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--acento) 65%, var(--color-surface)), var(--acento));
+  box-shadow: 0 0 14px color-mix(in srgb, var(--acento) 50%, transparent);
+  transition: width 600ms var(--ease-out);
+}
+.preg-cifras {
+  display: flex;
+  gap: 10px;
+  margin: 0;
+}
+.preg-cifra {
+  display: grid;
+  gap: 4px;
+  min-width: 92px;
+  padding: 10px 14px;
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+.preg-cifra dt {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-micro);
+  color: var(--color-text-muted);
+}
+.preg-cifra dd {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+}
+.preg-cifra[data-tipo="ok"] dd {
+  color: var(--color-success-ink);
+}
+.preg-cifra[data-tipo="repaso"] dd {
+  color: var(--color-warning-ink);
+}
+.preg-ronda-lista {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: linear-gradient(120deg, var(--color-success-tint), var(--color-surface) 80%);
+  border: var(--border-width) solid color-mix(in srgb, var(--color-success) 35%, var(--color-border));
+  border-radius: var(--radius-lg);
+  animation: carga-entrada 320ms var(--ease-out) both;
+}
+.preg-ronda-icono {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  color: var(--color-success-ink);
+  background: var(--color-surface);
+  border: var(--border-width) solid color-mix(in srgb, var(--color-success) 35%, transparent);
+}
+.preg-ronda-texto {
+  flex: 1;
+  min-width: 0;
+}
+.preg-ronda-texto strong {
+  color: var(--color-text);
+}
+.preg-ronda-texto p {
+  margin: 2px 0 0;
+  font-size: var(--fs-body-sm);
+  color: var(--color-text-secondary);
+}
+.preg-pagina .filter-bar {
+  margin: 0;
+}
+.preg-pagina .fchip {
+  padding: 8px 15px;
+  box-shadow: var(--shadow-xs);
+}
+.preg-pagina .fchip.active {
+  box-shadow: var(--shadow-primary);
+}
+.preg-pagina .q-search {
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xs);
+}
+.preg-pagina .qlist {
+  display: grid;
+  gap: 12px;
+  border-top: 0;
+}
+.preg-pagina .qitem {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-left: 4px solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
+  transition: border-color 200ms var(--ease-out), box-shadow 200ms var(--ease-out), transform 200ms var(--ease-out);
+}
+.preg-pagina .qitem:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+.preg-pagina .qitem.open {
+  box-shadow: var(--shadow-md);
+  border-color: color-mix(in srgb, var(--color-primary) 35%, var(--color-border));
+  border-left-color: var(--color-primary);
+}
+.preg-pagina .qitem.is-conocida {
+  border-left-color: var(--color-success);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--color-success) 6%, var(--color-surface)), var(--color-surface) 40%);
+}
+.preg-pagina .qitem.is-repaso {
+  border-left-color: var(--color-warning);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--color-warning) 7%, var(--color-surface)), var(--color-surface) 40%);
+}
+.preg-pagina .qitem-head {
+  padding: 18px 20px;
+  border-radius: 0;
+}
+.preg-pagina .qitem-num {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  background: var(--color-surface-sunken);
+  font-weight: 700;
+}
+.preg-pagina .qitem-body {
+  padding: 4px 20px 22px 68px;
+}
+@media (max-width: 880px) {
+  .preg-cabecera {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .preg-cifras {
+    flex-wrap: wrap;
+  }
+  .preg-cifra {
+    flex: 1;
+  }
+  .preg-ronda-lista {
+    flex-wrap: wrap;
+  }
+  .preg-pagina .qitem-head {
+    grid-template-columns: 30px 1fr;
+    padding: 16px;
+  }
+  .preg-pagina .qitem-side {
+    grid-column: 2;
+    flex-wrap: wrap;
+  }
+  .preg-pagina .qitem-body {
+    padding: 4px 16px 20px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .preg-barra > span,
+  .preg-pagina .qitem {
+    transition: none;
+  }
+  .preg-pagina .qitem:hover {
+    transform: none;
+  }
+  .preg-ronda-lista {
+    animation: none;
+  }
+}

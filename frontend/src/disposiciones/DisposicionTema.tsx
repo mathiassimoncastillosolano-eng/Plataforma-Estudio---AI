@@ -7,6 +7,8 @@ import { EstadoCarga, ErrorState, EmptyState } from "../componentes/Estados";
 import EncabezadoModulo from "../componentes/estudio/EncabezadoModulo";
 import { ContextoTema } from "./contextoTema";
 import { useLogroDominio } from "../buddy/useLogros";
+import { useBloqueoModulos } from "../hooks/useBloqueoModulos";
+import ModuloBloqueado from "../componentes/estudio/ModuloBloqueado";
 
 export default function DisposicionTema() {
   const { id } = useParams<{ id: string }>();
@@ -15,6 +17,7 @@ export default function DisposicionTema() {
   const [estado, establecerEstado] = useState<"cargando" | "exito" | "error" | "vacio">("cargando");
 
   useLogroDominio(tema);
+  const { bloqueado, mensaje } = useBloqueoModulos(id);
 
   async function cargar() {
     if (!id) return;
@@ -63,7 +66,7 @@ export default function DisposicionTema() {
 
         {/* key: cada módulo entra con su propia transición sin recargar el tema */}
         <div className="topic-body tab-enter" key={pathname}>
-          <Outlet />
+          {modulo && bloqueado(modulo.id) ? <ModuloBloqueado idTema={tema.id} modulo={modulo} mensaje={mensaje} /> : <Outlet />}
         </div>
       </div>
     </ContextoTema.Provider>

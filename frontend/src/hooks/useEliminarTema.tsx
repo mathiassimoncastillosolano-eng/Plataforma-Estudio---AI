@@ -3,6 +3,7 @@ import { AlertCircle } from "lucide-react";
 import type { TemaEstudio } from "../tipos";
 import * as servicioEstudio from "../servicios/servicioEstudio";
 import { eliminarDatosTema } from "../almacen/almacenSesion";
+import { cancelarGeneraciones } from "../servicios/generacionSegundoPlano";
 import { useAviso } from "./useAviso";
 import Boton from "../componentes/Boton";
 import Modal from "../componentes/Modal";
@@ -50,6 +51,7 @@ export function useEliminarTema(alEliminado: (id: string) => void): ResultadoUse
     establecerEliminando(true);
     try {
       const existia = await servicioEstudio.eliminarTemaEstudio(tema.id);
+      cancelarGeneraciones(tema.id);
       eliminarDatosTema(tema.id);
       alEliminado(tema.id);
       establecerPendiente(null);

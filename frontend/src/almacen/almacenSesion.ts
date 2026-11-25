@@ -42,9 +42,10 @@ interface EstadoSesion {
   rendimiento: Record<string, RespuestaRegistrada[]>;
   /** MOD-08: estado del motor adaptativo por tema (nivel, período y respuestas pendientes), en la forma del backend. */
   adaptacion: Record<string, EstadoAdaptacion>;
+  generandoResumen: Record<string, boolean>;
 }
 
-let estadoGlobal: EstadoSesion = { iniciadoEn: Date.now(), fuentes: {}, archivos: {}, resumenes: {}, mapas: {}, actividad: [], rendimiento: {}, adaptacion: {} };
+let estadoGlobal: EstadoSesion = { iniciadoEn: Date.now(), fuentes: {}, archivos: {}, resumenes: {}, mapas: {}, actividad: [], rendimiento: {}, adaptacion: {}, generandoResumen: {} };
 const oyentes = new Set<() => void>();
 let siguienteId = 1;
 
@@ -119,7 +120,7 @@ export function reiniciarSesionEstudio() {
   if (typeof window !== "undefined") window.clearTimeout(temporizadorGuardado);
   temporizadorGuardado = undefined;
   usuarioPersistidoId = null;
-  actualizar({ iniciadoEn: Date.now(), fuentes: {}, archivos: {}, resumenes: {}, mapas: {}, actividad: [], rendimiento: {}, adaptacion: {} });
+  actualizar({ iniciadoEn: Date.now(), fuentes: {}, archivos: {}, resumenes: {}, mapas: {}, actividad: [], rendimiento: {}, adaptacion: {}, generandoResumen: {} });
 }
 
 export function establecerFuenteTema(idTema: string, contenido: string) {
@@ -141,7 +142,13 @@ export function eliminarDatosTema(idTema: string) {
     mapas: sinClave(estadoGlobal.mapas),
     rendimiento: sinClave(estadoGlobal.rendimiento),
     adaptacion: sinClave(estadoGlobal.adaptacion),
+    generandoResumen: sinClave(estadoGlobal.generandoResumen),
   });
+}
+
+export function establecerGenerandoResumen(idTema: string, generando: boolean) {
+  const { [idTema]: _anterior, ...resto } = estadoGlobal.generandoResumen;
+  actualizar({ generandoResumen: generando ? { ...resto, [idTema]: true } : resto });
 }
 
 export function registrarActividad(entrada: Omit<ActividadSesion, "id" | "at">) {

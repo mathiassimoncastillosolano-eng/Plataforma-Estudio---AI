@@ -15,6 +15,13 @@ import RutaNiveles, { siguienteHito } from "../componentes/progreso/RutaNiveles"
 import PanelSesion from "../componentes/progreso/PanelSesion";
 import ListaDominioTemas from "../componentes/progreso/ListaDominioTemas";
 import GraficaEvolucion from "../componentes/progreso/GraficaEvolucion";
+import IndicadoresClave from "../componentes/progreso/IndicadoresClave";
+import EvolucionPeriodos from "../componentes/progreso/EvolucionPeriodos";
+import ComparativaTemas from "../componentes/progreso/ComparativaTemas";
+import DistribucionDificultad from "../componentes/progreso/DistribucionDificultad";
+import PuntosDebiles from "../componentes/progreso/PuntosDebiles";
+import { useSesion } from "../almacen/almacenSesion";
+import { comparativaTemas, cronologicas, distribucionDificultad, indicadoresGlobales, periodosDeRespuestas, puntosDebiles } from "../utilidades/panelProgreso";
 
 interface DatosProgreso {
   temas: TemaEstudio[];
@@ -27,6 +34,7 @@ export default function PaginaProgreso() {
   usePresentacionModulo("progreso");
   const [datos, establecerDatos] = useState<DatosProgreso | null>(null);
   const [estado, establecerEstado] = useState<"cargando" | "exito" | "error">("cargando");
+  const rendimiento = useSesion((s) => s.rendimiento);
 
   async function cargar() {
     establecerEstado("cargando");
@@ -58,6 +66,12 @@ export default function PaginaProgreso() {
       <div aria-busy="true" aria-label="Cargando tu progreso">
         {encabezado}
         <div className="skeleton progress-hero-skeleton" />
+        <div className="dash-esqueleto">
+          <div className="skeleton" />
+          <div className="skeleton" />
+          <div className="skeleton" />
+          <div className="skeleton" />
+        </div>
         <div className="progress-layout">
           <div className="skeleton" style={{ height: 320, borderRadius: "var(--radius-lg)" }} />
           <div className="skeleton" style={{ height: 320, borderRadius: "var(--radius-lg)" }} />
@@ -93,6 +107,11 @@ export default function PaginaProgreso() {
   const hito = siguienteHito(promedio);
   const preguntas = temas.reduce((suma, t) => suma + t.preguntasRespondidas, 0);
   const pruebasHechas = temas.reduce((suma, t) => suma + t.pruebasCompletadas, 0);
+  const indicadores = indicadoresGlobales(temas, rendimiento);
+  const periodos = periodosDeRespuestas(cronologicas(rendimiento));
+  const comparativa = comparativaTemas(temas, rendimiento);
+  const dificultades = distribucionDificultad(rendimiento);
+  const debiles = puntosDebiles(temas, rendimiento);
   const focus = [...temas].sort((a, b) => a.dominio - b.dominio)[0];
 
   return (
@@ -143,6 +162,27 @@ export default function PaginaProgreso() {
           </div>
         </dl>
       </section>
+
+      <IndicadoresClave indicadores={indicadores} />
+
+      <div className="dash-rejilla">
+        <section className="dash-panel reveal" style={{ ["--i" as string]: 2 }}>
+          <h2>Evolución por periodos</h2>
+          <EvolucionPeriodos periodos={periodos} />
+        </section>
+        <section className="dash-panel reveal" style={{ ["--i" as string]: 3 }}>
+          <h2>Dificultad</h2>
+          <DistribucionDificultad filas={dificultades} />
+        </section>
+        <section className="dash-panel is-ancho reveal" style={{ ["--i" as string]: 4 }}>
+          <h2>Comparativa entre temas</h2>
+          <ComparativaTemas filas={comparativa} />
+        </section>
+        <section className="dash-panel is-ancho reveal" style={{ ["--i" as string]: 5 }}>
+          <h2>Puntos por reforzar</h2>
+          <PuntosDebiles puntos={debiles} />
+        </section>
+      </div>
 
       <div className="progress-layout">
         <div className="progress-main">

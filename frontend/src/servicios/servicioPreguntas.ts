@@ -1,6 +1,7 @@
 import type { DificultadPregunta, PreguntaEstudio } from "../tipos";
 import { enviarJson } from "./clienteApi";
 import { obtenerResumenGeneral } from "./servicioPruebas";
+import { TAMANO_RONDA, cantidadNuevasNecesarias, componerRonda, dificultadSegunNivel, registrarResultado, type HistorialPreguntas } from "../utilidades/rondaPreguntas";
 
 // -----------------------------------------------------------------------
 // Servicio de Preguntas de práctica (MOD-03).
@@ -37,10 +38,13 @@ export interface OpcionesGeneracion {
   /** Enunciados ya vistos, para no repetirlos. */
   evitar?: string[];
   senal?: AbortSignal;
+  lote?: string;
 }
 
 const memoria = new Map<string, PreguntaEstudio[]>();
 const enVuelo = new Map<string, Promise<PreguntaEstudio[]>>();
+const bancos = new Map<string, PreguntaEstudio[]>();
+const historiales = new Map<string, HistorialPreguntas>();
 
 const CARACTERES_POR_PREGUNTA = 300; // mismo criterio que el backend
 const MAXIMO_PREGUNTAS = 25;
@@ -71,15 +75,19 @@ export function limpiarPreguntasEnMemoria(idTema?: string) {
   if (idTema) {
     memoria.delete(idTema);
     enVuelo.delete(idTema);
+    bancos.delete(idTema);
+    historiales.delete(idTema);
   } else {
     memoria.clear();
     enVuelo.clear();
+    bancos.clear();
+    historiales.clear();
   }
 }
 
-function aPreguntaEstudio(idTema: string, p: PreguntaApi): PreguntaEstudio {
+function aPreguntaEstudio(idTema: string, p: PreguntaApi, lote?: string): PreguntaEstudio {
   return {
-    id: `${idTema}-${p.id}`,
+    id: lote ? `${idTema}-${lote}-${p.id}` : `${idTema}-${p.id}`,
     idTema,
     enunciado: p.enunciado,
     tipo: "opcion-multiple",
@@ -115,7 +123,7 @@ export async function generarPreguntasConIa(idTema: string, titulo: string, opci
     },
   };
   const datos = await enviarJson<RespuestaApi>("/api/preguntas/generar", cuerpo, { senal: opciones.senal, tiempoEsperaMs: TIEMPO_GENERACION_MS });
-  return datos.preguntas.map((p) => aPreguntaEstudio(idTema, p));
+  return datos.preguntas.map((p) => aPreguntaEstudio(idTema, p, opciones.lote));
 }
 
 /** Preguntas del tema: memoria → solicitud en curso → backend. Una sola llamada por tema. */
@@ -143,4 +151,51 @@ export async function obtenerPreguntasDelTema(idTema: string, titulo: string, op
     senal.addEventListener("abort", abortar, { once: true });
     solicitud.then(resolver, rechazar);
   });
+}
+
+export function registrarResultadoPregunta(idTema: string, idPregunta: string, correcta: boolean): void {
+  historiales.set(idTema, registrarResultado(historiales.get(idTema) ?? {}, idPregunta, correcta));
+}
+
+export function obtenerHistorialPreguntas(idTema: string): HistorialPreguntas {
+  return historiales.get(idTema) ?? {};
+}
+
+function fusionar(banco: PreguntaEstudio[], nuevas: PreguntaEstudio[]): PreguntaEstudio[] {
+  const ids = new Set(banco.map((p) => p.id));
+  return [...banco, ...nuevas.filter((p) => !ids.has(p.id))];
+}
+
+export interface OpcionesRonda {
+  total?: number;
+  nivelEstudiante?: number;
+}
+
+export async function generarSiguienteRonda(idTema: string, titulo: string, actuales: PreguntaEstudio[], opciones: OpcionesRonda = {}): Promise<PreguntaEstudio[]> {
+  const total = opciones.total ?? TAMANO_RONDA;
+  const historial = historiales.get(idTema) ?? {};
+  const banco = fusionar(bancos.get(idTema) ?? [], actuales);
+  bancos.set(idTema, banco);
+
+  let nuevas: PreguntaEstudio[] = [];
+  const necesarias = cantidadNuevasNecesarias(total, banco, historial);
+  if (necesarias > 0 && puedeGenerarConIa(idTema)) {
+    try {
+      nuevas = await generarPreguntasConIa(idTema, titulo, {
+        cantidad: necesarias,
+        dificultad: dificultadSegunNivel(opciones.nivelEstudiante),
+        nivelEstudiante: opciones.nivelEstudiante,
+        evitar: banco.map((p) => p.enunciado),
+        lote: `r${Date.now().toString(36)}`,
+      });
+    } catch {
+      nuevas = [];
+    }
+  }
+
+  const ronda = componerRonda({ banco, historial, nuevas, total });
+  const elegidas = ronda.length > 0 ? ronda : actuales;
+  bancos.set(idTema, fusionar(banco, nuevas));
+  memoria.set(idTema, elegidas);
+  return elegidas;
 }

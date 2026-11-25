@@ -6,7 +6,8 @@ import { useContextoTema } from "../disposiciones/contextoTema";
 import type { TipoResumen } from "../tipos";
 import * as servicioResumen from "../servicios/servicioResumen";
 import { ErrorApi } from "../servicios/clienteApi";
-import { guardarResumenes, establecerFuenteTema, establecerArchivoTema, useSesion } from "../almacen/almacenSesion";
+import { guardarResumenes, establecerFuenteTema, establecerArchivoTema, establecerGenerandoResumen, useSesion } from "../almacen/almacenSesion";
+import { precargarMapa, precargarPreguntas } from "../servicios/generacionSegundoPlano";
 import { useAviso } from "../hooks/useAviso";
 import Boton from "../componentes/Boton";
 import CompositorResumen from "../componentes/resumen/CompositorResumen";
@@ -45,7 +46,13 @@ export default function PaginaResumen() {
   const [idActivo, establecerIdActivo] = useState("");
   const refAborto = useRef<AbortController | null>(null);
 
-  useEffect(() => () => refAborto.current?.abort(), []);
+  useEffect(
+    () => () => {
+      refAborto.current?.abort();
+      establecerGenerandoResumen(tema.id, false);
+    },
+    [tema.id]
+  );
 
   const indice = useMemo(() => (resumenes && vista === "lectura" ? construirIndice(resumenes, tipoVisible) : []), [resumenes, tipoVisible, vista]);
 
@@ -71,13 +78,16 @@ export default function PaginaResumen() {
     refAborto.current = controlador;
     establecerError(null);
     establecerVista("generando");
+    establecerGenerandoResumen(tema.id, true);
+    establecerFuenteTema(tema.id, contenido);
+    precargarMapa({ idTema: tema.id, titulo: tema.titulo, esPdf }, contenido, archivoPdf);
     try {
       const resultado =
         esPdf && archivoPdf
           ? await servicioResumen.generarResumenesDesdePdf(archivoPdf, tema.titulo, contenido, controlador.signal)
           : await servicioResumen.generarResumenes(contenido, tema.titulo, controlador.signal);
-      establecerFuenteTema(tema.id, contenido);
       guardarResumenes(tema.id, tema.titulo, resultado);
+      precargarPreguntas(tema.id, tema.titulo);
       if (totalResumenes === 0) anunciar(celebracionHito("primer-resumen"));
       establecerTipoVisible("esencial");
       establecerVista("lectura");
@@ -87,11 +97,14 @@ export default function PaginaResumen() {
       if (controlador.signal.aborted) return;
       establecerError(fallo instanceof ErrorApi ? fallo.message : "No pudimos generar el resumen. Inténtalo de nuevo.");
       establecerVista("redaccion");
+    } finally {
+      if (!controlador.signal.aborted) establecerGenerandoResumen(tema.id, false);
     }
   }
 
   function cancelarGeneracion() {
     refAborto.current?.abort();
+    establecerGenerandoResumen(tema.id, false);
     establecerVista(resumenes ? "lectura" : "redaccion");
   }
 

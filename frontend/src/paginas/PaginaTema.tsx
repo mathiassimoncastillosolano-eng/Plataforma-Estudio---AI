@@ -5,6 +5,7 @@ import { MODULOS_ESTUDIO, type IdModulo } from "../datos/modulosEstudio";
 import { etiquetasNivelDominio } from "../datos/temasEstudio";
 import { obtenerResumenesEjemplo } from "../servicios/servicioResumen";
 import { useSesion } from "../almacen/almacenSesion";
+import { useBloqueoModulos } from "../hooks/useBloqueoModulos";
 import Insignia from "../componentes/Insignia";
 import AnilloProgreso from "../componentes/estudio/AnilloProgreso";
 import TarjetaModulo, { type EstadoModulo } from "../componentes/estudio/TarjetaModulo";
@@ -16,6 +17,7 @@ export default function PaginaTema() {
   const { tema } = useContextoTema();
   const resumenGenerado = useSesion((s) => s.resumenes[tema.id]);
   const mapaGenerado = useSesion((s) => s.mapas[tema.id]);
+  const { bloqueado, mensaje } = useBloqueoModulos(tema.id);
 
   // Todos los estados salen de datos reales del tema o de la sesión; nada se inventa.
   const estados: Record<IdModulo, EstadoModulo> = {
@@ -66,7 +68,7 @@ export default function PaginaTema() {
       </div>
       <nav className="mod-grid stagger" aria-label="Módulos de estudio" data-tour="modulos-tema">
         {MODULOS_ESTUDIO.map((modulo, i) => (
-          <TarjetaModulo key={modulo.id} modulo={modulo} idTema={tema.id} numero={i + 1} estado={estados[modulo.id]} />
+          <TarjetaModulo key={modulo.id} modulo={modulo} idTema={tema.id} numero={i + 1} estado={estados[modulo.id]} bloqueado={bloqueado(modulo.id)} mensajeBloqueo={mensaje} />
         ))}
       </nav>
     </section>

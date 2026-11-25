@@ -1,0 +1,221 @@
+.carga-modulo {
+  --mod: var(--color-primary);
+  --mod-tint: var(--color-primary-tint);
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  max-width: 520px;
+  margin: 32px auto;
+  padding: 40px 32px 32px;
+  text-align: center;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--mod) 9%, var(--color-surface)) 0%, var(--color-surface) 62%);
+  border: var(--border-width) solid color-mix(in srgb, var(--mod) 28%, var(--color-border));
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md), 0 0 60px -24px var(--mod);
+  overflow: hidden;
+  animation: carga-entrada 320ms var(--ease-out) both;
+}
+.carga-modulo::before {
+  content: "";
+  position: absolute;
+  inset: -40% -20% auto;
+  height: 70%;
+  z-index: -1;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--mod) 24%, transparent), transparent);
+  animation: carga-resplandor 4.2s ease-in-out infinite;
+}
+.carga-orbita {
+  position: relative;
+  width: 116px;
+  height: 116px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 8px;
+}
+.carga-anillo {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid transparent;
+}
+.carga-anillo-1 {
+  border-top-color: var(--mod);
+  border-right-color: color-mix(in srgb, var(--mod) 35%, transparent);
+  animation: carga-giro 1.6s linear infinite;
+}
+.carga-anillo-2 {
+  inset: 14px;
+  border-bottom-color: var(--mod);
+  border-left-color: color-mix(in srgb, var(--mod) 30%, transparent);
+  animation: carga-giro 2.4s linear infinite reverse;
+}
+.carga-punto {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--mod);
+  box-shadow: 0 0 12px var(--mod);
+}
+.carga-punto-1 {
+  top: 2px;
+  left: calc(50% - 4px);
+  transform-origin: 4px 56px;
+  animation: carga-giro 1.6s linear infinite;
+}
+.carga-punto-2 {
+  bottom: 16px;
+  left: calc(50% - 4px);
+  width: 6px;
+  height: 6px;
+  transform-origin: 3px -36px;
+  animation: carga-giro 2.4s linear infinite reverse;
+}
+.carga-nucleo {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  color: var(--mod-ink, var(--mod));
+  background: var(--mod-tint);
+  border: var(--border-width) solid color-mix(in srgb, var(--mod) 35%, transparent);
+  box-shadow: 0 8px 24px -10px var(--mod);
+  animation: carga-pulso 2.2s ease-in-out infinite;
+}
+.carga-titulo {
+  font-family: var(--font-display);
+  font-size: var(--fs-heading-2);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+  margin: 0;
+}
+.carga-descripcion {
+  margin: 0;
+  max-width: 38ch;
+  font-size: var(--fs-body-sm);
+  color: var(--color-text-muted);
+}
+.carga-etapa {
+  min-height: 1.4em;
+  margin: 0;
+  font-size: var(--fs-body-sm);
+  font-weight: 600;
+  color: var(--mod-ink, var(--mod));
+  animation: carga-etapa 360ms var(--ease-out) both;
+}
+.carga-barra {
+  position: relative;
+  width: min(100%, 340px);
+  height: 8px;
+  margin-top: 6px;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-sunken);
+  overflow: hidden;
+}
+.carga-barra > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--mod) 70%, var(--color-surface)), var(--mod));
+  box-shadow: 0 0 14px color-mix(in srgb, var(--mod) 55%, transparent);
+  transition: width 420ms var(--ease-out);
+  position: relative;
+  overflow: hidden;
+}
+.carga-barra > span::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%, var(--shimmer, rgba(255, 255, 255, 0.55)) 50%, transparent 70%);
+  transform: translateX(-100%);
+  animation: carga-brillo 1.6s ease-in-out infinite;
+}
+.carga-porcentaje {
+  font-size: var(--fs-micro);
+  color: var(--color-text-muted);
+}
+.carga-esqueleto {
+  display: grid;
+  gap: 8px;
+  width: min(100%, 340px);
+  margin-top: 14px;
+  justify-items: center;
+}
+.carga-esqueleto > span {
+  display: block;
+  height: 9px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(90deg, var(--color-surface-sunken) 25%, color-mix(in srgb, var(--mod) 14%, var(--color-surface-sunken)) 50%, var(--color-surface-sunken) 75%);
+  background-size: 200% 100%;
+  animation: carga-esqueleto 1.8s ease-in-out infinite;
+}
+.carga-esqueleto > span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.carga-esqueleto > span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+@keyframes carga-giro {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes carga-pulso {
+  50% {
+    transform: scale(1.06);
+  }
+}
+@keyframes carga-resplandor {
+  50% {
+    opacity: 0.55;
+    transform: scale(1.08);
+  }
+}
+@keyframes carga-brillo {
+  to {
+    transform: translateX(100%);
+  }
+}
+@keyframes carga-esqueleto {
+  to {
+    background-position: -200% 0;
+  }
+}
+@keyframes carga-entrada {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+}
+@keyframes carga-etapa {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .carga-modulo,
+  .carga-modulo::before,
+  .carga-anillo,
+  .carga-punto,
+  .carga-nucleo,
+  .carga-etapa,
+  .carga-barra > span::after,
+  .carga-esqueleto > span {
+    animation: none;
+  }
+  .carga-punto {
+    display: none;
+  }
+}
+@media (max-width: 560px) {
+  .carga-modulo {
+    margin: 16px 8px;
+    padding: 32px 18px 24px;
+  }
+}

@@ -1,6 +1,8 @@
 import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { Lock } from "lucide-react";
 import { MODULOS_ESTUDIO, type IdModulo } from "../../datos/modulosEstudio";
+import { useBloqueoModulos } from "../../hooks/useBloqueoModulos";
 import { useClicFuera } from "../../hooks/useClicFuera";
 
 function IconoNuevePuntos() {
@@ -18,6 +20,7 @@ function IconoNuevePuntos() {
 export default function SelectorModulos({ idTema, actual }: { idTema: string; actual: IdModulo }) {
   const [abierto, establecerAbierto] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const { bloqueado, mensaje } = useBloqueoModulos(idTema);
   useClicFuera(ref as React.RefObject<HTMLElement>, () => establecerAbierto(false), abierto);
 
   return (
@@ -27,14 +30,26 @@ export default function SelectorModulos({ idTema, actual }: { idTema: string; ac
       </button>
       {abierto && (
         <div className="mod-switch-menu" role="menu" aria-label="Módulos del tema">
-          {MODULOS_ESTUDIO.map(({ id, ruta, etiqueta, icono: Icono, tono }) => (
-            <Link key={id} role="menuitem" to={`/estudio/${idTema}/${ruta}`} className="mod-switch-item" data-tono={tono} aria-current={id === actual ? "page" : undefined} onClick={() => establecerAbierto(false)}>
-              <span className="mod-switch-icon" aria-hidden="true">
-                <Icono size={22} strokeWidth={1.9} />
-              </span>
-              <span>{etiqueta}</span>
-            </Link>
-          ))}
+          {MODULOS_ESTUDIO.map(({ id, ruta, etiqueta, icono: Icono, tono }) => {
+            if (bloqueado(id)) {
+              return (
+                <span key={id} role="menuitem" aria-disabled="true" title={mensaje} className="mod-switch-item is-bloqueado" data-tono={tono}>
+                  <span className="mod-switch-icon" aria-hidden="true">
+                    <Lock size={20} strokeWidth={1.9} />
+                  </span>
+                  <span>{etiqueta}</span>
+                </span>
+              );
+            }
+            return (
+              <Link key={id} role="menuitem" to={`/estudio/${idTema}/${ruta}`} className="mod-switch-item" data-tono={tono} aria-current={id === actual ? "page" : undefined} onClick={() => establecerAbierto(false)}>
+                <span className="mod-switch-icon" aria-hidden="true">
+                  <Icono size={22} strokeWidth={1.9} />
+                </span>
+                <span>{etiqueta}</span>
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>

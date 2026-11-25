@@ -7,7 +7,8 @@ import * as studyService from "../servicios/servicioEstudio";
 import { cargarAjustes, guardarAjustes, obtenerResumenGeneral } from "../servicios/servicioPruebas";
 import { useControlPrueba } from "../hooks/useControlPrueba";
 import type { AjustesPrueba, ResultadoCompleto } from "../tipos/prueba";
-import { EstadoCarga, EmptyState } from "../componentes/Estados";
+import { EmptyState } from "../componentes/Estados";
+import CargaModulo from "../componentes/CargaModulo";
 import Boton from "../componentes/Boton";
 import ConfiguradorPrueba from "../componentes/prueba/ConfiguradorPrueba";
 import EjecutorPrueba from "../componentes/prueba/EjecutorPrueba";
@@ -49,7 +50,7 @@ export default function PaginaPrueba() {
     void c.crear(ajustes, cancelar.current.signal);
   }
 
-  if (c.fase === "cargando") return <EstadoCarga mensaje="Preparando tu prueba..." />;
+  if (c.fase === "cargando") return <CargaModulo modulo="prueba" />;
 
   if (!resumen && (c.fase === "configuracion" || c.fase === "error")) {
     return (
@@ -96,7 +97,7 @@ export default function PaginaPrueba() {
     );
   }
 
-  if (c.fase === "ejecutando") return <EstadoCarga mensaje="Recuperando tu prueba..." />;
+  if (c.fase === "ejecutando") return <CargaModulo modulo="prueba" titulo="Recuperando tu prueba" etapas={["Restaurando tu avance…", "Retomando donde lo dejaste…"]} />;
 
   return resumen ? <ConfiguradorPrueba tituloTema={tema.titulo} resumen={resumen} ajustes={ajustes} alCambiar={cambiarAjustes} alIniciar={generar} error={c.error} /> : null;
 }
