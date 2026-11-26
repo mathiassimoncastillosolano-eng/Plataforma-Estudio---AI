@@ -4,7 +4,7 @@ import { obtenerResumenesEjemplo } from "./servicioResumen";
 import { enviarJson, ErrorApi } from "./clienteApi";
 import { pruebasPasadas, type PruebaPasada } from "../datos/pruebas";
 import { retardoSimulado } from "../utilidades/retardoSimulado";
-import { CANTIDADES_PREGUNTAS, OPCIONES_TIEMPO, ajustesPorDefecto } from "../utilidades/constructorPruebas";
+import { CANTIDADES_PREGUNTAS, ajustesPorDefecto, esTiempoValido } from "../utilidades/constructorPruebas";
 import type {
   AjustesPrueba,
   ItemRevision,
@@ -351,7 +351,7 @@ export function cargarAjustes(idTema: string): AjustesPrueba {
   const g = leer<Partial<AjustesPrueba>>(claveAjustes(idTema), localStorage);
   if (!g) return base;
   const cantidadValida = (CANTIDADES_PREGUNTAS as readonly number[]).includes(g.cantidad as number);
-  const tiempoValido = g.limiteMinutos === null || (OPCIONES_TIEMPO as (number | null)[]).includes(g.limiteMinutos as number);
+  const tiempoValido = esTiempoValido(g.limiteMinutos);
   const dificultadValida = ["facil", "media", "dificil", "personalizada"].includes(g.dificultad as string);
   return {
     ...base,

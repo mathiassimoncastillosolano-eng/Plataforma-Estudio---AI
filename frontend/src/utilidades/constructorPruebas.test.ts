@@ -5,6 +5,8 @@ import {
   ajustesPorDefecto,
   calcularDistribucion,
   distribucionEfectiva,
+  esTiempoValido,
+  etiquetaTiempo,
   limitePorContenido,
   puntajeMaximoPara,
   segundosPorPregunta,
@@ -60,6 +62,22 @@ describe("pesos y tiempos", () => {
   it("segundos por pregunta", () => {
     expect(segundosPorPregunta(10, 5)).toBe(30);
     expect(segundosPorPregunta(10, null)).toBeNull();
+  });
+  it("acepta tiempos de 5 en 5 entre 5 y 240 minutos o sin límite", () => {
+    expect(esTiempoValido(null)).toBe(true);
+    expect(esTiempoValido(5)).toBe(true);
+    expect(esTiempoValido(95)).toBe(true);
+    expect(esTiempoValido(240)).toBe(true);
+    expect(esTiempoValido(0)).toBe(false);
+    expect(esTiempoValido(7)).toBe(false);
+    expect(esTiempoValido(245)).toBe(false);
+    expect(esTiempoValido("15")).toBe(false);
+  });
+  it("etiqueta el tiempo en minutos y horas", () => {
+    expect(etiquetaTiempo(null)).toBe("Sin límite");
+    expect(etiquetaTiempo(45)).toBe("45 min");
+    expect(etiquetaTiempo(60)).toBe("1 h");
+    expect(etiquetaTiempo(90)).toBe("1 h 30 min");
   });
   it("la capacidad coincide con el backend", () => {
     expect(limitePorContenido(100)).toBe(0);

@@ -13,6 +13,15 @@ const POSICIONES: ReadonlyArray<readonly [number, number]> = [
   [-1, 0],
 ];
 
+const CHISPAS: ReadonlyArray<readonly [number, number, number]> = [
+  [20, 0.43, 0],
+  [78, 0.37, 1.1],
+  [135, 0.45, 0.4],
+  [196, 0.39, 1.8],
+  [248, 0.44, 0.8],
+  [312, 0.36, 1.4],
+];
+
 function IconoNuevePuntos() {
   return (
     <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" fill="currentColor">
@@ -53,7 +62,14 @@ export default function SelectorModulos({ idTema, actual }: { idTema: string; ac
       </button>
       {montado && (
         <div className="mod-circulo" data-visible={visible} role="menu" aria-label="Módulos del tema">
+          <span className="mod-circulo-halo" aria-hidden="true" />
           <span className="mod-circulo-aro" aria-hidden="true" />
+          <span className="mod-circulo-aro mod-circulo-aro-interno" aria-hidden="true" />
+          <span className="mod-chispas" aria-hidden="true">
+            {CHISPAS.map(([angulo, radio, retraso]) => (
+              <i key={angulo} style={{ "--a": `${angulo}deg`, "--q": radio, "--t": `${retraso}s` } as CSSProperties} />
+            ))}
+          </span>
           <div className="mod-centro" aria-hidden="true">
             {IconoActual && <IconoActual size={22} strokeWidth={1.9} />}
             <span>Estás en</span>

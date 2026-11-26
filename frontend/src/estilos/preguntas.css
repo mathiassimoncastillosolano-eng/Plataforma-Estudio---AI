@@ -6,7 +6,7 @@
   margin: 0;
 }
 .preg-cabecera {
-  --acento: var(--color-warning);
+  --acento: var(--color-primary);
   position: relative;
   isolation: isolate;
   display: grid;
@@ -47,8 +47,8 @@
   border-radius: var(--radius-full);
   font-size: var(--fs-micro);
   font-weight: 700;
-  color: var(--color-warning-ink);
-  background: var(--color-warning-tint);
+  color: var(--color-primary-ink);
+  background: var(--color-primary-tint);
 }
 .preg-cabecera-titulo strong {
   font-family: var(--font-display);
@@ -108,7 +108,7 @@
   color: var(--color-success-ink);
 }
 .preg-cifra[data-tipo="repaso"] dd {
-  color: var(--color-warning-ink);
+  color: var(--color-primary-ink);
 }
 .preg-ronda-lista {
   display: flex;

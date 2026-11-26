@@ -1,12 +1,15 @@
-import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, ArrowRight, Clock, Eye, Info, PauseCircle, Sparkles } from "lucide-react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { AlertTriangle, ArrowRight, Clock, Eye, Info, Infinity as IconoInfinito, Minus, PauseCircle, Plus, Sparkles } from "lucide-react";
 import type { ResumenGeneral } from "../../tipos";
 import type { AjustesPrueba, DificultadElegida, DistribucionNiveles, NivelPregunta } from "../../tipos/prueba";
 import {
   CANTIDADES_PREGUNTAS,
   DIFICULTADES,
-  OPCIONES_TIEMPO,
+  ATAJOS_TIEMPO,
+  PASO_TIEMPO,
   PESO_PREGUNTA,
+  TIEMPO_MAX,
+  TIEMPO_MIN,
   calcularDistribucion,
   caracteresEvaluables,
   distribucionEfectiva,
@@ -50,6 +53,18 @@ export default function ConfiguradorPrueba({ resumen, ajustes, alCambiar, alInic
   const cantidadOk = ajustes.cantidad <= capacidad;
   const puedeIniciar = !sinContenido && cantidadOk && personalizadaOk;
   const segs = segundosPorPregunta(ajustes.cantidad, ajustes.limiteMinutos);
+  const sinLimite = ajustes.limiteMinutos === null;
+  const [ultimoTiempo, establecerUltimoTiempo] = useState(ajustes.limiteMinutos ?? 15);
+  const minutos = ajustes.limiteMinutos ?? ultimoTiempo;
+
+  useEffect(() => {
+    if (ajustes.limiteMinutos !== null) establecerUltimoTiempo(ajustes.limiteMinutos);
+  }, [ajustes.limiteMinutos]);
+
+  function cambiarTiempo(valor: number) {
+    const ajustado = Math.round(Math.min(TIEMPO_MAX, Math.max(TIEMPO_MIN, valor)) / PASO_TIEMPO) * PASO_TIEMPO;
+    alCambiar({ ...ajustes, limiteMinutos: ajustado });
+  }
 
   // Si lo guardado (o el valor por defecto) pide más preguntas de las que sostiene este resumen, se baja a la mayor opción posible.
   useEffect(() => {
@@ -128,15 +143,51 @@ export default function ConfiguradorPrueba({ resumen, ajustes, alCambiar, alInic
               <h3 id="pr-h-tiempo">
                 <Clock size={16} aria-hidden="true" /> Tiempo
               </h3>
-              <div className="pr-segmentos" role="radiogroup" aria-labelledby="pr-h-tiempo">
-                {OPCIONES_TIEMPO.map((m) => (
-                  <button key={m ?? "sin"} type="button" role="radio" aria-checked={ajustes.limiteMinutos === m} className="pr-segmento" onClick={() => alCambiar({ ...ajustes, limiteMinutos: m })}>
-                    {etiquetaTiempo(m)}
+              <div className="pr-tiempo" data-sin-limite={sinLimite || undefined}>
+                <div className="pr-tiempo-paso" role="group" aria-label="Duración de la prueba">
+                  <button type="button" className="pr-tiempo-btn" aria-label={`Restar ${PASO_TIEMPO} minutos`} disabled={sinLimite || minutos <= TIEMPO_MIN} onClick={() => cambiarTiempo(minutos - PASO_TIEMPO)}>
+                    <Minus size={18} aria-hidden="true" />
                   </button>
-                ))}
+                  <output className="pr-tiempo-valor" aria-live="polite">
+                    {sinLimite ? <IconoInfinito size={38} strokeWidth={2} aria-hidden="true" /> : <strong>{minutos}</strong>}
+                    <span>{sinLimite ? "Sin límite" : "minutos"}</span>
+                  </output>
+                  <button type="button" className="pr-tiempo-btn" aria-label={`Sumar ${PASO_TIEMPO} minutos`} disabled={sinLimite || minutos >= TIEMPO_MAX} onClick={() => cambiarTiempo(minutos + PASO_TIEMPO)}>
+                    <Plus size={18} aria-hidden="true" />
+                  </button>
+                </div>
+                <input
+                  type="range"
+                  className="pr-tiempo-rango"
+                  min={TIEMPO_MIN}
+                  max={TIEMPO_MAX}
+                  step={PASO_TIEMPO}
+                  value={minutos}
+                  disabled={sinLimite}
+                  aria-label="Duración en minutos"
+                  style={{ "--p": `${((minutos - TIEMPO_MIN) / (TIEMPO_MAX - TIEMPO_MIN)) * 100}%` } as CSSProperties}
+                  onChange={(e) => cambiarTiempo(Number(e.target.value))}
+                />
+                <div className="pr-tiempo-atajos" role="group" aria-label="Duraciones habituales">
+                  {ATAJOS_TIEMPO.map((m) => (
+                    <button key={m} type="button" className="pr-atajo" aria-pressed={!sinLimite && minutos === m} disabled={sinLimite} onClick={() => cambiarTiempo(m)}>
+                      {etiquetaTiempo(m)}
+                    </button>
+                  ))}
+                </div>
               </div>
+              <label className="pr-interruptor pr-tiempo-libre">
+                <input type="checkbox" role="switch" checked={sinLimite} onChange={(e) => alCambiar({ ...ajustes, limiteMinutos: e.target.checked ? null : ultimoTiempo })} />
+                <span className="pr-pista" aria-hidden="true" />
+                <span className="pr-interruptor-texto">
+                  <strong>
+                    <IconoInfinito size={14} aria-hidden="true" /> Sin límite de tiempo
+                  </strong>
+                  <small>Responde a tu ritmo, sin reloj.</small>
+                </span>
+              </label>
               <p className={`pr-nota ${segs !== null && segs < 40 ? "pr-nota-aviso" : ""}`}>
-                {segs === null ? "Sin límite: tómate el tiempo que necesites." : segs < 40 ? `Unos ${segs} s por pregunta: es un ritmo muy exigente.` : `Unos ${segs} s por pregunta.`}
+                {segs === null ? "Sin reloj: tómate el tiempo que necesites." : segs < 40 ? `Unos ${segs} s por pregunta: es un ritmo muy exigente.` : `Unos ${segs} s por pregunta.`}
               </p>
             </section>
           </div>
