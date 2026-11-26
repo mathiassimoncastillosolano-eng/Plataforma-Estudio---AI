@@ -306,6 +306,69 @@
   font-size: var(--fs-caption);
   color: var(--color-text-muted);
 }
+.composer-indicaciones {
+  overflow: hidden;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--color-primary) 5%, var(--color-surface)) 0%, var(--color-surface) 38%);
+}
+.composer-indicaciones-cabecera {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 22px 0;
+}
+.composer-indicaciones-icono {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: var(--color-primary-tint);
+  color: var(--color-primary);
+}
+.composer-indicaciones-titulo {
+  flex: 1;
+  min-width: 0;
+}
+.composer-indicaciones-titulo label {
+  display: block;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--color-text);
+}
+.composer-indicaciones-titulo p {
+  margin: 2px 0 0;
+  font-size: var(--fs-caption);
+  color: var(--color-text-muted);
+}
+.composer-indicaciones-opcional {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--color-surface-sunken);
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.composer-field.composer-indicaciones textarea {
+  min-height: 120px;
+  margin: 14px 22px 0;
+  width: calc(100% - 44px);
+  padding: 14px 16px;
+  font-size: 1rem;
+  line-height: 1.6;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: none;
+}
+.composer-field.composer-indicaciones textarea:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 18%, transparent);
+}
+.composer-indicaciones .composer-field-foot {
+  padding: 12px 22px 16px;
+}
 .composer-field-foot .is-warn {
   color: var(--color-warning-ink);
   font-weight: 600;
@@ -444,6 +507,37 @@
 .reader-doc .reader-points h2 {
   font-size: var(--fs-heading-2);
   color: var(--color-primary-ink);
+}
+.reader-doc section.reader-points {
+  padding: 30px 34px 34px;
+  margin-top: 40px;
+  border: 1px solid var(--color-primary-mid);
+  border-radius: var(--radius-xl);
+  background: linear-gradient(165deg, color-mix(in srgb, var(--color-primary) 9%, var(--color-surface)) 0%, var(--color-primary-tint) 100%);
+  box-shadow: var(--shadow-sm);
+}
+.reader-doc section.reader-points h2 {
+  margin-bottom: 22px;
+}
+.reader-doc section.reader-points + section {
+  margin-top: 48px;
+}
+.reader-doc .reader-points ol {
+  gap: 20px;
+}
+.reader-doc .reader-points li {
+  padding-left: 46px;
+}
+.reader-doc .reader-points li::before {
+  top: 3px;
+  width: 28px;
+  height: 28px;
+  box-shadow: 0 4px 12px -4px var(--color-primary);
+}
+@media (max-width: 640px) {
+  .reader-doc section.reader-points {
+    padding: 22px 20px 24px;
+  }
 }
 .reader-points ol {
   list-style: none;

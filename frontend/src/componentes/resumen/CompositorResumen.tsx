@@ -1,5 +1,5 @@
 import { useId, useRef, useState, type ChangeEvent, type FormEvent } from "react";
-import { AlertCircle, FileText, Sparkles, UploadCloud, X } from "lucide-react";
+import { AlertCircle, FileText, MessageSquareText, Sparkles, UploadCloud, X } from "lucide-react";
 import { LIMITE_BYTES_PDF, LIMITES_RESUMEN } from "../../configuracion";
 import { formatearTamanoArchivo } from "../../utilidades/formato";
 import Boton from "../Boton";
@@ -133,10 +133,23 @@ export default function CompositorResumen({
         </p>
       )}
 
-      <div className={`composer-field ${demasiadoLargo ? "is-invalid" : ""}`}>
-        <label htmlFor={idCampo} className={esPdf ? undefined : "sr-only"}>
-          {esPdf ? "Indicaciones para la IA (opcional)" : "Contenido a resumir"}
-        </label>
+      <div className={`composer-field ${esPdf ? "composer-indicaciones" : ""} ${demasiadoLargo ? "is-invalid" : ""}`}>
+        {esPdf ? (
+          <div className="composer-indicaciones-cabecera">
+            <span className="composer-indicaciones-icono" aria-hidden="true">
+              <MessageSquareText size={18} />
+            </span>
+            <div className="composer-indicaciones-titulo">
+              <label htmlFor={idCampo}>Indicaciones para la IA</label>
+              <p>Cuéntale cómo quieres tu resumen: qué priorizar o qué dejar fuera.</p>
+            </div>
+            <span className="composer-indicaciones-opcional">Opcional</span>
+          </div>
+        ) : (
+          <label htmlFor={idCampo} className="sr-only">
+            Contenido a resumir
+          </label>
+        )}
         <textarea
           id={idCampo}
           value={contenido}
