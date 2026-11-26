@@ -99,5 +99,5 @@ export default function PaginaPrueba() {
 
   if (c.fase === "ejecutando") return <CargaModulo modulo="prueba" titulo="Recuperando tu prueba" etapas={["Restaurando tu avance…", "Retomando donde lo dejaste…"]} />;
 
-  return resumen ? <ConfiguradorPrueba tituloTema={tema.titulo} resumen={resumen} ajustes={ajustes} alCambiar={cambiarAjustes} alIniciar={generar} error={c.error} /> : null;
+  return resumen ? <ConfiguradorPrueba resumen={resumen} ajustes={ajustes} alCambiar={cambiarAjustes} alIniciar={generar} error={c.error} /> : null;
 }

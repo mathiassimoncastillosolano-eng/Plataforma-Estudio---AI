@@ -1,9 +1,17 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type RefObject } from "react";
 import { Link } from "react-router-dom";
 import { Lock } from "lucide-react";
 import { MODULOS_ESTUDIO, type IdModulo } from "../../datos/modulosEstudio";
 import { useBloqueoModulos } from "../../hooks/useBloqueoModulos";
 import { useClicFuera } from "../../hooks/useClicFuera";
+
+const DURACION_CIERRE_MS = 300;
+const POSICIONES: ReadonlyArray<readonly [number, number]> = [
+  [0, -1],
+  [1, 0],
+  [0, 1],
+  [-1, 0],
+];
 
 function IconoNuevePuntos() {
   return (
@@ -13,43 +21,70 @@ function IconoNuevePuntos() {
   );
 }
 
-/**
- * Menú contextual de nueve puntos (estilo menú de aplicaciones): cambia entre los cuatro módulos
- * del tema actual sin pasar por la pantalla principal. No es un modal ni un control global.
- */
 export default function SelectorModulos({ idTema, actual }: { idTema: string; actual: IdModulo }) {
-  const [abierto, establecerAbierto] = useState(false);
+  const [montado, establecerMontado] = useState(false);
+  const [visible, establecerVisible] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const temporizador = useRef<number>();
   const { bloqueado, mensaje } = useBloqueoModulos(idTema);
-  useClicFuera(ref as React.RefObject<HTMLElement>, () => establecerAbierto(false), abierto);
+  const moduloActual = MODULOS_ESTUDIO.find((m) => m.id === actual);
+  const IconoActual = moduloActual?.icono;
+
+  useEffect(() => () => window.clearTimeout(temporizador.current), []);
+
+  function abrir() {
+    window.clearTimeout(temporizador.current);
+    establecerMontado(true);
+    window.requestAnimationFrame(() => window.requestAnimationFrame(() => establecerVisible(true)));
+  }
+
+  function cerrar() {
+    establecerVisible(false);
+    window.clearTimeout(temporizador.current);
+    temporizador.current = window.setTimeout(() => establecerMontado(false), DURACION_CIERRE_MS);
+  }
+
+  useClicFuera(ref as RefObject<HTMLElement>, cerrar, visible);
 
   return (
     <div className="mod-switch" ref={ref}>
-      <button type="button" className="mod-switch-btn" aria-haspopup="menu" aria-expanded={abierto} aria-label="Cambiar de módulo" title="Cambiar de módulo" onClick={() => establecerAbierto((o) => !o)}>
+      <button type="button" className="mod-switch-btn" aria-haspopup="menu" aria-expanded={visible} aria-label="Cambiar de módulo" title="Cambiar de módulo" onClick={() => (visible ? cerrar() : abrir())}>
         <IconoNuevePuntos />
       </button>
-      {abierto && (
-        <div className="mod-switch-menu" role="menu" aria-label="Módulos del tema">
-          {MODULOS_ESTUDIO.map(({ id, ruta, etiqueta, icono: Icono, tono }) => {
-            if (bloqueado(id)) {
-              return (
-                <span key={id} role="menuitem" aria-disabled="true" title={mensaje} className="mod-switch-item is-bloqueado" data-tono={tono}>
-                  <span className="mod-switch-icon" aria-hidden="true">
-                    <Lock size={20} strokeWidth={1.9} />
+      {montado && (
+        <div className="mod-circulo" data-visible={visible} role="menu" aria-label="Módulos del tema">
+          <span className="mod-circulo-aro" aria-hidden="true" />
+          <div className="mod-centro" aria-hidden="true">
+            {IconoActual && <IconoActual size={22} strokeWidth={1.9} />}
+            <span>Estás en</span>
+            <strong>{moduloActual?.etiqueta}</strong>
+          </div>
+          <div className="mod-orbita">
+            {MODULOS_ESTUDIO.map(({ id, ruta, etiqueta, icono: Icono }, i) => {
+              const [x, y] = POSICIONES[i % POSICIONES.length];
+              const estilo = { "--x": x, "--y": y, "--i": i } as CSSProperties;
+              const contenido = (
+                <span className="mod-nodo-giro">
+                  <span className="mod-nodo-icono" aria-hidden="true">
+                    {bloqueado(id) ? <Lock size={20} strokeWidth={1.9} /> : <Icono size={22} strokeWidth={1.9} />}
                   </span>
-                  <span>{etiqueta}</span>
+                  <span className="mod-nodo-nombre">{etiqueta}</span>
                 </span>
               );
-            }
-            return (
-              <Link key={id} role="menuitem" to={`/estudio/${idTema}/${ruta}`} className="mod-switch-item" data-tono={tono} aria-current={id === actual ? "page" : undefined} onClick={() => establecerAbierto(false)}>
-                <span className="mod-switch-icon" aria-hidden="true">
-                  <Icono size={22} strokeWidth={1.9} />
-                </span>
-                <span>{etiqueta}</span>
-              </Link>
-            );
-          })}
+              if (bloqueado(id)) {
+                return (
+                  <span key={id} role="menuitem" aria-disabled="true" title={mensaje} className="mod-nodo is-bloqueado" style={estilo}>
+                    {contenido}
+                  </span>
+                );
+              }
+              return (
+                <Link key={id} role="menuitem" to={`/estudio/${idTema}/${ruta}`} className="mod-nodo" style={estilo} aria-current={id === actual ? "page" : undefined} onClick={cerrar}>
+                  {contenido}
+                </Link>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>

@@ -17,7 +17,11 @@
 
 /* --------------------------------------------------------------- Configuración */
 .pr-config { display: grid; gap: var(--space-5); }
-.pr-config-cabecera h2 { margin: 4px 0 8px; font-family: var(--font-display); }
+.pr-fila-ajustes { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-4); align-items: stretch; }
+.pr-bloque-cantidad, .pr-bloque-tiempo { display: flex; flex-direction: column; background: linear-gradient(165deg, color-mix(in srgb, var(--color-primary) 6%, var(--color-surface)) 0%, var(--color-surface) 55%); box-shadow: var(--shadow-sm); }
+.pr-bloque-cantidad .pr-nota, .pr-bloque-tiempo .pr-nota { margin-top: auto; padding-top: var(--space-3); }
+.pr-bloque-tiempo h3 svg { color: var(--color-primary); }
+.pr-bloque-tiempo .pr-segmento { min-width: 64px; }
 .pr-config-rejilla { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: var(--space-6); align-items: start; }
 .pr-config-columna { display: grid; gap: var(--space-4); min-width: 0; }
 .pr-bloque { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: var(--space-5); }
@@ -171,6 +175,7 @@
 /* --------------------------------------------------------------- Responsive */
 @media (max-width: 1024px) {
   .pr-config-rejilla { grid-template-columns: 1fr; }
+  .pr-fila-ajustes { grid-template-columns: 1fr; }
   .pr-resumen { position: static; }
   .pr-cuerpo { grid-template-columns: 1fr; }
   .pr-mapa { position: static; }

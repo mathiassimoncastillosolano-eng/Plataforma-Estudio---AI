@@ -235,6 +235,9 @@
   box-shadow: var(--shadow-sm);
   z-index: 2;
 }
+.sidebar.collapsed > .sidebar-brand {
+  position: static;
+}
 .sidebar.collapsed .sidebar-collapse-btn:hover {
   background: var(--color-primary-hover);
 }

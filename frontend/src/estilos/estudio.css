@@ -113,22 +113,6 @@
 }
 .mod-switch-btn:hover, .mod-switch-btn[aria-expanded="true"] { background: var(--color-primary-tint); color: var(--color-primary); border-color: var(--color-primary-mid); }
 .mod-switch-btn:active { transform: scale(0.94); }
-.mod-switch-menu {
-  position: absolute; z-index: 40; top: calc(100% + 10px); right: 0; width: 296px; padding: 12px;
-  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;
-  background: var(--color-surface-elevated); border: 1px solid var(--color-border); border-radius: 20px;
-  box-shadow: var(--shadow-lg, 0 18px 48px rgba(26, 25, 56, 0.18)); transform-origin: top right;
-  animation: mod-menu-in 160ms var(--ease-out) both;
-}
-@keyframes mod-menu-in { from { opacity: 0; transform: translateY(-6px) scale(0.96); } to { opacity: 1; transform: none; } }
-.mod-switch-item {
-  display: grid; justify-items: center; gap: 8px; padding: 14px 8px; border-radius: 14px; text-align: center;
-  text-decoration: none; color: var(--color-text); font-size: var(--fs-body-sm); font-weight: 600; border: 1.5px solid transparent;
-  transition: background var(--motion-micro), transform var(--motion-micro) var(--ease-out);
-}
-.mod-switch-icon { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 14px; background: var(--mod-tint); color: var(--mod-ink); }
-.mod-switch-item:hover, .mod-switch-item:focus-visible { background: var(--color-surface-interactive); transform: translateY(-2px); }
-.mod-switch-item[aria-current="page"] { background: var(--mod-tint); border-color: var(--mod); color: var(--mod-ink); }
 
 /* ---------- Resumen: solo presentación (el texto no se toca) ---------- */
 .reader { grid-template-columns: 240px minmax(0, 1fr); gap: 64px; max-width: 1180px; }
@@ -159,11 +143,10 @@
   .topic-hero { flex-direction: column-reverse; align-items: flex-start; padding: 24px 22px; gap: 18px; }
   .mod-grid { grid-template-columns: minmax(0, 1fr); }
   .mod-card { min-height: 176px; padding: 20px; }
-  .mod-switch-menu { width: min(296px, calc(100vw - 32px)); }
   .mod-head-titulo { font-size: 1.35rem; }
   .mod-head-progress .progress-track { display: none; }
   .mod-head { padding: 14px 16px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .mod-card, .mod-card-glyph, .mod-card-icon, .mod-card-go, .mod-switch-menu, .mod-switch-item, .ring-valor { transition: none; animation: none; }
+  .mod-card, .mod-card-glyph, .mod-card-icon, .mod-card-go, .ring-valor { transition: none; animation: none; }
 }

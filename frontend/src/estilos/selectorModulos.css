@@ -1,0 +1,151 @@
+.mod-circulo {
+  --d: min(344px, calc(100vw - 32px));
+  --r: calc(var(--d) * 0.315);
+  position: absolute;
+  z-index: 60;
+  top: calc(100% + 12px);
+  right: 0;
+  width: var(--d);
+  height: var(--d);
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  background:
+    radial-gradient(closest-side, color-mix(in srgb, var(--color-primary) 16%, transparent), transparent 62%),
+    var(--color-surface-elevated);
+  box-shadow: var(--shadow-lg), 0 0 60px -20px color-mix(in srgb, var(--color-primary) 55%, transparent);
+  transform-origin: top right;
+  opacity: 0;
+  transform: scale(0.5) rotate(-35deg);
+  transition: opacity 240ms var(--ease-out), transform 420ms var(--ease-spring);
+}
+.mod-circulo[data-visible="true"] {
+  opacity: 1;
+  transform: none;
+}
+.mod-circulo-aro {
+  position: absolute;
+  inset: calc(50% - var(--r));
+  border-radius: 50%;
+  border: 1px dashed color-mix(in srgb, var(--color-primary) 38%, transparent);
+  pointer-events: none;
+}
+.mod-centro {
+  position: absolute;
+  inset: calc(50% - 46px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  border-radius: 50%;
+  background: linear-gradient(160deg, color-mix(in srgb, var(--color-primary) 22%, var(--color-surface)), var(--color-surface));
+  border: 1px solid color-mix(in srgb, var(--color-primary) 40%, var(--color-border));
+  box-shadow: 0 0 28px -8px var(--color-primary);
+  color: var(--color-primary);
+  text-align: center;
+  line-height: 1.15;
+  pointer-events: none;
+}
+.mod-centro span {
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+.mod-centro strong {
+  max-width: 78px;
+  font-size: 0.74rem;
+  color: var(--color-text);
+}
+.mod-orbita {
+  position: absolute;
+  inset: 0;
+  animation: mod-orbitar 56s linear infinite;
+}
+.mod-nodo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 104px;
+  margin: -39px 0 0 -52px;
+  transform: translate(calc(var(--x) * var(--r)), calc(var(--y) * var(--r)));
+  color: var(--color-text);
+  text-decoration: none;
+  outline: none;
+}
+.mod-nodo-giro {
+  display: grid;
+  justify-items: center;
+  gap: 7px;
+  opacity: 0;
+  scale: 0.4;
+  animation: mod-contra-orbitar 56s linear infinite;
+  transition: opacity 320ms var(--ease-out) calc(120ms + var(--i) * 70ms), scale 460ms var(--ease-spring) calc(120ms + var(--i) * 70ms);
+}
+.mod-circulo[data-visible="true"] .mod-nodo-giro {
+  opacity: 1;
+  scale: 1;
+}
+.mod-nodo-icono {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: var(--color-primary-tint);
+  color: var(--color-primary-ink);
+  border: 1px solid var(--color-primary-mid);
+  box-shadow: var(--shadow-sm);
+  transition: transform 300ms var(--ease-spring), box-shadow 300ms var(--ease-out), background-color 200ms var(--ease-out), border-color 200ms var(--ease-out);
+}
+.mod-nodo-nombre {
+  font-size: var(--fs-caption);
+  font-weight: 600;
+  white-space: nowrap;
+  text-shadow: 0 1px 8px var(--color-surface-elevated);
+}
+.mod-nodo:hover .mod-nodo-icono,
+.mod-nodo:focus-visible .mod-nodo-icono {
+  transform: scale(1.12);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-primary) 18%, transparent), var(--shadow-md);
+}
+.mod-nodo[aria-current="page"] .mod-nodo-icono {
+  transform: scale(1.1);
+  background: var(--color-primary-solid);
+  border-color: var(--color-primary-solid);
+  color: var(--color-text-on-primary);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--color-primary) 22%, transparent), 0 0 26px -2px var(--color-primary);
+}
+.mod-nodo[aria-current="page"] .mod-nodo-nombre {
+  color: var(--color-primary);
+}
+.mod-nodo.is-bloqueado {
+  cursor: not-allowed;
+}
+.mod-nodo.is-bloqueado .mod-nodo-giro {
+  filter: saturate(0.4);
+}
+.mod-nodo.is-bloqueado .mod-nodo-icono {
+  opacity: 0.55;
+}
+.mod-circulo:hover .mod-orbita,
+.mod-circulo:hover .mod-nodo-giro,
+.mod-circulo:focus-within .mod-orbita,
+.mod-circulo:focus-within .mod-nodo-giro {
+  animation-play-state: paused;
+}
+@keyframes mod-orbitar {
+  to { transform: rotate(360deg); }
+}
+@keyframes mod-contra-orbitar {
+  to { transform: rotate(-360deg); }
+}
+@media (max-width: 380px) {
+  .mod-nodo { width: 92px; margin-left: -46px; }
+  .mod-nodo-icono { width: 48px; height: 48px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mod-orbita, .mod-nodo-giro { animation: none; }
+  .mod-circulo, .mod-nodo-giro { transition-duration: 1ms; transition-delay: 0s; }
+}

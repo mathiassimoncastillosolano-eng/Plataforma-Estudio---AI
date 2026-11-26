@@ -22,7 +22,6 @@ import Boton from "../Boton";
 import AyudaInfo from "./AyudaInfo";
 
 interface Props {
-  tituloTema: string;
   resumen: ResumenGeneral;
   ajustes: AjustesPrueba;
   alCambiar: (ajustes: AjustesPrueba) => void;
@@ -39,7 +38,7 @@ const DESCRIPCION: Record<DificultadElegida, string> = {
   personalizada: "Tú decides cuántas preguntas de cada nivel.",
 };
 
-export default function ConfiguradorPrueba({ tituloTema, resumen, ajustes, alCambiar, alIniciar, error }: Props) {
+export default function ConfiguradorPrueba({ resumen, ajustes, alCambiar, alIniciar, error }: Props) {
   const [aviso, establecerAviso] = useState<string | null>(null);
   const capacidad = useMemo(() => limitePorContenido(caracteresEvaluables(resumen)), [resumen]);
   const minimo = CANTIDADES_PREGUNTAS[0];
@@ -85,14 +84,6 @@ export default function ConfiguradorPrueba({ tituloTema, resumen, ajustes, alCam
 
   return (
     <div className="pr-config">
-      <header className="pr-config-cabecera">
-        <p className="eyebrow">Prueba</p>
-        <h2>Configura tu prueba</h2>
-        <p className="pr-sub">
-          Las preguntas se generan con IA a partir del <strong>resumen general</strong> de «{tituloTema}». Las respuestas correctas y la calificación las controla el servidor.
-        </p>
-      </header>
-
       {error && (
         <div className="pr-banner pr-banner-error" role="alert">
           <AlertTriangle size={18} aria-hidden="true" />
@@ -108,30 +99,47 @@ export default function ConfiguradorPrueba({ tituloTema, resumen, ajustes, alCam
 
       <div className="pr-config-rejilla">
         <div className="pr-config-columna">
-          {/* ---------------------------------------------------------------- Cantidad */}
-          <section className="pr-bloque" aria-labelledby="pr-h-cantidad" data-tour="prueba-cantidad">
-            <h3 id="pr-h-cantidad">Número de preguntas</h3>
-            <div className="pr-segmentos" role="radiogroup" aria-labelledby="pr-h-cantidad">
-              {CANTIDADES_PREGUNTAS.map((n) => {
-                const bloqueada = n > capacidad;
-                return (
-                  <button
-                    key={n}
-                    type="button"
-                    role="radio"
-                    aria-checked={ajustes.cantidad === n}
-                    disabled={bloqueada}
-                    title={bloqueada ? "El resumen no tiene contenido suficiente para tantas preguntas" : undefined}
-                    className="pr-segmento"
-                    onClick={() => cambiarCantidad(n)}
-                  >
-                    {n}
+          <div className="pr-fila-ajustes">
+            {/* ---------------------------------------------------------------- Cantidad */}
+            <section className="pr-bloque pr-bloque-cantidad" aria-labelledby="pr-h-cantidad" data-tour="prueba-cantidad">
+              <h3 id="pr-h-cantidad">Número de preguntas</h3>
+              <div className="pr-segmentos" role="radiogroup" aria-labelledby="pr-h-cantidad">
+                {CANTIDADES_PREGUNTAS.map((n) => {
+                  const bloqueada = n > capacidad;
+                  return (
+                    <button
+                      key={n}
+                      type="button"
+                      role="radio"
+                      aria-checked={ajustes.cantidad === n}
+                      disabled={bloqueada}
+                      title={bloqueada ? "El resumen no tiene contenido suficiente para tantas preguntas" : undefined}
+                      className="pr-segmento"
+                      onClick={() => cambiarCantidad(n)}
+                    >
+                      {n}
+                    </button>
+                  );
+                })}
+              </div>
+              {!sinContenido && <p className="pr-nota">El resumen de este tema permite hasta {capacidad} preguntas sin repetir contenido.</p>}
+            </section>
+            <section className="pr-bloque pr-bloque-tiempo" aria-labelledby="pr-h-tiempo" data-tour="prueba-tiempo">
+              <h3 id="pr-h-tiempo">
+                <Clock size={16} aria-hidden="true" /> Tiempo
+              </h3>
+              <div className="pr-segmentos" role="radiogroup" aria-labelledby="pr-h-tiempo">
+                {OPCIONES_TIEMPO.map((m) => (
+                  <button key={m ?? "sin"} type="button" role="radio" aria-checked={ajustes.limiteMinutos === m} className="pr-segmento" onClick={() => alCambiar({ ...ajustes, limiteMinutos: m })}>
+                    {etiquetaTiempo(m)}
                   </button>
-                );
-              })}
-            </div>
-            {!sinContenido && <p className="pr-nota">El resumen de este tema permite hasta {capacidad} preguntas sin repetir contenido.</p>}
-          </section>
+                ))}
+              </div>
+              <p className={`pr-nota ${segs !== null && segs < 40 ? "pr-nota-aviso" : ""}`}>
+                {segs === null ? "Sin límite: tómate el tiempo que necesites." : segs < 40 ? `Unos ${segs} s por pregunta: es un ritmo muy exigente.` : `Unos ${segs} s por pregunta.`}
+              </p>
+            </section>
+          </div>
 
           {/* ---------------------------------------------------------------- Dificultad */}
           <section className="pr-bloque" aria-labelledby="pr-h-dificultad" data-tour="prueba-dificultad">
@@ -182,21 +190,6 @@ export default function ConfiguradorPrueba({ tituloTema, resumen, ajustes, alCam
                 <Info size={14} aria-hidden="true" /> {aviso}
               </p>
             )}
-          </section>
-
-          {/* ---------------------------------------------------------------- Tiempo */}
-          <section className="pr-bloque" aria-labelledby="pr-h-tiempo" data-tour="prueba-tiempo">
-            <h3 id="pr-h-tiempo">
-              <Clock size={16} aria-hidden="true" /> Tiempo
-            </h3>
-            <div className="pr-segmentos pr-segmentos-ancho" role="radiogroup" aria-labelledby="pr-h-tiempo">
-              {OPCIONES_TIEMPO.map((m) => (
-                <button key={m ?? "sin"} type="button" role="radio" aria-checked={ajustes.limiteMinutos === m} className="pr-segmento" onClick={() => alCambiar({ ...ajustes, limiteMinutos: m })}>
-                  {etiquetaTiempo(m)}
-                </button>
-              ))}
-            </div>
-            {segs !== null && segs < 40 && <p className="pr-nota pr-nota-aviso">Con este tiempo tendrás unos {segs} s por pregunta: es un ritmo muy exigente.</p>}
           </section>
 
           {/* ---------------------------------------------------------------- Modos */}

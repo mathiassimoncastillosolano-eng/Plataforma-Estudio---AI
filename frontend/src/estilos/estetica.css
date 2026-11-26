@@ -163,6 +163,7 @@ h3,
   position: absolute;
   inset: 0 0 auto 0;
   height: 180px;
+  border-radius: 25px 25px 0 0;
   background: radial-gradient(260px 140px at 20% 0%, color-mix(in srgb, var(--aurora-1) 22%, transparent), transparent 70%);
   pointer-events: none;
 }
