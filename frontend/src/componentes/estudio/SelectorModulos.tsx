@@ -60,7 +60,7 @@ export default function SelectorModulos({ idTema, actual }: { idTema: string; ac
             <strong>{moduloActual?.etiqueta}</strong>
           </div>
           <div className="mod-orbita">
-            {MODULOS_ESTUDIO.map(({ id, ruta, etiqueta, icono: Icono }, i) => {
+            {MODULOS_ESTUDIO.map(({ id, ruta, etiqueta, icono: Icono, tono }, i) => {
               const [x, y] = POSICIONES[i % POSICIONES.length];
               const estilo = { "--x": x, "--y": y, "--i": i } as CSSProperties;
               const contenido = (
@@ -73,13 +73,13 @@ export default function SelectorModulos({ idTema, actual }: { idTema: string; ac
               );
               if (bloqueado(id)) {
                 return (
-                  <span key={id} role="menuitem" aria-disabled="true" title={mensaje} className="mod-nodo is-bloqueado" style={estilo}>
+                  <span key={id} role="menuitem" aria-disabled="true" title={mensaje} className="mod-nodo is-bloqueado" data-tono={tono} style={estilo}>
                     {contenido}
                   </span>
                 );
               }
               return (
-                <Link key={id} role="menuitem" to={`/estudio/${idTema}/${ruta}`} className="mod-nodo" style={estilo} aria-current={id === actual ? "page" : undefined} onClick={cerrar}>
+                <Link key={id} role="menuitem" to={`/estudio/${idTema}/${ruta}`} className="mod-nodo" data-tono={tono} style={estilo} aria-current={id === actual ? "page" : undefined} onClick={cerrar}>
                   {contenido}
                 </Link>
               );
