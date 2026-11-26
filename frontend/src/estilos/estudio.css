@@ -3,11 +3,15 @@
    puntos y refinamientos de Resumen y Prueba. Se carga el último: solo presentación.
    ========================================================================== */
 
-/* Color funcional por módulo: azul · naranja · verde · morado (tintes suaves, sin saturar). */
-[data-tono="azul"] { --mod: var(--color-primary); --mod-tint: var(--color-primary-tint); --mod-ink: var(--color-primary-ink); }
-[data-tono="naranja"] { --mod: var(--color-warning); --mod-tint: var(--color-warning-tint); --mod-ink: var(--color-warning-ink); }
-[data-tono="verde"] { --mod: var(--color-success); --mod-tint: var(--color-success-tint); --mod-ink: var(--color-success-ink); }
-[data-tono="morado"] { --mod: var(--color-accent); --mod-tint: var(--color-accent-tint); --mod-ink: var(--color-accent-ink); }
+/* Cada módulo usa el acento elegido en una tonalidad distinta. */
+[data-tono], .pr-config, .pr-examen, .pr-pantalla {
+  --mod-tint: color-mix(in oklab, var(--mod) 16%, var(--color-surface));
+  --mod-ink: color-mix(in oklab, var(--mod) 62%, var(--color-text));
+}
+[data-tono="azul"] { --mod: color-mix(in oklab, var(--color-primary) 80%, #000); }
+[data-tono="naranja"] { --mod: var(--color-primary); }
+[data-tono="verde"], .pr-config, .pr-examen, .pr-pantalla { --mod: color-mix(in oklab, var(--color-primary) 76%, #fff); }
+[data-tono="morado"] { --mod: color-mix(in oklab, var(--color-primary) 56%, #fff); }
 
 /* ---------- Pantalla principal del tema ---------- */
 .topic-home { max-width: 1040px; margin: 0 auto; display: grid; gap: 22px; padding-top: 4px; }

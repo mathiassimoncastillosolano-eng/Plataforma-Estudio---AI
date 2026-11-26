@@ -197,9 +197,6 @@
 .pr-revision-opciones { width: 100%; max-width: 760px; }
 
 .pr-config, .pr-examen, .pr-pantalla {
-  --mod: var(--color-success);
-  --mod-tint: var(--color-success-tint);
-  --mod-ink: var(--color-success-ink);
   --pr-brillo: color-mix(in srgb, var(--mod) 24%, transparent);
 }
 

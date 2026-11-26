@@ -112,9 +112,9 @@
 }
 .mod-nodo[aria-current="page"] .mod-nodo-icono {
   transform: scale(1.1);
-  background: var(--mod);
-  border-color: var(--mod);
-  color: var(--color-text-on-primary);
+  background: var(--mod-tint);
+  border: 2px solid var(--mod);
+  color: var(--mod-ink);
   box-shadow: 0 0 0 5px color-mix(in srgb, var(--mod) 24%, transparent), 0 0 26px -2px var(--mod);
 }
 .mod-nodo[aria-current="page"] .mod-nodo-nombre {
