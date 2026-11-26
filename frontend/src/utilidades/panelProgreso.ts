@@ -1,8 +1,9 @@
 import type { RespuestaRegistrada } from "./rendimiento";
 import { NIVELES } from "./rendimiento";
 import type { NivelPregunta } from "../tipos/prueba";
+import { PREGUNTAS_POR_PERIODO } from "./adaptacion";
 
-export const TAMANO_PERIODO = 15;
+export const TAMANO_PERIODO = PREGUNTAS_POR_PERIODO;
 const MINIMO_RESPUESTAS_DIAGNOSTICO = 5;
 const UMBRAL_PUNTO_DEBIL = 0.7;
 

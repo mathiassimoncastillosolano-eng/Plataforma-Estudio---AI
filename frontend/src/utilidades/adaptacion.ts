@@ -8,8 +8,14 @@ import type { NivelPregunta } from "../tipos/prueba";
 // SIN conversiones. La conversión a la escala de la interfaz (0–100) no se hace aquí.
 // -----------------------------------------------------------------------
 
+/**
+ * Respuestas por período del motor adaptativo. Debe coincidir con `PREGUNTAS_POR_PERIODO` de
+ * backend/app/adaptacion/motor.py: el modelo de ML se entrenó con períodos de 15.
+ */
+export const PREGUNTAS_POR_PERIODO = 15;
+
 /** Respuestas que aún no completan un período; el motor cierra el período al llegar a 15. */
-export const MAX_PENDIENTES_ADAPTACION = 14;
+export const MAX_PENDIENTES_ADAPTACION = PREGUNTAS_POR_PERIODO - 1;
 /** Tope de `numero_periodo` que acepta el backend. */
 export const MAX_NUMERO_PERIODO = 10_000;
 

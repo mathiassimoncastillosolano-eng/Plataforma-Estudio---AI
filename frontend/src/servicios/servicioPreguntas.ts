@@ -12,7 +12,8 @@ import { TAMANO_RONDA, cantidadNuevasNecesarias, componerRonda, dificultadSegunN
 // -----------------------------------------------------------------------
 
 const TIEMPO_GENERACION_MS = 150_000;
-const CANTIDAD_POR_DEFECTO = 10;
+// La primera tanda del tema es la ronda 1: mismo tamaño que un período del motor adaptativo.
+const CANTIDAD_POR_DEFECTO = TAMANO_RONDA;
 
 interface PreguntaApi {
   id: string;

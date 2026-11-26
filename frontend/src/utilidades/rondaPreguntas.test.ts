@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { PreguntaEstudio } from "../tipos";
-import { cantidadNuevasNecesarias, componerRonda, dificultadSegunNivel, registrarResultado, repartoRonda, rondaCompleta, type HistorialPreguntas } from "./rondaPreguntas";
+import { TAMANO_RONDA, cantidadNuevasNecesarias, componerRonda, dificultadSegunNivel, registrarResultado, repartoRonda, rondaCompleta, type HistorialPreguntas } from "./rondaPreguntas";
+import { PREGUNTAS_POR_PERIODO } from "./adaptacion";
 
 const pregunta = (id: string, enunciado = `Enunciado ${id}`): PreguntaEstudio => ({
   id,
@@ -154,5 +155,20 @@ describe("fin de ronda", () => {
     expect(rondaCompleta(preguntas, () => true)).toBe(true);
     expect(rondaCompleta(preguntas, (id) => id !== "b2")).toBe(false);
     expect(rondaCompleta([], () => true)).toBe(false);
+  });
+});
+
+describe("tamaño de la ronda", () => {
+  it("una ronda es un período del motor adaptativo (15), así el nivel se actualiza al terminar cada ronda", () => {
+    expect(TAMANO_RONDA).toBe(15);
+    expect(TAMANO_RONDA).toBe(PREGUNTAS_POR_PERIODO);
+  });
+
+  it("con 15 preguntas y todo disponible da 9 falladas, 5 nuevas y 1 acertada", () => {
+    expect(repartoRonda(15, { falladas: 20, nuevas: 20, acertadas: 20 })).toEqual({ falladas: 9, nuevas: 5, acertadas: 1 });
+  });
+
+  it("en la ronda 1 (sin historial) pide 15 preguntas nuevas", () => {
+    expect(cantidadNuevasNecesarias(TAMANO_RONDA, [], {})).toBe(15);
   });
 });
