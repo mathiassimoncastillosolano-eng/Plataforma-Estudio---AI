@@ -1,7 +1,12 @@
 import type { DificultadPregunta, PreguntaEstudio } from "../tipos";
+import { PREGUNTAS_POR_PERIODO } from "./adaptacion";
 
 export const PROPORCION_RONDA = { falladas: 0.6, nuevas: 0.35, acertadas: 0.05 } as const;
-export const TAMANO_RONDA = 10;
+/**
+ * Una ronda de práctica = un período del motor adaptativo (15). Así cada ronda completa cierra un
+ * período y el nivel se actualiza al terminarla, también en un tema nuevo (sin historial).
+ */
+export const TAMANO_RONDA = PREGUNTAS_POR_PERIODO;
 const MINIMO_TAMANO_PARA_ACERTADAS = 4;
 const UMBRAL_MEDIA = 0.5;
 const UMBRAL_DIFICIL = 0.8;

@@ -20,8 +20,18 @@
     inset 0 -24px 60px -30px color-mix(in srgb, var(--color-primary) 30%, transparent);
   transform-origin: top right;
   opacity: 0;
-  transform: scale(0.5) rotate(-35deg);
+  /* Solo escala desde la esquina superior derecha: con el origen ahí, el borde derecho no se mueve y la
+     caja nunca sale de su sitio final. El giro de apertura va en el contenido interior (ver abajo): si se
+     rota la caja cuadrada, su esquina inferior derecha sobresale por la derecha durante ~0,5 s y la página
+     muestra una barra de desplazamiento horizontal. */
+  transform: scale(0.5);
   transition: opacity 240ms var(--ease-out), transform 420ms var(--ease-spring);
+  /* Las capas que giran sin parar (halo, órbita, chispas) son cajas cuadradas: al girar 45° su caja
+     crece un 41 % y, cerca del borde derecho, la página mostraba una barra de desplazamiento
+     horizontal intermitente. El recorte con margen mantiene todo el brillo visible y evita que esas
+     capas cambien el tamaño de la página. */
+  overflow: clip;
+  overflow-clip-margin: 14px;
 }
 .mod-circulo[data-visible="true"] {
   opacity: 1;
@@ -120,6 +130,16 @@
   position: absolute;
   inset: 0;
   animation: mod-orbitar 42s linear infinite;
+}
+/* Giro de apertura dentro del círculo (no cambia el tamaño de la página). */
+.mod-orbita,
+.mod-chispas {
+  rotate: -35deg;
+  transition: rotate 420ms var(--ease-spring);
+}
+.mod-circulo[data-visible="true"] .mod-orbita,
+.mod-circulo[data-visible="true"] .mod-chispas {
+  rotate: 0deg;
 }
 .mod-nodo {
   position: absolute;
@@ -260,5 +280,5 @@
 @media (prefers-reduced-motion: reduce) {
   .mod-orbita, .mod-nodo-giro, .mod-circulo-halo, .mod-chispas, .mod-chispas i, .mod-centro::before, .mod-centro::after, .mod-centro svg, .mod-nodo-icono::after { animation: none; }
   .mod-chispas i { opacity: 0.6; }
-  .mod-circulo, .mod-nodo-giro { transition-duration: 1ms; transition-delay: 0s; }
+  .mod-circulo, .mod-nodo-giro, .mod-orbita, .mod-chispas { transition-duration: 1ms; transition-delay: 0s; }
 }

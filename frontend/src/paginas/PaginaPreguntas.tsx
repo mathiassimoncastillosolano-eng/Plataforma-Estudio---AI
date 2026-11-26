@@ -88,7 +88,9 @@ export default function PaginaPreguntas() {
   }
 
   useEffect(() => {
-    if (!preguntas || siguiente || preparando || !huboRespuestas.current) return;
+    // Durante la práctica guiada se espera a que termine: al salir ya se registraron las respuestas en el
+    // motor adaptativo y la ronda siguiente se prepara con el nivel recién estimado (no con el anterior).
+    if (practica || !preguntas || siguiente || preparando || !huboRespuestas.current) return;
     if (!rondaCompleta(preguntas, (id) => Boolean(estados[id]))) return;
     const firma = preguntas.map((p) => p.id).join("|");
     if (rondaCerrada.current === firma) return;
@@ -98,7 +100,7 @@ export default function PaginaPreguntas() {
       .then(establecerSiguiente)
       .catch(() => establecerSiguiente(null))
       .finally(() => establecerPreparando(false));
-  }, [preguntas, estados, siguiente, preparando, tema.id, tema.titulo]);
+  }, [practica, preguntas, estados, siguiente, preparando, tema.id, tema.titulo]);
 
   function empezarSiguienteRonda() {
     if (!siguiente) return;
