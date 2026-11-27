@@ -82,7 +82,7 @@ describe("pesos y tiempos", () => {
   it("la capacidad coincide con el backend", () => {
     expect(limitePorContenido(100)).toBe(0);
     expect(limitePorContenido(1500)).toBe(5);
-    expect(limitePorContenido(10_000)).toBe(25);
+    expect(limitePorContenido(10_000)).toBe(30);
   });
   it("la distribución efectiva usa la personalizada solo si se eligió", () => {
     const base = ajustesPorDefecto(10);

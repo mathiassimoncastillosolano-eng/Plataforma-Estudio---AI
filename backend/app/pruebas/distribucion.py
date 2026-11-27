@@ -10,7 +10,7 @@ DIFICULTADES = ("facil", "media", "dificil")
 DIFICULTADES_PREDEFINIDAS = DIFICULTADES
 DIFICULTAD_PERSONALIZADA = "personalizada"
 
-CANTIDADES_PERMITIDAS = (5, 10, 15, 20, 25)
+CANTIDADES_PERMITIDAS = (5, 10, 15, 20, 25, 30)
 MAXIMO_PREGUNTAS = max(CANTIDADES_PERMITIDAS)
 
 # Peso de cada pregunta en medios puntos (enteros, sin errores de coma flotante).

@@ -8,12 +8,11 @@ import type { AjustesPrueba, DificultadElegida, DistribucionNiveles, NivelPregun
 // ---------------------------------------------------------------------------
 
 export const DIFICULTADES: NivelPregunta[] = ["facil", "media", "dificil"];
-export const CANTIDADES_PREGUNTAS = [5, 10, 15, 20, 25] as const;
+export const CANTIDADES_PREGUNTAS = [5, 10, 15, 20, 25, 30] as const;
 /** Minutos disponibles. null = sin límite. */
 export const TIEMPO_MIN = 5;
 export const TIEMPO_MAX = 240;
 export const PASO_TIEMPO = 5;
-export const ATAJOS_TIEMPO: readonly number[] = [10, 15, 30, 45, 60, 90];
 
 export function esTiempoValido(minutos: unknown): minutos is number | null {
   if (minutos === null) return true;
@@ -22,7 +21,7 @@ export function esTiempoValido(minutos: unknown): minutos is number | null {
 
 /** Preguntas que sostiene cada tramo de resumen; el backend aplica la misma cota. */
 export const CARACTERES_POR_PREGUNTA = 300;
-export const MAXIMO_PREGUNTAS = 25;
+export const MAXIMO_PREGUNTAS = 30;
 
 /** Peso de cada pregunta, en medios puntos para operar siempre con enteros. */
 const PESO_EN_MEDIOS_PUNTOS: Record<NivelPregunta, number> = { facil: 1, media: 2, dificil: 4 };

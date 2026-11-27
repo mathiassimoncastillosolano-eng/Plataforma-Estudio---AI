@@ -5,7 +5,6 @@ import type { AjustesPrueba, DificultadElegida, DistribucionNiveles, NivelPregun
 import {
   CANTIDADES_PREGUNTAS,
   DIFICULTADES,
-  ATAJOS_TIEMPO,
   PASO_TIEMPO,
   PESO_PREGUNTA,
   TIEMPO_MAX,
@@ -146,14 +145,14 @@ export default function ConfiguradorPrueba({ resumen, ajustes, alCambiar, alInic
               <div className="pr-tiempo" data-sin-limite={sinLimite || undefined}>
                 <div className="pr-tiempo-paso" role="group" aria-label="Duración de la prueba">
                   <button type="button" className="pr-tiempo-btn" aria-label={`Restar ${PASO_TIEMPO} minutos`} disabled={sinLimite || minutos <= TIEMPO_MIN} onClick={() => cambiarTiempo(minutos - PASO_TIEMPO)}>
-                    <Minus size={18} aria-hidden="true" />
+                    <Minus size={16} aria-hidden="true" />
                   </button>
                   <output className="pr-tiempo-valor" aria-live="polite">
-                    {sinLimite ? <IconoInfinito size={38} strokeWidth={2} aria-hidden="true" /> : <strong>{minutos}</strong>}
+                    {sinLimite ? <IconoInfinito size={24} strokeWidth={2} aria-hidden="true" /> : <strong>{minutos}</strong>}
                     <span>{sinLimite ? "Sin límite" : "minutos"}</span>
                   </output>
                   <button type="button" className="pr-tiempo-btn" aria-label={`Sumar ${PASO_TIEMPO} minutos`} disabled={sinLimite || minutos >= TIEMPO_MAX} onClick={() => cambiarTiempo(minutos + PASO_TIEMPO)}>
-                    <Plus size={18} aria-hidden="true" />
+                    <Plus size={16} aria-hidden="true" />
                   </button>
                 </div>
                 <input
@@ -168,13 +167,6 @@ export default function ConfiguradorPrueba({ resumen, ajustes, alCambiar, alInic
                   style={{ "--p": `${((minutos - TIEMPO_MIN) / (TIEMPO_MAX - TIEMPO_MIN)) * 100}%` } as CSSProperties}
                   onChange={(e) => cambiarTiempo(Number(e.target.value))}
                 />
-                <div className="pr-tiempo-atajos" role="group" aria-label="Duraciones habituales">
-                  {ATAJOS_TIEMPO.map((m) => (
-                    <button key={m} type="button" className="pr-atajo" aria-pressed={!sinLimite && minutos === m} disabled={sinLimite} onClick={() => cambiarTiempo(m)}>
-                      {etiquetaTiempo(m)}
-                    </button>
-                  ))}
-                </div>
               </div>
               <label className="pr-interruptor pr-tiempo-libre">
                 <input type="checkbox" role="switch" checked={sinLimite} onChange={(e) => alCambiar({ ...ajustes, limiteMinutos: e.target.checked ? null : ultimoTiempo })} />

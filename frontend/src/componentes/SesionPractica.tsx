@@ -6,7 +6,7 @@ import { useContextoTema } from "../disposiciones/contextoTema";
 import { registrarRespuestas } from "../almacen/almacenSesion";
 import { segundosEntre } from "../utilidades/rendimiento";
 import PreguntaPractica from "./PreguntaPractica";
-import MedidorDominio from "./MedidorDominio";
+import ResultadoRonda from "./preguntas/ResultadoRonda";
 import CambioNivel, { type EstadoNivel } from "./preguntas/CambioNivel";
 import Boton from "./Boton";
 import { useBuddy } from "../buddy/BuddyProvider";
@@ -124,15 +124,9 @@ export default function SesionPractica({ preguntas, alResponder, alSalir }: Prop
   }, [terminada, nivel]);
 
   if (terminada) {
-    const total = totalRonda;
-    const porcentaje = porcentajeRonda;
     return (
-      <div className="practice-done">
-        <MedidorDominio valor={porcentaje} etiqueta="Aciertos" tamano={150} />
-        <h2>Práctica completada</h2>
-        <p className="text-muted">
-          Respondiste correctamente {correcta} de {total} preguntas.
-        </p>
+      <div className="practice-done ronda-fin">
+        <ResultadoRonda correctas={correcta} incorrectas={incorrecta} />
         {nivel && <CambioNivel estado={nivel} alReintentar={() => void calcularNivel([], 0)} />}
         <div className="results-actions">
           <Boton variante="secondary" onClick={reiniciar}>
