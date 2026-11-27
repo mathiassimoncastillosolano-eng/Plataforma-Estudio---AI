@@ -1,7 +1,7 @@
 // La práctica registra sus respuestas en el backend y el dominio mostrado es el nivel que estima el modelo de ML.
 import { enviarJson } from "./clienteApi";
 import { guardarEstadoAdaptacion, obtenerEstadoAdaptacion } from "../almacen/almacenSesion";
-import type { EstadoAdaptacion } from "../utilidades/adaptacion";
+import { PREGUNTAS_POR_PERIODO, type EstadoAdaptacion } from "../utilidades/adaptacion";
 import type { TemaEstudio } from "../tipos";
 import { actualizarDominioTema, incrementarPreguntasRespondidas } from "./servicioEstudio";
 
@@ -28,6 +28,8 @@ export interface ResultadoRegistro {
 }
 
 const MAXIMO_POR_ENVIO = 100; // límite de SolicitudRegistrar.respuestas en el backend
+const TIEMPO_REGISTRO_MS = 45_000;
+const INTENTOS_REGISTRO = 2;
 
 // El estado del motor vive en el almacén de sesión (MOD-08), que lo persiste entre recargas.
 // Las respuestas que no se pudieron enviar se conservan solo en memoria.
@@ -46,31 +48,49 @@ export async function registrarPractica(idTema: string, respuestas: RespuestaPra
   const lote = [...(porEnviar.get(idTema) ?? []), ...respuestas].slice(-MAXIMO_POR_ENVIO);
   porEnviar.set(idTema, lote);
   if (lote.length === 0) return null;
-  const estado = obtenerEstadoAdaptacion(idTema);
-  try {
-    const datos = await enviarJson<RespuestaApi>("/api/adaptacion/registrar", {
-      id_tema: idTema,
-      ...(estado ? { estado } : {}),
-      respuestas: lote,
-    });
-    guardarEstadoAdaptacion(idTema, datos.estado);
-    porEnviar.delete(idTema);
-    const cerrados = datos.periodos_cerrados.length;
-    return {
-      dominio: cerrados > 0 ? nivelADominio(datos.estado.nivel) : null,
-      dificultadObjetivo: datos.dificultad_objetivo,
-      periodosCerrados: cerrados,
-    };
-  } catch {
-    return null;
+  for (let intento = 0; intento < INTENTOS_REGISTRO; intento += 1) {
+    const estado = obtenerEstadoAdaptacion(idTema);
+    try {
+      const datos = await enviarJson<RespuestaApi>(
+        "/api/adaptacion/registrar",
+        { id_tema: idTema, ...(estado ? { estado } : {}), respuestas: lote },
+        { tiempoEsperaMs: TIEMPO_REGISTRO_MS }
+      );
+      guardarEstadoAdaptacion(idTema, datos.estado);
+      porEnviar.delete(idTema);
+      const cerrados = datos.periodos_cerrados.length;
+      return {
+        dominio: cerrados > 0 ? nivelADominio(datos.estado.nivel) : null,
+        dificultadObjetivo: datos.dificultad_objetivo,
+        periodosCerrados: cerrados,
+      };
+    } catch {
+      continue;
+    }
   }
+  return null;
 }
 
-export async function consolidarPractica(idTema: string, respuestas: RespuestaPractica[], preguntasRespondidas: number): Promise<TemaEstudio | null> {
+export interface ResultadoConsolidacion {
+  tema: TemaEstudio | null;
+  dominio: number | null;
+  periodosCerrados: number;
+  faltan: number;
+  enviado: boolean;
+}
+
+export async function consolidarPractica(idTema: string, respuestas: RespuestaPractica[], preguntasRespondidas: number): Promise<ResultadoConsolidacion> {
   const resultado = await registrarPractica(idTema, respuestas);
   await incrementarPreguntasRespondidas(idTema, preguntasRespondidas);
-  const actualizado = resultado?.dominio != null ? await actualizarDominioTema(idTema, resultado.dominio) : null;
-  return actualizado ?? null;
+  const tema = resultado?.dominio != null ? ((await actualizarDominioTema(idTema, resultado.dominio)) ?? null) : null;
+  const pendientes = obtenerEstadoAdaptacion(idTema)?.pendientes.length ?? 0;
+  return {
+    tema,
+    dominio: resultado?.dominio ?? null,
+    periodosCerrados: resultado?.periodosCerrados ?? 0,
+    faltan: Math.max(0, PREGUNTAS_POR_PERIODO - pendientes),
+    enviado: resultado !== null,
+  };
 }
 
 /** Vacía solo las respuestas sin enviar; el estado del motor se borra con el almacén (tema o cierre de sesión). */

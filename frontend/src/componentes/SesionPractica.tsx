@@ -7,6 +7,7 @@ import { registrarRespuestas } from "../almacen/almacenSesion";
 import { segundosEntre } from "../utilidades/rendimiento";
 import PreguntaPractica from "./PreguntaPractica";
 import MedidorDominio from "./MedidorDominio";
+import CambioNivel, { type EstadoNivel } from "./preguntas/CambioNivel";
 import Boton from "./Boton";
 import { useBuddy } from "../buddy/BuddyProvider";
 import { felicitacionResultado } from "../buddy/mensajes";
@@ -38,13 +39,17 @@ export default function SesionPractica({ preguntas, alResponder, alSalir }: Prop
   const idTema = tema.id;
   const { anunciar } = useBuddy();
   const primeraPractica = useRef(tema.preguntasRespondidas === 0);
+  const [nivel, establecerNivel] = useState<EstadoNivel | null>(null);
+  const dominioPrevio = useRef(tema.dominio);
+  const peticionNivel = useRef(0);
+  const anunciado = useRef(false);
 
   useEffect(
     () => () => {
       const restantes = respuestasTanda.current.splice(0);
       if (restantes.length === 0) return;
-      void consolidarPractica(idTema, restantes, restantes.length).then((actualizado) => {
-        if (actualizado) establecerTema(actualizado);
+      void consolidarPractica(idTema, restantes, restantes.length).then((resultado) => {
+        if (resultado.tema) establecerTema(resultado.tema);
       });
     },
     [idTema]
@@ -62,11 +67,22 @@ export default function SesionPractica({ preguntas, alResponder, alSalir }: Prop
     alResponder(idPregunta, esCorrecta);
   }
 
+  async function calcularNivel(respuestas: RespuestaPractica[], cantidad: number) {
+    const peticion = ++peticionNivel.current;
+    establecerNivel({ fase: "calculando" });
+    const resultado = await consolidarPractica(idTema, respuestas, cantidad);
+    if (resultado.tema) establecerTema(resultado.tema);
+    if (peticion !== peticionNivel.current) return;
+    if (resultado.dominio !== null) establecerNivel({ fase: "listo", anterior: dominioPrevio.current, nuevo: resultado.dominio });
+    else if (resultado.enviado) establecerNivel({ fase: "pendiente", faltan: resultado.faltan });
+    else establecerNivel({ fase: "error" });
+  }
+
   async function manejarSiguiente() {
     if (indiceActual + 1 >= preguntas.length) {
       establecerTerminada(true);
-      const actualizado = await consolidarPractica(tema.id, respuestasTanda.current.splice(0), preguntas.length);
-      if (actualizado) establecerTema(actualizado);
+      dominioPrevio.current = tema.dominio;
+      await calcularNivel(respuestasTanda.current.splice(0), preguntas.length);
     } else {
       inicioPregunta.current = Date.now();
       establecerIndiceActual((i) => i + 1);
@@ -80,14 +96,18 @@ export default function SesionPractica({ preguntas, alResponder, alSalir }: Prop
     establecerTerminada(false);
     respuestasTanda.current = [];
     inicioPregunta.current = Date.now();
-    establecerRonda((r) => r + 1);    
+    peticionNivel.current += 1;
+    anunciado.current = false;
+    establecerNivel(null);
+    establecerRonda((r) => r + 1);
   }
 
   const totalRonda = correcta + incorrecta;
   const porcentajeRonda = totalRonda > 0 ? Math.round((correcta / totalRonda) * 100) : 0;
 
   useEffect(() => {
-    if (!terminada || totalRonda === 0) return;
+    if (!terminada || totalRonda === 0 || !nivel || nivel.fase === "calculando" || anunciado.current) return;
+    anunciado.current = true;
     anunciar(
       felicitacionResultado({
         idEvento: `practica:${idTema}:${Date.now()}`,
@@ -97,10 +117,11 @@ export default function SesionPractica({ preguntas, alResponder, alSalir }: Prop
         primera: primeraPractica.current,
         tituloPrimera: "¡Tu primera práctica!",
         rutaRepaso: `/estudio/${idTema}/resumen`,
+        nivelConocimiento: nivel.fase === "listo" ? { anterior: nivel.anterior, nuevo: nivel.nuevo } : undefined,
       })
     );
     primeraPractica.current = false;
-  }, [terminada]);
+  }, [terminada, nivel]);
 
   if (terminada) {
     const total = totalRonda;
@@ -112,6 +133,7 @@ export default function SesionPractica({ preguntas, alResponder, alSalir }: Prop
         <p className="text-muted">
           Respondiste correctamente {correcta} de {total} preguntas.
         </p>
+        {nivel && <CambioNivel estado={nivel} alReintentar={() => void calcularNivel([], 0)} />}
         <div className="results-actions">
           <Boton variante="secondary" onClick={reiniciar}>
             <RotateCcw size={15} />

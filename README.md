@@ -89,7 +89,7 @@ flowchart LR
 | Modelo | `ExtraTreesRegressor` | `HistGradientBoostingRegressor` |
 | MAE · R² en prueba | **0,0335 · 0,886** | 0,0565 · 0,714 |
 
-- **Dataset:** `dataset_ml_nivel_conocimiento_125k.csv`, 125 000 filas × 36 columnas.
+- **Dataset:** `dataset_ml_nivel_conocimiento_125k.csv`, 125 000 filas × 36 columnas. Es un conjunto **sintético**: las métricas miden el desempeño sobre esos datos, no sobre estudiantes reales.
 - **Evaluación:** partición por estudiante (sin estudiantes compartidos entre entrenamiento y prueba) y validación cruzada por grupos.
 - **Nivel inicial:** 0,57. Si el modelo no carga, el motor usa la regla y lo registra en el log (`fuente: "regla"`).
 - **Compatibilidad:** el `.pkl` exige **scikit-learn 1.6.1**.

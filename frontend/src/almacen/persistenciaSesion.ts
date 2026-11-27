@@ -2,6 +2,7 @@ import type { MapaMental, ResumenesGenerados, Usuario } from "../tipos";
 import type { TipoActividad } from "../datos/actividades";
 import { NIVELES, type RespuestaRegistrada } from "../utilidades/rendimiento";
 import { copiarEstadoAdaptacion, esEstadoAdaptacion, type EstadoAdaptacion } from "../utilidades/adaptacion";
+import { esEstadoPractica, type EstadoPractica } from "../utilidades/practicaPreguntas";
 
 // -----------------------------------------------------------------------
 // Persistencia TEMPORAL de la sesión, exclusivamente en sessionStorage.
@@ -126,6 +127,7 @@ export interface EstudioPersistido {
   rendimiento: Record<string, RespuestaRegistrada[]>;
   /** MOD-08: estado del motor adaptativo por tema (nivel, período y respuestas pendientes). */
   adaptacion: Record<string, EstadoAdaptacion>;
+  practica: Record<string, EstadoPractica>;
 }
 
 function filtrarRegistro<T>(bruto: unknown, valido: (valor: unknown) => valor is T): Record<string, T> {
@@ -168,11 +170,12 @@ export function leerEstudioPersistido(usuarioId: string): EstudioPersistido | nu
     actividad: Array.isArray(bruto.actividad) ? bruto.actividad.filter(esActividad) : [],
     rendimiento: sanearRendimiento(bruto.rendimiento),
     adaptacion: sanearAdaptacion(bruto.adaptacion),
+    practica: filtrarRegistro(bruto.practica, esEstadoPractica),
   };
 }
 
 export const guardarEstudioPersistido = (
-  estudio: Omit<EstudioPersistido, "rendimiento" | "adaptacion"> & { rendimiento?: EstudioPersistido["rendimiento"]; adaptacion?: EstudioPersistido["adaptacion"] }
+  estudio: Omit<EstudioPersistido, "rendimiento" | "adaptacion" | "practica"> & { rendimiento?: EstudioPersistido["rendimiento"]; adaptacion?: EstudioPersistido["adaptacion"]; practica?: EstudioPersistido["practica"] }
 ) => escribirSobre(CLAVES_SESION.estudio, estudio);
 
 // --- Última ruta visitada ----------------------------------------------------------------

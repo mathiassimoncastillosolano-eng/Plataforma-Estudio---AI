@@ -34,13 +34,21 @@ describe("servicioAdaptacion", () => {
     expect(enviar.mock.calls[1]?.[1]).toMatchObject({ estado: estado(0.6775) });
   });
 
-  it("si el backend falla devuelve null, no guarda estado y reintenta con las respuestas acumuladas", async () => {
-    enviar.mockRejectedValueOnce(new Error("falla"));
+  it("si el backend falla en los dos intentos devuelve null, no guarda estado y reenvía las respuestas acumuladas", async () => {
+    enviar.mockRejectedValue(new Error("falla"));
     expect(await registrarPractica("t1", respuestas(10))).toBeNull();
+    expect(enviar).toHaveBeenCalledTimes(2);
     expect(obtenerEstadoAdaptacion("t1")).toBeUndefined();
     enviar.mockResolvedValue({ id_tema: "t1", estado: estado(0.6), periodos_cerrados: [{}], dificultad_objetivo: "media" });
     await registrarPractica("t1", respuestas(5));
-    expect((enviar.mock.calls[1]?.[1] as { respuestas: unknown[] }).respuestas).toHaveLength(15);
+    expect((enviar.mock.calls[2]?.[1] as { respuestas: unknown[] }).respuestas).toHaveLength(15);
+  });
+
+  it("si el primer intento falla y el segundo responde, devuelve el nivel del período cerrado", async () => {
+    enviar.mockRejectedValueOnce(new Error("arranque en frío"));
+    enviar.mockResolvedValueOnce({ id_tema: "t1", estado: estado(0.62), periodos_cerrados: [{}], dificultad_objetivo: "media" });
+    expect(await registrarPractica("t1", respuestas(15))).toMatchObject({ dominio: 62, periodosCerrados: 1 });
+    expect(enviar).toHaveBeenCalledTimes(2);
   });
 
   it("nivelADominio acota a 0-100", () => {
@@ -55,7 +63,7 @@ describe("consolidarPractica", () => {
   it("las respuestas de una práctica abandonada llegan al motor y suman a las preguntas respondidas sin tocar el dominio", async () => {
     const tema = await nuevoTema();
     enviar.mockResolvedValue({ id_tema: tema.id, estado: { ...estado(0.57), pendientes: respuestas(7) }, periodos_cerrados: [], dificultad_objetivo: "media" });
-    expect(await consolidarPractica(tema.id, respuestas(7), 7)).toBeNull();
+    expect(await consolidarPractica(tema.id, respuestas(7), 7)).toMatchObject({ tema: null, dominio: null, periodosCerrados: 0, faltan: 8, enviado: true });
     expect((enviar.mock.calls[0]?.[1] as { respuestas: unknown[] }).respuestas).toHaveLength(7);
     const guardado = await obtenerTemaEstudio(tema.id);
     expect(guardado).toMatchObject({ dominio: 0, preguntasRespondidas: 7 });
@@ -65,8 +73,16 @@ describe("consolidarPractica", () => {
   it("con un período cerrado actualiza el dominio y devuelve el tema actualizado", async () => {
     const tema = await nuevoTema();
     enviar.mockResolvedValue({ id_tema: tema.id, estado: estado(0.6), periodos_cerrados: [{}], dificultad_objetivo: "media" });
-    const actualizado = await consolidarPractica(tema.id, respuestas(15), 15);
-    expect(actualizado).toMatchObject({ dominio: 60, preguntasRespondidas: 15 });
+    const resultado = await consolidarPractica(tema.id, respuestas(15), 15);
+    expect(resultado).toMatchObject({ dominio: 60, periodosCerrados: 1, enviado: true });
+    expect(resultado.tema).toMatchObject({ dominio: 60, preguntasRespondidas: 15 });
     expect(await obtenerTemaEstudio(tema.id)).toMatchObject({ dominio: 60 });
+  });
+
+  it("si el motor no responde informa que no se envió y no toca el dominio", async () => {
+    const tema = await nuevoTema();
+    enviar.mockRejectedValue(new Error("falla"));
+    expect(await consolidarPractica(tema.id, respuestas(15), 15)).toMatchObject({ tema: null, dominio: null, enviado: false });
+    expect(await obtenerTemaEstudio(tema.id)).toMatchObject({ dominio: 0 });
   });
 });

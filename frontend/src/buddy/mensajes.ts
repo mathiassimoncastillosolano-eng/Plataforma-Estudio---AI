@@ -83,6 +83,7 @@ export interface DatosResultado {
   mejora?: number | null;
   rutaRepaso?: string;
   accionVer?: string;
+  nivelConocimiento?: { anterior: number; nuevo: number };
 }
 
 export function felicitacionResultado(datos: DatosResultado): EventoBuddy {
@@ -90,6 +91,7 @@ export function felicitacionResultado(datos: DatosResultado): EventoBuddy {
   const presencia = PRESENCIA_NIVEL[nivel];
   const usaReintento = datos.reintento === true && nivel === "bajo";
   const detalles = [`${datos.porcentaje} % de aciertos`, `${datos.correctas} de ${datos.total} correctas`];
+  if (datos.nivelConocimiento) detalles.push(`Nivel de conocimiento: ${datos.nivelConocimiento.anterior} % → ${datos.nivelConocimiento.nuevo} %`);
   if (datos.mejora && datos.mejora >= 5) detalles.push(`+${datos.mejora} puntos frente a tus rondas anteriores`);
   const accion = nivel === "bajo" && datos.rutaRepaso ? { etiqueta: "Repasar el resumen", ruta: datos.rutaRepaso } : datos.accionVer ? { etiqueta: datos.accionVer } : undefined;
   return crearEvento({

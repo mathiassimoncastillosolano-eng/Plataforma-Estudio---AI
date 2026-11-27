@@ -2,17 +2,12 @@ import type { DificultadPregunta, PreguntaEstudio } from "../tipos";
 import { enviarJson } from "./clienteApi";
 import { obtenerResumenGeneral } from "./servicioPruebas";
 import { TAMANO_RONDA, cantidadNuevasNecesarias, componerRonda, dificultadSegunNivel, registrarResultado, type HistorialPreguntas } from "../utilidades/rondaPreguntas";
-
-// -----------------------------------------------------------------------
-// Servicio de Preguntas de práctica (MOD-03).
-// Frontend → POST /api/preguntas/generar (FastAPI) → OpenAI.
-// Las preguntas se generan a partir del resumen general del tema y se guardan
-// SOLO en memoria por tema: así abrir y cerrar la pantalla no vuelve a llamar a la IA.
-// No toca el almacén de sesión (MOD-08).
-// -----------------------------------------------------------------------
+import { ampliarBanco, crearPractica, preguntasPorIds, type EstadoPractica } from "../utilidades/practicaPreguntas";
+import { eliminarPractica, guardarPractica, obtenerPractica } from "../almacen/almacenSesion";
+import { TIEMPO_ESPERA_DESCARGA_MS } from "../configuracion";
+import { descargarArchivo, type ArchivoDescargado } from "./clienteApi";
 
 const TIEMPO_GENERACION_MS = 150_000;
-// La primera tanda del tema es la ronda 1: mismo tamaño que un período del motor adaptativo.
 const CANTIDAD_POR_DEFECTO = TAMANO_RONDA;
 
 interface PreguntaApi {
@@ -42,10 +37,7 @@ export interface OpcionesGeneracion {
   lote?: string;
 }
 
-const memoria = new Map<string, PreguntaEstudio[]>();
 const enVuelo = new Map<string, Promise<PreguntaEstudio[]>>();
-const bancos = new Map<string, PreguntaEstudio[]>();
-const historiales = new Map<string, HistorialPreguntas>();
 
 const CARACTERES_POR_PREGUNTA = 300; // mismo criterio que el backend
 const MAXIMO_PREGUNTAS = 25;
@@ -73,17 +65,21 @@ export function puedeGenerarConIa(idTema: string): boolean {
 }
 
 export function limpiarPreguntasEnMemoria(idTema?: string) {
-  if (idTema) {
-    memoria.delete(idTema);
-    enVuelo.delete(idTema);
-    bancos.delete(idTema);
-    historiales.delete(idTema);
-  } else {
-    memoria.clear();
-    enVuelo.clear();
-    bancos.clear();
-    historiales.clear();
-  }
+  if (idTema) enVuelo.delete(idTema);
+  else enVuelo.clear();
+  eliminarPractica(idTema);
+}
+
+export function iniciarPractica(idTema: string, preguntas: PreguntaEstudio[]): EstadoPractica {
+  const existente = obtenerPractica(idTema);
+  if (existente) return existente;
+  const nueva = crearPractica(preguntas);
+  guardarPractica(idTema, nueva);
+  return nueva;
+}
+
+export function preguntasDeLaRonda(estado: EstadoPractica): PreguntaEstudio[] {
+  return preguntasPorIds(estado.banco, estado.idsRonda);
 }
 
 function aPreguntaEstudio(idTema: string, p: PreguntaApi, lote?: string): PreguntaEstudio {
@@ -129,17 +125,14 @@ export async function generarPreguntasConIa(idTema: string, titulo: string, opci
 
 /** Preguntas del tema: memoria → solicitud en curso → backend. Una sola llamada por tema. */
 export async function obtenerPreguntasDelTema(idTema: string, titulo: string, opciones: OpcionesGeneracion = {}): Promise<PreguntaEstudio[]> {
-  const guardadas = memoria.get(idTema);
-  if (guardadas) return guardadas;
+  const guardada = obtenerPractica(idTema);
+  if (guardada) return preguntasDeLaRonda(guardada);
 
   let solicitud = enVuelo.get(idTema);
   if (!solicitud) {
     const { senal: _ignorada, ...sinSenal } = opciones; // la solicitud compartida no se cancela por un solo llamador
     solicitud = generarPreguntasConIa(idTema, titulo, sinSenal)
-      .then((nuevas) => {
-        memoria.set(idTema, nuevas);
-        return nuevas;
-      })
+      .then((nuevas) => preguntasDeLaRonda(iniciarPractica(idTema, nuevas)))
       .finally(() => enVuelo.delete(idTema));
     enVuelo.set(idTema, solicitud);
   }
@@ -155,16 +148,17 @@ export async function obtenerPreguntasDelTema(idTema: string, titulo: string, op
 }
 
 export function registrarResultadoPregunta(idTema: string, idPregunta: string, correcta: boolean): void {
-  historiales.set(idTema, registrarResultado(historiales.get(idTema) ?? {}, idPregunta, correcta));
+  const estado = obtenerPractica(idTema);
+  if (!estado) return;
+  guardarPractica(idTema, {
+    ...estado,
+    historial: registrarResultado(estado.historial, idPregunta, correcta),
+    respondidas: estado.respondidas.includes(idPregunta) ? estado.respondidas : [...estado.respondidas, idPregunta],
+  });
 }
 
 export function obtenerHistorialPreguntas(idTema: string): HistorialPreguntas {
-  return historiales.get(idTema) ?? {};
-}
-
-function fusionar(banco: PreguntaEstudio[], nuevas: PreguntaEstudio[]): PreguntaEstudio[] {
-  const ids = new Set(banco.map((p) => p.id));
-  return [...banco, ...nuevas.filter((p) => !ids.has(p.id))];
+  return obtenerPractica(idTema)?.historial ?? {};
 }
 
 export interface OpcionesRonda {
@@ -172,11 +166,11 @@ export interface OpcionesRonda {
   nivelEstudiante?: number;
 }
 
-export async function generarSiguienteRonda(idTema: string, titulo: string, actuales: PreguntaEstudio[], opciones: OpcionesRonda = {}): Promise<PreguntaEstudio[]> {
+export async function generarSiguienteRonda(idTema: string, titulo: string, opciones: OpcionesRonda = {}): Promise<boolean> {
+  const estado = obtenerPractica(idTema);
+  if (!estado) return false;
   const total = opciones.total ?? TAMANO_RONDA;
-  const historial = historiales.get(idTema) ?? {};
-  const banco = fusionar(bancos.get(idTema) ?? [], actuales);
-  bancos.set(idTema, banco);
+  const { banco, historial } = estado;
 
   let nuevas: PreguntaEstudio[] = [];
   const necesarias = cantidadNuevasNecesarias(total, banco, historial);
@@ -195,8 +189,36 @@ export async function generarSiguienteRonda(idTema: string, titulo: string, actu
   }
 
   const ronda = componerRonda({ banco, historial, nuevas, total });
-  const elegidas = ronda.length > 0 ? ronda : actuales;
-  bancos.set(idTema, fusionar(banco, nuevas));
-  memoria.set(idTema, elegidas);
-  return elegidas;
+  const ids = ronda.length > 0 ? ronda.map((p) => p.id) : estado.idsRonda;
+  const actual = obtenerPractica(idTema) ?? estado;
+  guardarPractica(idTema, { ...actual, banco: ampliarBanco(actual.banco, ronda), idsSiguiente: ids });
+  return true;
+}
+
+export function empezarSiguienteRonda(idTema: string): void {
+  const estado = obtenerPractica(idTema);
+  if (!estado?.idsSiguiente) return;
+  guardarPractica(idTema, { ...estado, ronda: estado.ronda + 1, idsRonda: estado.idsSiguiente, idsSiguiente: null, respondidas: [] });
+}
+
+export type FormatoDescargaPreguntas = "pdf" | "docx";
+export type ModoRespuestasDescarga = "junto" | "final";
+
+export function descargarPreguntas(
+  idTema: string,
+  titulo: string,
+  formato: FormatoDescargaPreguntas,
+  respuestas: ModoRespuestasDescarga,
+  senal?: AbortSignal
+): Promise<ArchivoDescargado> {
+  const estado = obtenerPractica(idTema);
+  const preguntas = (estado?.banco ?? []).map((p) => ({
+    enunciado: p.enunciado,
+    dificultad: p.dificultad,
+    opciones: (p.opciones ?? []).map((o) => ({ id: o.id, texto: o.etiqueta })),
+    correcta: p.idOpcionCorrecta ?? "",
+    respuesta_texto: p.textoRespuestaCorrecta ?? "",
+    explicacion: p.explicacion,
+  }));
+  return descargarArchivo("/api/preguntas/exportar", { titulo_tema: titulo, formato, respuestas, preguntas }, { senal, tiempoEsperaMs: TIEMPO_ESPERA_DESCARGA_MS });
 }

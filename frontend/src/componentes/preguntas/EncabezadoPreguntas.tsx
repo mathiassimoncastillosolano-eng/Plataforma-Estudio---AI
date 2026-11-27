@@ -3,8 +3,9 @@ import Boton from "../Boton";
 
 interface PropsEncabezadoPreguntas {
   ronda: number;
+  respondidasRonda: number;
+  totalRonda: number;
   respondidas: number;
-  total: number;
   conocidas: number;
   repasar: number;
   textoPracticar: string;
@@ -12,8 +13,8 @@ interface PropsEncabezadoPreguntas {
   alPracticar: () => void;
 }
 
-export default function EncabezadoPreguntas({ ronda, respondidas, total, conocidas, repasar, textoPracticar, practicarDeshabilitado, alPracticar }: PropsEncabezadoPreguntas) {
-  const porcentaje = total > 0 ? Math.round((respondidas / total) * 100) : 0;
+export default function EncabezadoPreguntas({ ronda, respondidasRonda, totalRonda, respondidas, conocidas, repasar, textoPracticar, practicarDeshabilitado, alPracticar }: PropsEncabezadoPreguntas) {
+  const porcentaje = totalRonda > 0 ? Math.round((respondidasRonda / totalRonda) * 100) : 0;
   const precision = respondidas > 0 ? Math.round((conocidas / respondidas) * 100) : null;
 
   return (
@@ -22,7 +23,7 @@ export default function EncabezadoPreguntas({ ronda, respondidas, total, conocid
         <div className="preg-cabecera-titulo">
           <span className="preg-ronda mono">Ronda {ronda}</span>
           <strong>
-            {respondidas} <span>de {total} respondidas</span>
+            {respondidasRonda} <span>de {totalRonda} respondidas</span>
           </strong>
         </div>
         <div className="preg-barra" role="progressbar" aria-valuenow={porcentaje} aria-valuemin={0} aria-valuemax={100} aria-label="Preguntas respondidas">

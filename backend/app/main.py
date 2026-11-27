@@ -1,4 +1,5 @@
 import logging
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, Response
 from fastapi.exceptions import RequestValidationError
@@ -6,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException as ExcepcionHTTP
 
 from app.adaptacion.enrutador import enrutador as enrutador_adaptacion
+from app.adaptacion.modelo_ml import obtener_modelo
 from app.comun.errores import ErrorAplicacion
 from app.comun.respuestas import respuesta_error
 from app.configuracion.ajustes import obtener_ajustes
@@ -38,7 +40,13 @@ def _registrar_manejadores_de_errores(aplicacion: FastAPI) -> None:
 
 def crear_aplicacion() -> FastAPI:
     ajustes = obtener_ajustes()
-    aplicacion = FastAPI(title="Plataforma Estudio AI", version="1.0.0")
+
+    @asynccontextmanager
+    async def _ciclo_de_vida(_: FastAPI):
+        obtener_modelo(ajustes.modelo_nivel_ruta)
+        yield
+
+    aplicacion = FastAPI(title="Plataforma Estudio AI", version="1.0.0", lifespan=_ciclo_de_vida)
 
     # Captura errores inesperados DENTRO del middleware de CORS: así la respuesta 500
     # también lleva las cabeceras CORS y el navegador puede leer el mensaje.

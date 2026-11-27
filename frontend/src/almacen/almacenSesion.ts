@@ -4,6 +4,7 @@ import type { TipoActividad } from "../datos/actividades";
 import { guardarEstudioPersistido, leerEstudioPersistido } from "./persistenciaSesion";
 import { anadirRespuestas, type RespuestaRegistrada } from "../utilidades/rendimiento";
 import { copiarEstadoAdaptacion, type EstadoAdaptacion } from "../utilidades/adaptacion";
+import type { EstadoPractica } from "../utilidades/practicaPreguntas";
 
 // -----------------------------------------------------------------------
 // Estado de la sesión de estudio.
@@ -42,10 +43,11 @@ interface EstadoSesion {
   rendimiento: Record<string, RespuestaRegistrada[]>;
   /** MOD-08: estado del motor adaptativo por tema (nivel, período y respuestas pendientes), en la forma del backend. */
   adaptacion: Record<string, EstadoAdaptacion>;
+  practica: Record<string, EstadoPractica>;
   generandoResumen: Record<string, boolean>;
 }
 
-let estadoGlobal: EstadoSesion = { iniciadoEn: Date.now(), fuentes: {}, archivos: {}, resumenes: {}, mapas: {}, actividad: [], rendimiento: {}, adaptacion: {}, generandoResumen: {} };
+let estadoGlobal: EstadoSesion = { iniciadoEn: Date.now(), fuentes: {}, archivos: {}, resumenes: {}, mapas: {}, actividad: [], rendimiento: {}, adaptacion: {}, practica: {}, generandoResumen: {} };
 const oyentes = new Set<() => void>();
 let siguienteId = 1;
 
@@ -57,8 +59,8 @@ let temporizadorGuardado: number | undefined;
 function volcarAlmacenamiento() {
   temporizadorGuardado = undefined;
   if (!usuarioPersistidoId) return;
-  const { iniciadoEn, fuentes, resumenes, mapas, actividad, rendimiento, adaptacion } = estadoGlobal;
-  guardarEstudioPersistido({ usuarioId: usuarioPersistidoId, iniciadoEn, fuentes, resumenes, mapas, actividad, rendimiento, adaptacion });
+  const { iniciadoEn, fuentes, resumenes, mapas, actividad, rendimiento, adaptacion, practica } = estadoGlobal;
+  guardarEstudioPersistido({ usuarioId: usuarioPersistidoId, iniciadoEn, fuentes, resumenes, mapas, actividad, rendimiento, adaptacion, practica });
 }
 
 function programarGuardado() {
@@ -89,7 +91,7 @@ export function restaurarEstudio(idUsuario: string) {
   if (guardado) {
     const numeros = guardado.actividad.map((a) => Number(a.id.replace(/^act-/, ""))).filter(Number.isFinite);
     siguienteId = Math.max(siguienteId, ...numeros, 0) + 1;
-    estadoGlobal = { ...estadoGlobal, iniciadoEn: guardado.iniciadoEn, fuentes: guardado.fuentes, resumenes: guardado.resumenes, mapas: guardado.mapas, actividad: guardado.actividad, rendimiento: guardado.rendimiento, adaptacion: guardado.adaptacion };
+    estadoGlobal = { ...estadoGlobal, iniciadoEn: guardado.iniciadoEn, fuentes: guardado.fuentes, resumenes: guardado.resumenes, mapas: guardado.mapas, actividad: guardado.actividad, rendimiento: guardado.rendimiento, adaptacion: guardado.adaptacion, practica: guardado.practica };
     oyentes.forEach((oyente) => oyente());
   }
   usuarioPersistidoId = idUsuario;
@@ -120,7 +122,7 @@ export function reiniciarSesionEstudio() {
   if (typeof window !== "undefined") window.clearTimeout(temporizadorGuardado);
   temporizadorGuardado = undefined;
   usuarioPersistidoId = null;
-  actualizar({ iniciadoEn: Date.now(), fuentes: {}, archivos: {}, resumenes: {}, mapas: {}, actividad: [], rendimiento: {}, adaptacion: {}, generandoResumen: {} });
+  actualizar({ iniciadoEn: Date.now(), fuentes: {}, archivos: {}, resumenes: {}, mapas: {}, actividad: [], rendimiento: {}, adaptacion: {}, practica: {}, generandoResumen: {} });
 }
 
 export function establecerFuenteTema(idTema: string, contenido: string) {
@@ -142,6 +144,7 @@ export function eliminarDatosTema(idTema: string) {
     mapas: sinClave(estadoGlobal.mapas),
     rendimiento: sinClave(estadoGlobal.rendimiento),
     adaptacion: sinClave(estadoGlobal.adaptacion),
+    practica: sinClave(estadoGlobal.practica),
     generandoResumen: sinClave(estadoGlobal.generandoResumen),
   });
 }
@@ -172,6 +175,23 @@ export function guardarEstadoAdaptacion(idTema: string, estado: EstadoAdaptacion
 /** MOD-08: estado del motor adaptativo del tema; `undefined` = tema sin historial (el motor parte de su estado inicial). */
 export function obtenerEstadoAdaptacion(idTema: string): EstadoAdaptacion | undefined {
   return estadoGlobal.adaptacion[idTema];
+}
+
+export function guardarPractica(idTema: string, estado: EstadoPractica) {
+  actualizar({ practica: { ...estadoGlobal.practica, [idTema]: estado } });
+}
+
+export function obtenerPractica(idTema: string): EstadoPractica | undefined {
+  return estadoGlobal.practica[idTema];
+}
+
+export function eliminarPractica(idTema?: string) {
+  if (idTema === undefined) {
+    actualizar({ practica: {} });
+    return;
+  }
+  const { [idTema]: _anterior, ...resto } = estadoGlobal.practica;
+  actualizar({ practica: resto });
 }
 
 export function guardarResumenes(idTema: string, tituloTema: string, resultado: ResumenesGenerados) {

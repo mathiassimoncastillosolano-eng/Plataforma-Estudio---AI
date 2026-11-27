@@ -5,7 +5,8 @@ vi.mock("./servicioPruebas", () => ({ obtenerResumenGeneral: vi.fn() }));
 
 import { enviarJson } from "./clienteApi";
 import { obtenerResumenGeneral } from "./servicioPruebas";
-import { generarPreguntasConIa, limpiarPreguntasEnMemoria, obtenerPreguntasDelTema, puedeGenerarConIa } from "./servicioPreguntas";
+import { obtenerPractica } from "../almacen/almacenSesion";
+import { empezarSiguienteRonda, generarPreguntasConIa, generarSiguienteRonda, limpiarPreguntasEnMemoria, obtenerHistorialPreguntas, obtenerPreguntasDelTema, puedeGenerarConIa, registrarResultadoPregunta } from "./servicioPreguntas";
 
 const enviar = vi.mocked(enviarJson);
 const resumenMock = vi.mocked(obtenerResumenGeneral);
@@ -101,5 +102,37 @@ describe("servicioPreguntas", () => {
     limpiarPreguntasEnMemoria("t1");
     await obtenerPreguntasDelTema("t1", "Tema");
     expect(enviar).toHaveBeenCalledTimes(2);
+  });
+
+  it("la práctica queda guardada y no se vuelve a pedir al backend al regresar", async () => {
+    await obtenerPreguntasDelTema("t1", "Tema");
+    expect(obtenerPractica("t1")).toMatchObject({ ronda: 1, idsRonda: ["t1-qabc"] });
+    await obtenerPreguntasDelTema("t1", "Tema");
+    expect(enviar).toHaveBeenCalledTimes(1);
+  });
+
+  it("registrarResultadoPregunta acumula respondidas e historial", async () => {
+    await obtenerPreguntasDelTema("t1", "Tema");
+    registrarResultadoPregunta("t1", "t1-qabc", false);
+    registrarResultadoPregunta("t1", "t1-qabc", true);
+    expect(obtenerPractica("t1")?.respondidas).toEqual(["t1-qabc"]);
+    expect(obtenerHistorialPreguntas("t1")["t1-qabc"]).toMatchObject({ aciertos: 1, errores: 1, ultimo: "ok" });
+  });
+
+  it("la siguiente ronda amplía el banco sin duplicar y conserva las rondas anteriores al avanzar", async () => {
+    await obtenerPreguntasDelTema("t1", "Tema");
+    registrarResultadoPregunta("t1", "t1-qabc", false);
+    enviar.mockResolvedValue({ ...respuestaApi, preguntas: [{ ...respuestaApi.preguntas[0], id: "qnueva", enunciado: "¿Otra cosa?" }] });
+    expect(await generarSiguienteRonda("t1", "Tema", { total: 2 })).toBe(true);
+    empezarSiguienteRonda("t1");
+    const estado = obtenerPractica("t1");
+    expect(estado?.ronda).toBe(2);
+    expect(estado?.respondidas).toEqual([]);
+    expect(estado?.banco.map((p) => p.id)).toContain("t1-qabc");
+    expect(new Set(estado?.banco.map((p) => p.id)).size).toBe(estado?.banco.length);
+  });
+
+  it("generarSiguienteRonda devuelve false si el tema no tiene práctica", async () => {
+    expect(await generarSiguienteRonda("sin-practica", "Tema")).toBe(false);
   });
 });

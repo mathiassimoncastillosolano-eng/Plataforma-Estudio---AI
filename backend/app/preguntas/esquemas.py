@@ -19,3 +19,24 @@ class SolicitudGenerarPreguntas(BaseModel):
     nivel_estudiante: float | None = Field(default=None, ge=0, le=1)
     # Enunciados ya mostrados al estudiante, para no repetirlos al pedir más preguntas.
     evitar: list[str] = Field(default_factory=list, max_length=60)
+
+
+class OpcionExportada(BaseModel):
+    id: str = Field(min_length=1, max_length=20)
+    texto: str = Field(max_length=2000)
+
+
+class PreguntaExportada(BaseModel):
+    enunciado: str = Field(min_length=1, max_length=4000)
+    dificultad: Literal["facil", "media", "dificil"]
+    opciones: list[OpcionExportada] = Field(default_factory=list, max_length=8)
+    correcta: str = Field(default="", max_length=20)
+    respuesta_texto: str = Field(default="", max_length=4000)
+    explicacion: str = Field(default="", max_length=6000)
+
+
+class SolicitudExportarPreguntas(BaseModel):
+    titulo_tema: str = Field(min_length=1, max_length=300)
+    formato: Literal["pdf", "docx"]
+    respuestas: Literal["junto", "final"]
+    preguntas: list[PreguntaExportada] = Field(min_length=1, max_length=500)

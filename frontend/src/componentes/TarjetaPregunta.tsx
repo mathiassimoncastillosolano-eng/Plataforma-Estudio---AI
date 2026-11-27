@@ -22,7 +22,6 @@ const tono = { facil: "green", media: "amber", dificil: "red" } as const;
  */
 export default function TarjetaPregunta({ pregunta, numero, abierto, estado, relacionados, alAlternar, alEstado }: PropsTarjetaPregunta) {
   const idPanel = `q-panel-${pregunta.id}`;
-  const etiquetaCorrecta = pregunta.tipo === "abierta" ? pregunta.textoRespuestaCorrecta : pregunta.opciones?.find((o) => o.id === pregunta.idOpcionCorrecta)?.etiqueta;
 
   return (
     <article className={`qitem ${abierto ? "open" : ""} ${estado ? `is-${estado}` : ""}`}>
@@ -63,10 +62,12 @@ export default function TarjetaPregunta({ pregunta, numero, abierto, estado, rel
               </ul>
             )}
 
-            <div className="qitem-section">
-              <h4>Respuesta</h4>
-              <p className="qitem-answer">{etiquetaCorrecta}</p>
-            </div>
+            {pregunta.tipo === "abierta" && (
+              <div className="qitem-section">
+                <h4>Respuesta</h4>
+                <p className="qitem-answer">{pregunta.textoRespuestaCorrecta}</p>
+              </div>
+            )}
             <div className="qitem-section">
               <h4>Explicación</h4>
               <p>{pregunta.explicacion}</p>
